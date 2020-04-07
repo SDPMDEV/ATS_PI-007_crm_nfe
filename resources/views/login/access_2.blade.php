@@ -51,7 +51,9 @@
 							<i class="fa fa-lock" aria-hidden="true"></i>
 						</span>
 					</div>
-					
+					@if(session()->has('message'))
+					<p style="color: red; margin-left: 10px;">Usuário ou senha inválido(s)</p>
+					@endif
 					<div class="container-login100-form-btn">
 						<button class="login100-form-btn">
 							Login
