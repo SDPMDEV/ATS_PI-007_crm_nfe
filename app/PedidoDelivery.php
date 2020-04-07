@@ -1,0 +1,83 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+use App\DeliveryConfig;
+
+class PedidoDelivery extends Model
+{
+	protected $fillable = [
+		'cliente_id', 'valor_total', 'forma_pagamento', 'observacao',
+		'telefone', 'estado', 'endereco_id', 'motivoEstado', 'troco_para', 'cupom_id', 'desconto'
+	];
+
+	public function itens(){
+		return $this->hasMany('App\ItemPedidoDelivery', 'pedido_id', 'id');
+	}
+
+	public function cliente(){
+		return $this->belongsTo(ClienteDelivery::class, 'cliente_id');
+	}
+
+	public function cupom(){
+		return $this->belongsTo(CodigoDesconto::class, 'cupom_id');
+	}
+
+	public function endereco(){
+		return $this->belongsTo(EnderecoDelivery::class, 'endereco_id');
+	}
+
+	public function somaItens(){
+
+		$config = DeliveryConfig::first();
+		$total = 0;
+
+		if($this->valor_total > 0){
+			return $this->valor_total;
+		} else{
+
+			foreach($this->itens as $i){
+
+				if(count($i->sabores) > 0){
+					$maiorValor = 0;
+					foreach($i->sabores as $sb){
+						$v = $sb->maiorValor($sb->sabor_id, $i->tamanho_id);
+						if($v > $maiorValor) $maiorValor = $v;
+					}
+					$total += $maiorValor;
+				}else{
+					$total += $i->quantidade * $i->produto->valor;
+				}
+
+				foreach($i->itensAdicionais as $a){
+					$total += $a->quantidade * $a->adicional->valor;
+				}
+				
+			}
+
+			if($this->cupom_id != null){
+				$total -= $this->desconto;
+			}
+
+			if($this->endereco_id != null)
+				$total += $config != null ? $config->valor_entrega : 0;
+			return $total;
+		}
+	}
+
+	public function somaCarrinho(){
+		$config = DeliveryConfig::first();
+		$total = 0;
+		foreach($this->itens as $i){
+			if($this->valor_total == 0){
+				$total += $i->quantidade * $i->produto->valor;
+				foreach($i->itensAdicionais as $a){
+					$total += $a->quantidade * $a->adicional->valor;
+				}
+			}
+		}
+
+		return $total;
+	}
+}
