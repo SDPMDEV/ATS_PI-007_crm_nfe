@@ -110,165 +110,166 @@
 
 					
 				</div>
+
+
 				<div class="row">
 					<div class="input-field col s2">
 						<select name="consumidor_final">
 							<option value=""></option>
-							<option @if(isset($cliente) && $cliente->consumidor_final == 1)
-								selected @endif value="1">SIM</option>
-								<option @if(isset($cliente) && $cliente->consumidor_final == 0)
-									selected @endif value="0">NAO</option>
-								</select>
-								<label>Consumidor Final</label>
+							<option @if(isset($cliente) && $cliente->consumidor_final == 1)selected @endif value="1" @if(old('consumidor_final') == 1) selected @endif>SIM</option>
+							<option @if(isset($cliente) && $cliente->consumidor_final == 0)
+								selected @endif value="0" @if(old('consumidor_final') == 0) selected @endif>NAO</option>
+							</select>
+							<label>Consumidor Final</label>
 
-								@if($errors->has('consumidor_final'))
-								<div class="center-align red lighten-2">
-									<span class="white-text">{{ $errors->first('consumidor_final') }}</span>
-								</div>
-								@endif
+							@if($errors->has('consumidor_final'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('consumidor_final') }}</span>
 							</div>
+							@endif
+						</div>
 
-							<div class="input-field col s2">
-								<select name="contribuinte">
-									<option value=""></option>
-									<option @if(isset($cliente) && $cliente->contribuinte == 1)
-										selected @endif value="1">SIM</option>
-										<option @if(isset($cliente) && $cliente->contribuinte == 0)
-											selected @endif value="0">NAO</option>
-										</select>
-										<label>Contribuinte</label>
+						<div class="input-field col s2">
+							<select name="contribuinte">
+								<option value=""></option>
+								<option @if(isset($cliente) && $cliente->contribuinte == 1)
+									selected @endif value="1" @if(old('contribuinte') == 1) selected @endif>SIM</option>
+									<option @if(isset($cliente) && $cliente->contribuinte == 0)
+										selected @endif value="0" @if(old('contribuinte') == 0) selected @endif>NAO</option>
+									</select>
+									<label>Contribuinte</label>
 
-										@if($errors->has('contribuinte'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('contribuinte') }}</span>
-										</div>
-										@endif
+									@if($errors->has('contribuinte'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('contribuinte') }}</span>
 									</div>
-
-									<div class="input-field col s3">
-										<input value="{{{ isset($cliente->limite_venda) ? $cliente->limite_venda : old('limite_venda') }}}" id="valor" name="limite_venda" type="text" class="validate">
-										<label>Limite de Venda</label>
-
-									</div>
-								</div>
-							</section>
-							<section class="section-2">
-
-								<div class="row">
-									<div class="input-field col s5">
-										<input value="{{{ isset($cliente->rua) ? $cliente->rua : old('rua') }}}" id="rua" name="rua" type="text" class="validate upper-input">
-										<label for="rua">Rua</label>
-
-										@if($errors->has('rua'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('rua') }}</span>
-										</div>
-										@endif
-
-									</div>
-									<div class="input-field col s2">
-										<input value="{{{ isset($cliente->numero) ? $cliente->numero : old('numero') }}}" id="numero" name="numero" type="text" class="validate upper-input">
-										<label for="numero">Numero</label>
-
-										@if($errors->has('numero'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('numero') }}</span>
-										</div>
-										@endif
-
-									</div>
+									@endif
 								</div>
 
-								<div class="row">
-									<div class="input-field col s3">
-										<input value="{{{ isset($cliente->bairro) ? $cliente->bairro : old('bairro') }}}" id="bairro" name="bairro" type="text" class="validate upper-input">
-										<label for="bairro">Bairro</label>
+								<div class="input-field col s3">
+									<input value="{{{ isset($cliente->limite_venda) ? $cliente->limite_venda : old('limite_venda') }}}" id="valor" name="limite_venda" type="text" class="validate">
+									<label>Limite de Venda</label>
 
-										@if($errors->has('bairro'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('bairro') }}</span>
-										</div>
-										@endif
-
-									</div>
-									<div class="input-field col s4">
-										<input value="{{{ isset($cliente->email) ? $cliente->email : old('email') }}}" id="email" name="email" type="text" class="validate">
-										<label for="email">Email</label>
-
-										@if($errors->has('email'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('email') }}</span>
-										</div>
-										@endif
-
-									</div>
 								</div>
+							</div>
+						</section>
+						<section class="section-2">
 
-								<div class="row">
-									<div class="input-field col s3">
-										<input value="{{{ isset($cliente->cep) ? $cliente->cep : old('cep') }}}" id="cep" name="cep" type="text" class="validate">
-										<label for="cep">CEP</label>
-
-										@if($errors->has('cep'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('cep') }}</span>
-										</div>
-										@endif
-
-									</div>
-
-
-									<div class="input-field col s4">
-
-										<input autocomplete="off" type="text" name="cidade" id="autocomplete-cidade" value="{{old('cidade')}}" class="autocomplete-cidade">
-										<label for="autocomplete-cidade">Cidade</label>
-										<input type="hidden" id="cidadeId" value="{{{ isset($cliente) ? $cliente->cidade_id : 0 }}}" 
-										>
-										@if($errors->has('cidade'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('cidade') }}</span>
-										</div>
-										@endif
-
-									</div>
-								</div>
-
-								<div class="row">
-									<div class="input-field col s3">
-										<input value="{{{ isset($cliente->telefone) ? $cliente->telefone : old('telefone') }}}" id="telefone" name="telefone" type="text" class="validate">
-										<label for="telefone">Telefone</label>
-
-										@if($errors->has('telefone'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('telefone') }}</span>
-										</div>
-										@endif
-
-									</div>
-									<div class="input-field col s3">
-										<input value="{{{ isset($cliente->celular) ? $cliente->celular : old('celular') }}}" id="celular" name="celular" type="text" class="validate">
-										<label for="celular">Celular</label>
-
-										@if($errors->has('celular'))
-										<div class="center-align red lighten-2">
-											<span class="white-text">{{ $errors->first('celular') }}</span>
-										</div>
-										@endif
-
-									</div>
-								</div>
-
-								<input type="hidden" name="_token" value="{{ csrf_token() }}">
-
-							</section>
-
-
-							<br>
 							<div class="row">
-								<a class="btn-large red lighten-2" href="/clientes">Cancelar</a>
-								<input type="submit" value="Salvar" class="btn-large green accent-3">
+								<div class="input-field col s5">
+									<input value="{{{ isset($cliente->rua) ? $cliente->rua : old('rua') }}}" id="rua" name="rua" type="text" class="validate upper-input">
+									<label for="rua">Rua</label>
+
+									@if($errors->has('rua'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('rua') }}</span>
+									</div>
+									@endif
+
+								</div>
+								<div class="input-field col s2">
+									<input value="{{{ isset($cliente->numero) ? $cliente->numero : old('numero') }}}" id="numero" name="numero" type="text" class="validate upper-input">
+									<label for="numero">Numero</label>
+
+									@if($errors->has('numero'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('numero') }}</span>
+									</div>
+									@endif
+
+								</div>
 							</div>
-						</form>
-					</div>
+
+							<div class="row">
+								<div class="input-field col s3">
+									<input value="{{{ isset($cliente->bairro) ? $cliente->bairro : old('bairro') }}}" id="bairro" name="bairro" type="text" class="validate upper-input">
+									<label for="bairro">Bairro</label>
+
+									@if($errors->has('bairro'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('bairro') }}</span>
+									</div>
+									@endif
+
+								</div>
+								<div class="input-field col s4">
+									<input value="{{{ isset($cliente->email) ? $cliente->email : old('email') }}}" id="email" name="email" type="text" class="validate">
+									<label for="email">Email</label>
+
+									@if($errors->has('email'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('email') }}</span>
+									</div>
+									@endif
+
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="input-field col s3">
+									<input value="{{{ isset($cliente->cep) ? $cliente->cep : old('cep') }}}" id="cep" name="cep" type="text" class="validate">
+									<label for="cep">CEP</label>
+
+									@if($errors->has('cep'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('cep') }}</span>
+									</div>
+									@endif
+
+								</div>
+
+
+								<div class="input-field col s4">
+
+									<input autocomplete="off" type="text" name="cidade" id="autocomplete-cidade" value="{{old('cidade')}}" class="autocomplete-cidade">
+									<label for="autocomplete-cidade">Cidade</label>
+									<input type="hidden" id="cidadeId" value="{{{ isset($cliente) ? $cliente->cidade_id : 0 }}}" 
+									>
+									@if($errors->has('cidade'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('cidade') }}</span>
+									</div>
+									@endif
+
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="input-field col s3">
+									<input value="{{{ isset($cliente->telefone) ? $cliente->telefone : old('telefone') }}}" id="telefone" name="telefone" type="text" class="validate">
+									<label for="telefone">Telefone</label>
+
+									@if($errors->has('telefone'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('telefone') }}</span>
+									</div>
+									@endif
+
+								</div>
+								<div class="input-field col s3">
+									<input value="{{{ isset($cliente->celular) ? $cliente->celular : old('celular') }}}" id="celular" name="celular" type="text" class="validate">
+									<label for="celular">Celular</label>
+
+									@if($errors->has('celular'))
+									<div class="center-align red lighten-2">
+										<span class="white-text">{{ $errors->first('celular') }}</span>
+									</div>
+									@endif
+
+								</div>
+							</div>
+
+							<input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+						</section>
+
+
+						<br>
+						<div class="row">
+							<a class="btn-large red lighten-2" href="/clientes">Cancelar</a>
+							<input type="submit" value="Salvar" class="btn-large green accent-3">
+						</div>
+					</form>
 				</div>
-				@endsection
+			</div>
+			@endsection

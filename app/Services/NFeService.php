@@ -1108,7 +1108,7 @@ class NFeService{
 		try{
 			$idLote = str_pad(100, 15, '0', STR_PAD_LEFT);
 			$resp = $this->tools->sefazEnviaLote([$signXml], $idLote);
-			sleep(2);
+			sleep(1);
 			$st = new Standardize();
 			$std = $st->toStd($resp);
 
@@ -1119,7 +1119,7 @@ class NFeService{
 			sleep(1);
 			$recibo = $std->infRec->nRec; 
 			$protocolo = $this->tools->sefazConsultaRecibo($recibo);
-			sleep(3);
+			sleep(1);
 			// return $protocolo;
 
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';

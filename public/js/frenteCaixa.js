@@ -933,6 +933,20 @@ function emitirNFCe(vendaId){
 			alert('Erro ao enviar NFC-e')
 			$('#preloader2').css('display', 'none');
 			$('#preloader9').css('display', 'none');
+
+			let js = err.responseJSON;
+			console.log(js)
+			if(js.message){
+				Materialize.toast(js.message, 5000)
+			}else{
+				let err = "";
+				js.map((v) => {
+					err += v + "\n";
+				});
+				alert(err);
+			}
+
+			$('#preloader1').css('display', 'none');
 			
 		}
 	})

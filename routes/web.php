@@ -366,7 +366,7 @@ Route::group(['prefix' => 'enviarXml'],function(){
 });
 
 Route::group(['prefix' => 'nf'],function(){
-	Route::post('/gerarNf', 'NotaFiscalController@gerarNf');
+	Route::post('/gerarNf', 'NotaFiscalController@gerarNf')->middleware('valid');
 	Route::get('/gerarNf/{id}', 'NotaFiscalController@testeGerar');
 	Route::get('/imprimir/{id}', 'NotaFiscalController@imprimir');
 	Route::get('/escpos/{id}', 'NotaFiscalController@escpos');
@@ -444,7 +444,7 @@ Route::group(['prefix' => 'mdfeSefaz'],function(){
 });
 
 Route::group(['prefix' => 'nfce'],function(){
-	Route::post('/gerar', 'NFCeController@gerar');
+	Route::post('/gerar', 'NFCeController@gerar')->middleware('validNFCe');
 	Route::get('/imprimir/{id}', 'NFCeController@imprimir');
 	Route::get('/imprimirNaoFiscal/{id}', 'NFCeController@imprimirNaoFiscal');
 	Route::get('/imprimirNaoFiscalCredito/{id}', 'NFCeController@imprimirNaoFiscalCredito');

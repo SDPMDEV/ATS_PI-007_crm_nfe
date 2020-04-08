@@ -29,7 +29,6 @@ class CTeService{
 	public function gerarCTe($id){
 
 		$config = ConfigNota::first();
-
 		$cteEmit = Cte::where('id', $id)
 		->first();
 

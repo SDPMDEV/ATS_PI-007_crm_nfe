@@ -9,8 +9,7 @@ class VendaCaixa extends Model
 {
 	protected $fillable = [
 		'cliente_id', 'usuario_id', 'valor_total', 'NFcNumero',
-		'natureza_id', 'chave', 'path_xml', 'estado', 'tipo_pagamento', 'forma_pagamento', 'dinheiro_recebido',
-		'troco', 'nome', 'cpf'
+		'natureza_id', 'chave', 'path_xml', 'estado', 'tipo_pagamento', 'forma_pagamento', 'dinheiro_recebido','troco', 'nome', 'cpf'
 	];
 
 	public function itens(){
@@ -26,32 +25,37 @@ class VendaCaixa extends Model
 	}
 
 	public static function tiposPagamento(){
-        return [
-            '01' => 'Dinheiro',
-            '02' => 'Cheque',
-            '03' => 'Cartão de Crédito',
-            '04' => 'Cartão de Débito',
-            '05' => 'Crédito Loja',
-            '10' => 'Vale Alimentação',
-            '11' => 'Vale Refeição',
-            '12' => 'Vale Presente',
-            '13' => 'Vale Combustível',
-            '14' => 'Duplicata Mercantil',
-            '15' => 'Boleto Bancário',
-            '90' => 'Sem pagamento',
-            '99' => 'Outros',
-        ];
-    }
+		return [
+			'01' => 'Dinheiro',
+			'02' => 'Cheque',
+			'03' => 'Cartão de Crédito',
+			'04' => 'Cartão de Débito',
+			'05' => 'Crédito Loja',
+			'10' => 'Vale Alimentação',
+			'11' => 'Vale Refeição',
+			'12' => 'Vale Presente',
+			'13' => 'Vale Combustível',
+			'14' => 'Duplicata Mercantil',
+			'15' => 'Boleto Bancário',
+			'90' => 'Sem pagamento',
+			'99' => 'Outros',
+		];
+	}
 
 	public static function lastNFCe(){
-        $venda = VendaCaixa::
-        where('NFcNumero', '!=', 0)
-        ->orderBy('NFcNumero', 'desc')
-        ->first();
+		$venda = VendaCaixa::
+		where('NFcNumero', '!=', 0)
+		->orderBy('NFcNumero', 'desc')
+		->first();
 
-        if($venda == null) return ConfigNota::first()->ultimo_numero_nfce;
-        else return $venda->NFcNumero;
-    }
+		if($venda == null) {
+			return ConfigNota::first()->ultimo_numero_nfce;
+		}
+		else{ 
+			$configNum = ConfigNota::first()->ultimo_numero_nfce;
+			return $configNum > $venda->NFcNumero ? $configNum : $venda->NFcNumero;
+		}
+	}
 
 	public static function filtroData($dataInicial, $dataFinal){
 		return VendaCaixa::

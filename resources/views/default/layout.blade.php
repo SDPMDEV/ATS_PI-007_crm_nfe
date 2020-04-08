@@ -481,6 +481,8 @@ async defer></script>
 		)
 
 	$(function() {
+
+
 		var Accordion = function(el, multiple) {
 			this.el = el || {};
 			this.multiple = multiple || false;
@@ -527,6 +529,7 @@ async defer></script>
 		localStorage.setItem('theme', next);
 	}
 	document.getElementById('themeButton').onclick = toggleTheme;
+
 
 	
 </script>

@@ -84,6 +84,7 @@ class ConfigNotaController extends Controller
 				'tipo_pagamento_padrao' => $request->tipo_pagamento_padrao, 
 				'nat_op_padrao' => $request->nat_op_padrao ?? 0, 
 				'ambiente' => $request->ambiente, 
+				'cUF' => $uf,
 				'ultimo_numero_nfe' => $request->ultimo_numero_nfe, 
 				'ultimo_numero_nfce' => $request->ultimo_numero_nfce, 
 				'ultimo_numero_cte' => $request->ultimo_numero_cte, 

@@ -53,14 +53,21 @@ class Venda extends Model
         ->first();
 
         if($venda != null || $devolucao != null){
+            $numeroConfig = ConfigNota::first()->ultimo_numero_nfe ?? 0;
             if($devolucao != null){
+                if($numeroConfig > $venda->NfNumero && $numeroConfig > $devolucao->nNf){
+                    return $numeroConfig;
+                }
                 if($venda->NfNumero > $devolucao->nNf) return $venda->NfNumero;
                 else return $devolucao->nNf;
             }else{
-                return $venda->NfNumero;
+                if($numeroConfig > $venda->NfNumero){
+                    return $numeroConfig;
+                }
+                else return $venda->NfNumero;
             }
         }else{
-            return ConfigNota::first()->ultimo_numero_nfe;
+            return $numeroConfig;
         }
 
     }

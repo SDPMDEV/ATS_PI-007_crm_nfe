@@ -44,8 +44,19 @@ function enviar(){
 
 			$('#preloader1').css('display', 'none');
 		}, error: function(e){
-			Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
-			console.log(e)
+
+			let js = e.responseJSON;
+			console.log(js)
+			if(js.message){
+				Materialize.toast(js.message, 5000)
+			}else{
+				let err = "";
+				js.map((v) => {
+					err += v + "\n";
+				});
+				alert(err);
+			}
+
 			$('#preloader1').css('display', 'none');
 		}
 	});
