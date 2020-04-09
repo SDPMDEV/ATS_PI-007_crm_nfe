@@ -127,7 +127,7 @@
 			</a></div>
 			<ul class="submenu"> 
 				<li><a href="/ordemServico"><span class="left material-icons">radio_button_unchecked</span>Ordem de Serviço</a></li>
-				<li><a href="/frenteCaixa"><span class="left material-icons">radio_button_unchecked</span>Frente de Caixa</a></li>
+				<li><a href="/frenteCaixa#autocomplete-cliente"><span class="left material-icons">radio_button_unchecked</span>Frente de Caixa</a></li>
 				<!-- <li><a href="/orcamentos">Orçamento</a></li> -->
 				<li><a href="/vendas/lista"><span class="left material-icons">radio_button_unchecked</span>Vendas</a></li>
 				<li><a href="/vendas/nova"><span class="left material-icons">radio_button_unchecked</span>Nova Venda</a></li>
@@ -461,6 +461,9 @@ async defer></script>
 
 
 <script type="text/javascript">
+
+
+
 	$('#ver-senha').click(() => {
 		let tp = $('#senha-view').is("[type=text]");
 		if(!tp) $('#senha-view').prop('type', 'text');

@@ -2,7 +2,7 @@
 @section('content')
 <style type="text/css">
 .table{
-	height: 325px;
+	height: 300px;
 	overflow-x:auto;
 }
 table tbody{
@@ -47,11 +47,7 @@ table tbody{
 <div class="row">
 	<input type="hidden" id="_token" value="{{ csrf_token() }}">
 
-	<div class="row">
-		<div class="col s12 green accent-4">
-			<h1 id="nome-produto" class="center-align white-text">--</h1>
-		</div>
-	</div>
+	
 	
 	@if(isset($itens))
 	<input type="hidden" id="itens_pedido" value="{{json_encode($itens)}}">
@@ -76,13 +72,13 @@ table tbody{
 				</div>
 			</div>
 		</div>
-		<div class="card">
+		<div class="card" >
 			<div class="row">
 				
 				<div class="row">
 					<div class="input-field col s12">
 						<i class="material-icons prefix">inbox</i>
-						<input autocomplete="off" type="text" name="produto" id="autocomplete-produto" class="autocomplete-produto">
+						<input autofocus="true" autocomplete="off" type="text" name="produto" id="autocomplete-produto" class="autocomplete-produto">
 						<label for="autocomplete-produto green-text">Produto</label>
 
 					</div>
@@ -129,21 +125,25 @@ table tbody{
 							<a href="/frenteCaixa/list" style="width: 100%;" class="btn-large green lighten-1">Lista de Vendas</a>
 						</div>
 					</div>
-					
 				</div>
 			</div>
 		</div>
 		
 	</div>
-	<div class="col s7">
+	<div class="col s7" style="margin-top: -5px;">
 		<div class="card">
 			<div class="row">
+				<div class="row">
+					<div class="col s12 green accent-4">
+						<h5 id="nome-produto" class="center-align white-text">--</h5>
+					</div>
+				</div>
 				<div class="col s12">
-					
+
 					<div class="card table">
 						<div class="row">
 							<div class="col s12">
-								<h5>ITENS</h5>
+								<h6>ITENS</h6>
 							</div>
 							<table class="stiped">
 								<thead>
@@ -162,7 +162,7 @@ table tbody{
 							</table>
 						</div>
 					</div>
-					<div class="row">
+					<div class="">
 						<div class="col s3">
 							<h6>Itens: <strong class="green-text" id="qtd-itens">0</strong></h6>
 						</div>
@@ -178,7 +178,7 @@ table tbody{
 
 					</div>
 
-					<div class="row">
+					<div class="">
 						<div class="col s6 input-field">
 							<input type="text" id="valor_recebido" name="" value="">
 							<label>Valor Recebido</label>
@@ -198,22 +198,6 @@ table tbody{
 						</div>
 					</div>
 
-					<!-- <div class="row">
-						<div class="col s12 input-field">
-							<select id="tipo-pagamento">
-								<option value="--">Selecione o Tipo de pagamento</option>
-								@foreach($tiposPagamento as $key => $t)
-								<option 
-								@if($config->tipo_pagamento_padrao == $key)
-								selected
-								@endif
-								value="{{$key}}">{{$key}} - {{$t}}</option>
-								@endforeach
-							</select>
-							<label>Forma de Pagamento</label>
-
-						</div>
-					</div> -->
 
 					<div class="row">
 						<button id="finalizar-venda" style="width: 100%;" class="btn-large green accent-3 modal-trigger disabled" href="#modal-venda">Finalizar Venda</button>

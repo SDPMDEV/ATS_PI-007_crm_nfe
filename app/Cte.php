@@ -12,7 +12,7 @@ class Cte extends Model
         'valor_transporte', 'valor_receber', 'valor_carga', 
         'produto_predominante', 'data_previsata_entrega', 'observacao',
         'sequencia_cce', 'cte_numero', 'chave', 'path_xml', 'estado', 'retira', 'detalhes_retira',
-        'modal', 'veiculo_id'
+        'modal', 'veiculo_id', 'tpDoc', 'descOutros', 'nDoc', 'vDocFisc'
     ];
 
 

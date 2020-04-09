@@ -96,6 +96,10 @@ function removeEspacoChave(){
 	.replace(' ', '').replace(' ', '').replace(' ', '');
 }
 
+$('.type-ref').on('keyup', () => {
+	habilitaBtnSalarCTe();
+})
+
 $('#chave_nfe').on('keyup', () => {
 	console.log('passou');
 	
@@ -131,6 +135,17 @@ $('#chave_nfe').on('keyup', () => {
 		});
 	}
 });
+
+$('.ref-nfe').click(() => {
+	$('#descOutros').val("")
+	$('#nDoc').val("")
+	$('#vDocFisc').val("")
+})
+
+$('.ref-out').click(() => {
+	$('#chave_nfe').val("")
+
+})
 
 function chaveNfeDuplicada(chave, call){
 
@@ -184,11 +199,32 @@ function getCliente(id, data){
 }
 
 function habilitaBtnSalarCTe(){
-	
-	console.log(xmlValido)
-	console.log(MEDIDAS)
-	if(MEDIDAS.length > 0 && COMPONENTES.length > 0 && DESTINATARIO != null && REMETENTE != null && xmlValido){
+	console.log("testando")
+	let tipoDocumento = false;
+	let inputs = false;
+
+	if(!xmlValido && $('#descOutros').val() != "" && $('#nDoc').val() != "" && 
+		$('#vDocFisc').val() != ""){
+		tipoDocumento = true;
+	}else if(xmlValido && $('#descOutros').val() == "" && $('#nDoc').val() == "" && 
+		$('#vDocFisc').val() == ""){
+		tipoDocumento = true
+	}
+
+	if($('#prod_predominante').val() != "" && $('#valor_carga').val() != ""
+		&& $('#valor_transporte').val() != "" && $('#valor_receber').val() != ""
+		&& $('#autocomplete-cidade-envio').val() != "" && $('#autocomplete-cidade-inicio').val() != "" 
+		&& $('#autocomplete-cidade-final').val() != ""){
+		inputs = true;
+	}
+
+	console.log(tipoDocumento)
+
+	if(MEDIDAS.length > 0 && COMPONENTES.length > 0 && DESTINATARIO != null && 
+		REMETENTE != null &&
+		tipoDocumento && inputs){
 		$('#finalizar').removeClass('disabled')
+
 	}
 }
 
@@ -432,6 +468,11 @@ function salvarCTe(){
 			detalhes_retira: $('#detalhes_retira').val(),
 			modal: $('#modal-transp').val(),
 			veiculo_id: $('#veiculo_id').val(),
+			
+			tpDoc: $('#tpDoc').val(),
+			descOutros: $('#descOutros').val(),
+			nDoc: $('#nDoc').val(),
+			vDocFisc: $('#vDocFisc').val(),
 
 		}
 		console.log(js)

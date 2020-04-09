@@ -48,19 +48,6 @@
 					</div>
 				</div>
 
-				<div class="row">
-					<div class="input-field col s8">
-						<i class="material-icons prefix">code</i>
-						<input autocomplete="off" type="text" id="chave_nfe">
-						<label for="chave_nfe">Chave da NF-e</label>
-
-					</div>
-					<div class="col s4" style="display: none" id="chave-referenciada">
-						<p class="red-text">
-							Chave já referenciada em outra CT-e!
-						</p>
-					</div>
-				</div>
 
 				<div class="row">
 					<div class="input-field col s4">
@@ -133,6 +120,77 @@
 					</div>
 				</div>
 
+				<div class="col s12">
+					<div class="card">
+						<div class="card-header center-align">
+							<h5>Referencia de Documento para CT-e</h5>
+						</div>
+
+						<ul class="tabs">
+							<li class="tab col s6 ref-nfe"><a href="#ref-nfe" class="red-text">NF-e</a></li>
+							<li class="tab col s6 ref-out"><a class="red-text" href="#ref-outros">OUTROS</a></li>
+
+
+						</ul>
+
+						<div id="ref-nfe">
+							<div class="card">
+								<div class="card-content">
+
+									<div class="row">
+										<div class="input-field col s8">
+											<i class="material-icons prefix">code</i>
+											<input autocomplete="off" type="text" id="chave_nfe">
+											<label for="chave_nfe">Chave da NF-e</label>
+
+										</div>
+										<div class="col s4" style="display: none" id="chave-referenciada">
+											<p class="red-text">
+												Chave já referenciada em outra CT-e!
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div id="ref-outros">
+							<div class="card">
+								<div class="card-content">
+									<div class="row">
+										<div class="input-field col s2">
+											<select name="tpDoc" id="tpDoc">
+												<option value="00">Declaração</option>
+												<option value="10">Dutoviário</option>
+												<option value="59">CF-e SAT</option>
+												<option value="65">NFC-e</option>
+												<option value="99">Outros</option>
+											</select>
+											<label>Tipo do Doc.</label>
+										</div>
+
+										<div class="input-field col s4">
+											<input class="type-ref" id="descOutros" type="text" name="descOutros" placeholder="CNPJ">
+											<label>Descrição do Documento</label>
+										</div>
+
+
+										<div class="input-field col s2">
+											<input class="type-ref" id="nDoc" type="text" name="nDoc">
+											<label>Numero do Doc.</label>
+										</div>
+
+										<div class="input-field col s2">
+											<input class="type-ref" id="vDocFisc" type="text" name="vDocFisc">
+											<label>Valor do Doc.</label>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
 			</div>
 		</div>
 
@@ -165,7 +223,7 @@
 							</div>
 							<div class="col s12">
 								<div class="input-field col s4">
-									<input autocomplete="off" type="text" name="prod_predominante" id="prod_predominante" class="prod_predominante">
+									<input autocomplete="off" type="text" name="prod_predominante" id="prod_predominante" class="prod_predominante type-ref">
 									<label for="prod_predominante">Produto predominante</label>
 
 								</div>
@@ -394,11 +452,11 @@
 								</div>
 
 								<div class="input-field col s3">
-									<input autocomplete="off" type="text" id="valor_transporte" class="valor_transporte">
+									<input autocomplete="off" type="text" id="valor_transporte" class="valor_transporte type-ref">
 									<label for="valor_transporte">Valor da Prestação de Serviço</label>
 								</div>
 								<div class="input-field col s3">
-									<input autocomplete="off" type="text" id="valor_receber" class="valor_receber">
+									<input autocomplete="off" type="text" id="valor_receber" class="valor_receber type-ref">
 									<label for="valor_receber">Valor a Receber</label>
 								</div>
 
@@ -408,15 +466,15 @@
 						<div class="row">
 							<div class="col s12">
 								<div class="col s3 input-field">
-									<input autocomplete="off" type="text" name="cidade_envio" id="autocomplete-cidade-envio" value="{{old('cidade_envio')}}" class="autocomplete-cidade-envio">
+									<input autocomplete="off" type="text" name="cidade_envio" id="autocomplete-cidade-envio" value="{{old('cidade_envio')}}" class="autocomplete-cidade-envio type-ref">
 									<label>Municipio de Envio</label>
 								</div>
 								<div class="col s3 input-field">
-									<input autocomplete="off" type="text" name="cidade_inicio" id="autocomplete-cidade-inicio" value="{{old('cidade_inicio')}}" class="autocomplete-cidade-inicio">
+									<input autocomplete="off" type="text" name="cidade_inicio" id="autocomplete-cidade-inicio" value="{{old('cidade_inicio')}}" class="autocomplete-cidade-inicio type-ref">
 									<label>Municipio de Inicio</label>
 								</div>
 								<div class="col s3 input-field">
-									<input autocomplete="off" type="text" name="cidade_fim" id="autocomplete-cidade-final" value="{{old('cidade_fim')}}" class="autocomplete-cidade-final">
+									<input autocomplete="off" type="text" name="cidade_fim" id="autocomplete-cidade-final" value="{{old('cidade_fim')}}" class="autocomplete-cidade-final type-ref">
 									<label>Municipio Final</label>
 								</div>
 							</div>

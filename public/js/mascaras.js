@@ -71,5 +71,9 @@ $('.chave').mask('0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000', {reve
 
 $('.v-lacre').mask('00000000000000000000', {reverse: true});
 
+$('#nDoc').mask('000000', {reverse: true});
+$('#vDocFisc').mask('000000.00', {reverse: true});
+
+
 
 

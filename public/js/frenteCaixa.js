@@ -233,49 +233,54 @@ function getProduto(id, data){
 	});
 }
 
-$('#adicionar-item').click(() => {
-	if(!verificaProdutoIncluso()) {
+function addItem(){
+	verificaProdutoIncluso((call) => {
 
-		let quantidade = $('#quantidade').val();
-		quantidade = quantidade.replace(",", ".");
-		let valor = $('#valor_item').val();
-		console.log(parseFloat(quantidade.replace(",", ".")));
-		if(quantidade.length > 0 && parseFloat(quantidade.replace(",", ".")) > 0 && valor.length > 0 && 
-			parseFloat(valor.replace(",", ".")) > 0
-			&& PRODUTO != null){
-			TOTAL += parseFloat(valor.replace(',','.'))*(quantidade.replace(',','.'));
-		console.log(TOTAL)
-		let item = {
-			cont: (ITENS.length+1),
-			id: PRODUTO.id,
-			nome: PRODUTO.nome,
-			quantidade: $('#quantidade').val(),
-			valor: $('#valor_item').val()
+		if(!call){
+			let quantidade = $('#quantidade').val();
+			quantidade = quantidade.replace(",", ".");
+			let valor = $('#valor_item').val();
+			console.log(parseFloat(quantidade.replace(",", ".")));
+			if(quantidade.length > 0 && parseFloat(quantidade.replace(",", ".")) > 0 && valor.length > 0 && 
+				parseFloat(valor.replace(",", ".")) > 0
+				&& PRODUTO != null){
+				TOTAL += parseFloat(valor.replace(',','.'))*(quantidade.replace(',','.'));
+			console.log(TOTAL)
+			let item = {
+				cont: (ITENS.length+1),
+				id: PRODUTO.id,
+				nome: PRODUTO.nome,
+				quantidade: $('#quantidade').val(),
+				valor: $('#valor_item').val()
+			}
+			$('#body').html("");
+			ITENS.push(item);
+
+			limparCamposFormProd();
+			atualizaTotal();
+
+			let v = $('#valor_recebido').val();
+			v = v.replace(",", ".");
+
+			if(ITENS.length > 0 && ((parseFloat(v) >= TOTAL))){
+				$('#finalizar-venda').removeClass('disabled');
+			}else{
+				$('#finalizar-venda').addClass('disabled');
+			}
+
+			let t = montaTabela();
+			console.log(ITENS);
+			$('#body').html(t);
+			PRODUTO = null;
 		}
-		$('#body').html("");
-		ITENS.push(item);
-		
-		limparCamposFormProd();
-		atualizaTotal();
-		
-		let v = $('#valor_recebido').val();
-		v = v.replace(",", ".");
-
-		if(ITENS.length > 0 && ((parseFloat(v) >= TOTAL))){
-			$('#finalizar-venda').removeClass('disabled');
-		}else{
-			$('#finalizar-venda').addClass('disabled');
-		}
-
-		let t = montaTabela();
-		console.log(ITENS);
-		$('#body').html(t);
-		PRODUTO = null;
-
 	}else{
 		Materialize.toast('Informe corretamente os campos para continuar!', 4000)
 	}
+});
 }
+
+$('#adicionar-item').click(() => {
+	addItem();
 })
 
 function atualizaTotal(){
@@ -331,23 +336,30 @@ function limparCamposFormProd(){
 	$('#valor_item').val('0,00');
 }
 
-function verificaProdutoIncluso(){
-	if(ITENS.length == 0) return false;
-	if($('#prod tbody tr').length == 0) return false;
-	let cod = $('#autocomplete-produto').val().split('-')[0];
-	let duplicidade = false;
+function verificaProdutoIncluso(call){
 
-	ITENS.map((v) => {
-		if(v.codigo == cod){
-			duplicidade = true;
-		}
-	})
+	// if(ITENS.length == 0) call(false);
+	// if($('#prod tbody tr').length == 0) call(false);
+	// let cod = $('#autocomplete-produto').val().split('-')[0];
+	// let duplicidade = false;
+	// 	console.log($('#autocomplete-produto').val())
 
-	let c;
-	if(duplicidade) c = !confirm('Produto já adicionado, deseja incluir novamente?');
-	else c = false;
-	console.log(c)
-	return c;
+	// ITENS.map((v) => {
+	// 	console.log(v)
+	// 	if(v.id == cod){
+	// 		duplicidade = true;
+	// 	}
+	// })
+	// console.log(duplicidade)
+
+	// let c;
+	// if(duplicidade){
+	// 	c = !confirm('Produto já adicionado, deseja incluir novamente?');
+	// 	call(c)
+	// } 
+	// else call(false);
+
+	call(false);
 }
 
 function getProdutoCodBarras(cod, data){
@@ -379,8 +391,8 @@ function getProdutoCodBarras(cod, data){
 						PRODUTO = JSON.parse(res);
 						$('#nome-produto').html(PRODUTO.nome);
 						$('#valor_item').val(valor);
+						console.log(res)
 
-						console.log(res);
 					})
 					.fail((err) => {
 						alert('Produto nao encontrado!')
@@ -711,6 +723,9 @@ $('#autocomplete-produto').on('keyup', () => {
 	if($.isNumeric(val) && val.length > 6){
 		getProdutoCodBarras(val, (data) => {
 			console.log(data);
+			setTimeout(() => {
+				addItem();
+			}, 400)
 		})
 	}
 })

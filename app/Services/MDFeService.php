@@ -38,7 +38,7 @@ class MDFeService{
 		$std->cUF = $emitente->cUF;
 		$std->tpAmb = (int)$emitente->ambiente;
 		$std->tpEmit = '2'; //adicionar no bd
-		$std->tpTransp = '2';
+		$std->tpTransp = '2'; //adicionar no bd
 		$std->mod = '58';
 		$std->serie = '0';
 

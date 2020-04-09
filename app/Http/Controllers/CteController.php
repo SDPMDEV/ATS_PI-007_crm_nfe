@@ -140,7 +140,7 @@ class CTeController extends Controller
 
 
 		$result = Cte::create([
-			'chave_nfe' => $cte['chave_nfe'],
+			'chave_nfe' => $cte['chave_nfe'] ?? '',
 			'remetente_id' => $cte['remetente'],
 			'destinatario_id' => $cte['destinatario'],
 			'usuario_id' => get_id_user(),
@@ -171,7 +171,11 @@ class CTeController extends Controller
 			'retira' => $cte['retira'],
 			'detalhes_retira' => $cte['detalhes_retira'] ?? '',
 			'modal' => $cte['modal'],
-			'veiculo_id' => $cte['veiculo_id']
+			'veiculo_id' => $cte['veiculo_id'],
+			'tpDoc' => $cte['tpDoc'] ?? '',
+			'descOutros' => $cte['descOutros'] ?? '',
+			'nDoc' => $cte['nDoc'] ?? 0,
+			'vDocFisc' => $cte['vDocFisc'] ?? 0
 
 		]);
 

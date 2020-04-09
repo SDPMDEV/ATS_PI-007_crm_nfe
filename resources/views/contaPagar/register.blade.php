@@ -91,7 +91,7 @@
 					<div class="row">
 						
 						<div class="col s3 input-field">
-							<input placeholder="mm/yy" type="text" id="recorrencia" name="recorrencia" class="text">
+							<input placeholder="mm/aa" type="text" id="recorrencia" name="recorrencia" class="text">
 							<label>Salvar até este mês (opcional) </label>
 						</div><br>
 						<p class="red-text"> *Este campo deve ser preenchido se ouver recorrencia para este registro

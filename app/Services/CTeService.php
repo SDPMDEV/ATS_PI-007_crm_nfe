@@ -294,12 +294,26 @@ class CTeService{
 			$cte->taginfQ($infQ);
 		}
 
+		if(strlen($cteEmit->chave_nfe) > 0){
+			$infNFe = new \stdClass();
+			$infNFe->chave = $cteEmit->chave_nfe; 
+			$infNFe->PIN = ''; 
+			$infNFe->dPrev = $cteEmit->data_previsata_entrega;                                       
+			$cte->taginfNFe($infNFe);
+		}else{
 
-		$infNFe = new \stdClass();
-		$infNFe->chave = $cteEmit->chave_nfe; 
-		$infNFe->PIN = ''; 
-		$infNFe->dPrev = $cteEmit->data_previsata_entrega;                                       
-		$cte->taginfNFe($infNFe);
+			$infOut = new \stdClass();
+
+			$infOut->tpDoc = $cteEmit->tpDoc;     
+			$infOut->descOutros = $cteEmit->descOutros;     
+			$infOut->nDoc = $cteEmit->nDoc;     
+			$infOut->dEmi = date('Y-m-d');     
+			$infOut->vDocFisc = $this->format($cteEmit->vDocFisc);     
+			$infOut->dPrev = $cteEmit->data_previsata_entrega;     
+			$cte->taginfOutros($infOut);
+
+		}
+
 
 		$infModal = new \stdClass();
 		$infModal->versaoModal = '3.00';

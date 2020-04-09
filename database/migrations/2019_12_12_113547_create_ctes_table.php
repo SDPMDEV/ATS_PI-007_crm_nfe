@@ -76,6 +76,11 @@ class CreateCtesTable extends Migration
             $table->integer('veiculo_id')->unsigned();
             $table->foreign('veiculo_id')->references('id')
             ->on('veiculos');
+
+            $table->string('tpDoc', 2);
+            $table->string('descOutros', 100);
+            $table->integer('nDoc');
+            $table->decimal('vDocFisc', 10, 2);
             
             $table->timestamps();
         });
