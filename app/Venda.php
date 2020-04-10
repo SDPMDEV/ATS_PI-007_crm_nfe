@@ -67,7 +67,7 @@ class Venda extends Model
                 else return $venda->NfNumero;
             }
         }else{
-            return $numeroConfig;
+            return ConfigNota::first()->ultimo_numero_nfe;
         }
 
     }

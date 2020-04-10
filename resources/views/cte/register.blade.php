@@ -170,7 +170,7 @@
 										</div>
 
 										<div class="input-field col s4">
-											<input class="type-ref" id="descOutros" type="text" name="descOutros" placeholder="CNPJ">
+											<input class="type-ref" id="descOutros" type="text" name="descOutros">
 											<label>Descrição do Documento</label>
 										</div>
 

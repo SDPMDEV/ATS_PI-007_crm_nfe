@@ -72,11 +72,16 @@ public function servicosordem($ordemId){
     $ordem = OrdemServico::
     where('id', $ordemId)
     ->first();
+
+    $temServicos = count(Servico::all()) > 0;
+    $temFuncionarios = count(Funcionario::all()) > 0;
          // echo json_encode($ordem->servicos);
     return view('os/servicos')
     ->with('ordem', $ordem)
     ->with('relatorioJs', true)
     ->with('funcionario', true)
+    ->with('temServicos', $temServicos)
+    ->with('temFuncionarios', $temFuncionarios)
     ->with('title', 'Novo serviço para OS')
     ->with('servicoJs', true);
 }
@@ -226,6 +231,8 @@ public function filtro(Request $request){
             $cliente,
             $estado
         );
+    }else{
+        $orders = OrdemServico::orderBy('id', 'desc')->get();
     }
 
     return view('os/list')

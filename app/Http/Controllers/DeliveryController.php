@@ -381,6 +381,7 @@ public function refreshToken(Request $request){
     $celular = str_replace(" ", "", $celular);
     $celular = str_replace("-", "", $celular);
     $this->sendSms($celular, $cod);
+    $this->sendEmailCod($cliente->email, $cod);
     $cliente->token = $cod;
     if($cliente->save())
         return response()->json($cliente, 200);
@@ -388,6 +389,8 @@ public function refreshToken(Request $request){
         return response()->json(false, 204);
 
 }
+
+
 
 public function logoff(){
     session()->forget('cliente_log');
@@ -424,6 +427,8 @@ public function salvarRegistro(Request $request){
         $celular = str_replace(" ", "", $celular);
         $celular = str_replace("-", "", $celular);
         $this->sendSms($celular, $cod);
+        $this->sendEmailCod($request->email, $cod);
+
         return view('delivery/autenticarCliente')
         ->with('config', $this->config)
         ->with('celular', $celular)
@@ -444,6 +449,16 @@ private function sendSms($phone, $cod){
     $textMessageService = new TextMessageService(getenv('SMS_KEY'));
     $res = $textMessageService->send("Sender", $content, [$phone]);
     return $res;
+}
+
+private function sendEmailCod($email, $cod){
+    Mail::send('mail.codigo_verifica', ['cod' => $cod], function($m) use ($cliente){
+        $nomeEmail = getenv('MAIL_NAME');
+        $nomeEmail = str_replace("_", " ", $nomeEmail);
+        $m->from(getenv('MAIL_USERNAME'), $nomeEmail);
+        $m->subject('Autenticação');
+        $m->to($email);
+    });
 }
 
 public function validaToken(Request $request){

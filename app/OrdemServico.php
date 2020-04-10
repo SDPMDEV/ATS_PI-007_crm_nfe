@@ -19,7 +19,7 @@ class OrdemServico extends Model
     }
 
     public function funcionarios(){
-        return $this->hasMany('App\FuncionarioOS', 'ordem_servico_id', 'id');
+        return $this->hasMany('App\FuncionarioOs', 'ordem_servico_id', 'id');
     }
 
     public function cliente(){

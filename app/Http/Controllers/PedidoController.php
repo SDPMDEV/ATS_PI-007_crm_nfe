@@ -332,7 +332,8 @@ public function imprimirPedido($id){
   where('id', $id)
   ->first();
 
-  $pathLogo = 'imgs/logo.jpg';
+  $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+  $pathLogo = $public.'imgs/logo.jpg';
 
   $cupom = new CupomPedido($pedido, $pathLogo);
   $cupom->monta();

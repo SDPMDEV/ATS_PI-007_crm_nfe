@@ -13,7 +13,7 @@
 
 		<div class="row">
 			<div class="container">
-				<h2 class="text-success">Obrigado Marcos, seu pedido foi realizado com sucesso! <i class="fa fa-check"></i></h2>
+				<h2 class="text-success">Obrigado <strong>{{$pedido->cliente->nome}}</strong>, seu pedido foi realizado com sucesso! <i class="fa fa-check"></i></h2>
 				<h4 class="">Horario: <strong>{{ \Carbon\Carbon::parse($pedido->data_registro)->format('d/m/Y H:i')}}</strong></h4>
 				@if($config)
 				<h4 class="">Tempo médio de entrega: <strong>{{$config->tempo_medio_entrega}}</strong></h4><br>
