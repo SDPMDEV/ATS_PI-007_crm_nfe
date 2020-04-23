@@ -17,13 +17,14 @@
 			<thead>
 				<tr>
 					<th>DATA</th>
-					<th width="180px;">VENDAS</th>
+					<th width="120px;">VENDAS</th>
 					<th>CONTAS A RECEBER</th>
 					<th>CONTA CRÉDITO</th>
 					<th>CONTA A PAGAR</th>
 					<th>RESULTADO</th>
 				</tr>
 			</thead>
+
 			<?php  
 			$totalVenda = 0;
 			$totalContaReceber = 0;

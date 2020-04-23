@@ -20,6 +20,10 @@ class VendaCaixa extends Model
 		return $this->belongsTo(Cliente::class, 'cliente_id');
 	}
 
+	public function natureza(){
+        return $this->belongsTo(NaturezaOperacao::class, 'natureza_id');
+    }
+
 	public function usuario(){
 		return $this->belongsTo(Usuario::class, 'usuario_id');
 	}

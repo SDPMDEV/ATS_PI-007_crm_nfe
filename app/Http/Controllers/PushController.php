@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Push;
 use App\TokenClienteDelivery;
 use App\TokenWeb;
+use App\ProdutoDelivery;
 
 class PushController extends Controller
 {	
@@ -24,13 +25,6 @@ class PushController extends Controller
 	}
 
 	public function index(){
-
-    	// $to = 'dNO6h_mjTck:APA91bFaD2869FjFV6ta02JClhnO-nvhDTL-cpFZRCi7b9BvAmMPTu70OtiZRqCSKlprolzRnM6_V_v1TweU_aQPmtbVJtg8UwwaVBEuWaWbIcUaEn_vFAvrLv5q-6WJv6EB3zl357Kc';
-    	// $data = array(
-    	// 	'message' => 'FCM SENDER'
-    	// );
-    	// $t = $this->send($to, $data);
-    	// echo $t;
 
 		$pushes = Push::
 		orderBy('id', 'desc')
@@ -54,7 +48,9 @@ class PushController extends Controller
 		$res = Push::create([
 			'titulo' => $request->titulo,
 			'texto' => $request->texto,
+			'path_img' => $request->path_img ?? '',
 			'cliente_id' => $request->todos ? NULL : $cli,
+			'referencia_produto' => $request->referencia_produto ?? 0,
 			'status' => false
 		]);
 
@@ -105,6 +101,8 @@ class PushController extends Controller
 
 		$push->titulo = $request->titulo;
 		$push->texto = $request->texto;
+		$push->path_img = $request->path_img;
+		$push->referencia_produto = $request->referencia_produto;
 		if($push->save()){
 			session()->flash('color', 'green');
 			session()->flash('message', 'Push editado!');
@@ -122,62 +120,53 @@ class PushController extends Controller
 		where('id', $id)
 		->first();
 
-		$push->status = true;
-		// $push->save();
-
 		$tkTemp = [];
 		if($push->cliente){ 
 
 			foreach($push->cliente->tokens as $t){
 
-				if(!in_array($t->token, $tkTemp)){
-    			// send
-					$data = array(
-						'message' => $push->texto,
-						'title' => $push->titulo
-					);
+				if(!in_array($t->user_id, $tkTemp)){
 
-					$this->sendGo($t->token, $data);
 
-					array_push($tkTemp, $t->token);
+					array_push($tkTemp, $t->user_id);
 				}
 			}
+
+			$data = [
+				'heading' => [
+					"en" => $push->titulo
+				],
+				'content' => [
+					"en" => $push->texto
+				],
+				'image' => $push->path_img,
+				'referencia_produto' => $push->referencia_produto,
+			];
+
+			$this->sendMessageOneSignal($data, $tkTemp);
 			session()->flash('color', 'blue');
 			session()->flash('message', 'Push enviado!');
 
-
+			$push->status = true;
+			$push->save();
 			return redirect('/push');
 
 		}else{
-			$todos = TokenClienteDelivery::all();
-			$tkTemp = [];
-			foreach($todos as $td){
 
-				if(!in_array($td->token, $tkTemp)){
-					
-					array_push($tkTemp, $td->token);
+			$data = [
+				'heading' => [
+					"en" => $push->titulo
+				],
+				'content' => [
+					"en" => $push->texto
+				],
+				'image' => $push->path_img,
+				'referencia_produto' => $push->referencia_produto,
+			];
 
-				}
-			}
-			$data = array(
-				'message' => $push->texto,
-				'title' => $push->titulo
-			);
 
-			$this->sendGo($tkTemp, $data);
+			$res = $this->sendMessageOneSignal($data);
 
-			$todos = TokenWeb::all();
-
-			foreach($todos as $td){
-				$data = array(
-					'body' => $push->texto,
-					'title' => $push->titulo,
-					'click_action' => getenv('PATH_URL'),
-					'icon' => 'imgs/logo.png'
-				);
-				$this->sendWeb($td->token, $data);
-
-			}
 			
 			$push->status = true;
 			$push->save();
@@ -187,55 +176,60 @@ class PushController extends Controller
 		}
 	}
 
-	private function sendGo($to = '', $data = array()){
-		$apiKey = getenv('PUSH_KEY');
-		$fields = array('registration_ids' => [$to], 'data' => $data);
 
-		$headers = array('Authorization:key = '.$apiKey, 'Content-Type: application/json');
+	public function sendMessageOneSignal($data, $tokens = null){
 
-		$url = 'https://fcm.googleapis.com/fcm/send';
+		$fields = [
+			'app_id' => getenv('ONE_SIGNAL_APP_ID'),
+			'contents' => $data['content'],
+			'headings' => $data['heading'],
+			'large_icon' => getenv('PATH_URL').'/imgs/logo.png',
+			'small_icon' => 'notification_icon'
+		];
+
+		if($data['image'] != '')
+			$fields['big_picture'] = $data['image'];
+
+		if($tokens == null){
+			$fields['included_segments'] = array('All');
+			if($data['image'] != '')
+			$fields['chrome_web_image'] = $data['image'];
+		}else{
+			$fields['include_player_ids'] = $tokens;
+		}
+
+
+		if($data['referencia_produto'] > 0){
+			$fields['web_url'] = getenv('PATH_URL') . "/cardapio/verProduto/" . $data['referencia_produto'];
+			$produtoDelivery = ProdutoDelivery::find($data['referencia_produto']);
+			if($produtoDelivery != null){
+				$produtoDelivery->pizza;
+				$produtoDelivery->galeria;
+				$produtoDelivery->categoria;
+				$produtoDelivery->produto;
+				$fields['data'] = ["referencia" => $produtoDelivery];
+			}
+		}
+
+		$fields = json_encode($fields);
+		// print("\nJSON sent:\n");
+		// print($fields);
 
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_URL, "https://onesignal.com/api/v1/notifications");
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8',
+			'Authorization: Basic '.getenv('ONE_SIGNAL_KEY')));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($ch, CURLOPT_HEADER, FALSE);
+		curl_setopt($ch, CURLOPT_POST, TRUE);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-
-		$result = curl_exec($ch);
-		if($result === FALSE){
-			die('Curl failed: ' . curl_error($ch));
-		}
+		$response = curl_exec($ch);
 		curl_close($ch);
-		return $result;
+		return $response;
 	}
-
-	private function sendWeb($to = '', $data = array()){
-		$apiKey = getenv('PUSH_KEY');
-		$fields = array('to' => $to, 'notification' => $data);
-
-		$headers = array('Authorization:key = '.$apiKey, 'Content-Type: application/json');
-
-		$url = 'https://fcm.googleapis.com/fcm/send';
-
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-
-		$result = curl_exec($ch);
-		if($result === FALSE){
-			die('Curl failed: ' . curl_error($ch));
-		}
-		curl_close($ch);
-		return $result;
-	}
+	
 
 	public function delete($id){
 		$res = Push::

@@ -26,7 +26,7 @@
 					<input value="{{{ isset($cliente) ? $cliente : '' }}}" type="text" class="validate" name="cliente">
 					<label>Cliente</label>
 				</div>
-
+				
 				<div class="col s2 input-field">
 					<input value="{{{ isset($dataInicial) ? $dataInicial : '' }}}" type="text" class="datepicker" name="data_inicial">
 					<label>Data Inicial</label>
@@ -38,9 +38,9 @@
 
 				<div class="col s2 input-field">
 					<select name="status">
-						<option @if(isset($stats) && $status == 'todos') selected @endif value="todos">TODOS</option>
-						<option @if(isset($stats) && $status == 'pago') selected @endif value="pago">PAGO</option>
-						<option @if(isset($stats) && $status == 'pendente') selected @endif value="pendente">PENDENTE</option>
+						<option @if(isset($status) && $status == 'todos') selected @endif value="todos">TODOS</option>
+						<option @if(isset($status) && $status == 'pago') selected @endif value="pago">PAGO</option>
+						<option @if(isset($status) && $status == 'pendente') selected @endif value="pendente">PENDENTE</option>
 					</select>
 					<label>Estado</label>
 				</div>

@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
+
 class ProdutoFavoritoDelivery extends Model
 {
 	protected $fillable = [ 
@@ -16,5 +17,17 @@ class ProdutoFavoritoDelivery extends Model
 
 	public function produto(){
 		return $this->belongsTo(ProdutoDelivery::class, 'produto_id');
+	}
+
+	public function totalCompras(){
+		$cont = 0;
+		$comprasDoCliente = $this->cliente->pedidos;
+		foreach($comprasDoCliente as $c){
+			foreach($c->itens as $i){
+				if($i->produto->id == $this->produto_id)
+					$cont++;
+			}
+		}
+		return $cont;
 	}
 }

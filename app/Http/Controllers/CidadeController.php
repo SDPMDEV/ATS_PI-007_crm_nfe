@@ -21,7 +21,7 @@ class CidadeController extends Controller
     	$cidades = Cidade::all();
         $arr = array();
         foreach($cidades as $c){
-            $arr[$c->id. ' - ' .$c->nome] = null;
+            $arr[$c->id. ' - ' .$c->nome.'('.$c->uf.')'] = null;
                 //array_push($arr, $temp);
         }
         echo json_encode($arr);

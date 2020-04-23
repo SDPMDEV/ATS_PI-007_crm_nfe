@@ -38,6 +38,25 @@
 					@endif
 				</div>
 			</div>
+
+			<div class="row">
+				<div class="col s8">
+					<div class="input-field">
+						<input value="{{{ isset($push) ? $push->path_img : old('path_img') }}}" type="text" id="path_img" name="path_img" data-length="200">
+						<label>Endereço da Imagem (opcional)</label>
+					</div>
+					
+				</div>
+				<div class="col s3">
+					<div class="input-field">
+						<input value="{{{ isset($push) ? $push->referencia_produto : old('referencia_produto') }}}" type="text" id="referencia_produto" name="referencia_produto" data-length="100">
+						<label>Código do Produto (opcional)</label>
+					</div>
+					
+				</div>
+			</div>
+
+			
 			@else
 
 			<div class="row">
@@ -68,7 +87,33 @@
 				</div>
 			</div>
 
+			<div class="row">
+				<div class="col s8">
+					<div class="input-field">
+						<input value="{{{ isset($imagem) ? getenv('PATH_URL').'/imagens_produtos/'.$imagem : old('path_img') }}}" type="text" id="path_img" name="path_img" data-length="100">
+						<label>Endereço da Imagem (opcional)</label>
+					</div>
+					
+				</div>
+				<div class="col s3">
+					<div class="input-field">
+						<input value="{{{ isset($referencia) ? $referencia : old('referencia_produto') }}}" type="text" id="referencia_produto" name="referencia_produto" data-length="100">
+						<label>Código do Produto (opcional)</label>
+					</div>
+					
+				</div>
+			</div>
+
+
 			@endif
+
+			<div id="div-img" style="display: none">
+				<div class="row">
+					<div class="col s12">
+						<img src="" style="width: 300px; height: 200px" id="img-view">
+					</div>
+				</div>
+			</div>
 
 			<div class="row">
 				<div class="col s12">
@@ -96,7 +141,7 @@
 				</div>
 				<div class="input-field col s6" id="cliente">
 					<i class="material-icons prefix">person</i>
-					<input autocomplete="off" type="text" name="cli" id="autocomplete-cliente" class="autocomplete-cliente">
+					<input autocomplete="off" value="{{{ isset($cliente) ? $cliente : old('cli') }}}" type="text" name="cli" id="autocomplete-cliente" class="autocomplete-cliente">
 					<label for="autocomplete-cliente">Cliente do Delivery</label>
 					@if($errors->has('cliente'))
 					<div class="center-align red lighten-2">

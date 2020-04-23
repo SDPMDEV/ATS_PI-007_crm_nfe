@@ -46,7 +46,7 @@ class CreateConfigNotasTable extends Migration
             $table->integer('ultimo_numero_cte');
             $table->integer('ultimo_numero_mdfe');
 
-
+            
             $table->timestamps();
         });
     }

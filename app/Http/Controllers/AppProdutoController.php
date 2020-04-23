@@ -118,7 +118,7 @@ class AppProdutoController extends Controller
 		->where('tamanho_id', $request->tamanho)
 		->first();
 
-		if($p != null) return response()->json($p->valor, 200);
+		if($p != null) return response()->json((float)$p->valor, 200);
 		else return response()->json(0, 200);
 	}
 
@@ -174,13 +174,14 @@ class AppProdutoController extends Controller
 	}
 
 	public function enviaProduto(Request $request){
-		$adicionais = $request->adicionais;
-		$sabores = $request->sabores;
-		$produto = $request->produto;
+		$adicionais = json_decode($request['adicionais']);
+		$sabores = json_decode($request['sabores']);
+		$produto = json_decode($request['produto']);
 		$quantidade = $request->quantidade;
 		$observacao = $request->observacao;
 		$cliente = $request->cliente;
 		$tamanho = $request->tamanho ?? null;
+
 
 		//verifica se cliente nao possui pedido estado novo 'nv'
 
@@ -208,23 +209,22 @@ class AppProdutoController extends Controller
 		if($pedido->valor_total == 0){
 			$item = ItemPedidoDelivery::create([
 				'pedido_id' => $pedido->id,
-				'produto_id' => $produto['id'],
+				'produto_id' => $produto->id,
 				'status' => false,
 				'observacao' => $observacao ?? '',
 				'quantidade' => $quantidade,
-				'tamanho_id' => $tamanho
-
+				'tamanho_id' => $tamanho == 'null' ? NULL : $tamanho
 			]);
 
-			if($tamanho != null){
+			if($tamanho != 'null'){
 				ItemPizzaPedido::create([
 					'item_pedido' => $item->id,
-					'sabor_id' => $produto['id']
+					'sabor_id' => $produto->id
 				]);
 				foreach($sabores as $s){
 					ItemPizzaPedido::create([
 						'item_pedido' => $item->id,
-						'sabor_id' => $s['produto_id']
+						'sabor_id' => $s->produto_id
 					]);
 				}
 			}
@@ -235,7 +235,7 @@ class AppProdutoController extends Controller
 
 					$itemAdd = ItemPedidoComplementoDelivery::create([
 						'item_pedido_id' => $item->id,
-						'complemento_id' => $a['complemento_id'],
+						'complemento_id' => $a->complemento_id,
 						'quantidade' => 1,
 					]);
 				}

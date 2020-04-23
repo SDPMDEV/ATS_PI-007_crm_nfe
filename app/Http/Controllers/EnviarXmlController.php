@@ -49,9 +49,32 @@ class EnviarXmlController extends Controller
 			$zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
 			foreach($xml as $x){
-				$zip->addFile($public.'xml_nfe/'.$x->chave. '.xml', $x->path_xml);
+				if(file_exists($public.'xml_nfe/'.$x->chave. '.xml'))
+					$zip->addFile($public.'xml_nfe/'.$x->chave. '.xml', $x->path_xml);
 			}
 			$zip->close();
+		}
+
+		$xmlCte = Cte::
+		whereBetween('data_registro', [
+			$this->parseDate($request->data_inicial), 
+			$this->parseDate($request->data_final, true)])
+		->where('cte_numero', '!=', 0)
+		->get();
+
+		if(count($xmlCte) > 0){
+
+
+			$zip_file = $public.'xmlcte.zip';
+			$zip = new \ZipArchive();
+			$zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+			foreach($xmlCte as $x){
+				if(file_exists($public.'xml_cte/'.$x->chave. '.xml'))
+					$zip->addFile($public.'xml_cte/'.$x->chave. '.xml', $x->path_xml);
+			}
+			$zip->close();
+
 		}
 
 		$xmlNfce = VendaCaixa::
@@ -68,29 +91,13 @@ class EnviarXmlController extends Controller
 			$zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
 			foreach($xmlNfce as $x){
-				$zip->addFile($public.'xml_nfce/'.$x->chave. '.xml', $x->path_xml);
+				if(file_exists($public.'xml_nfce/'.$x->chave. '.xml'))
+					$zip->addFile($public.'xml_nfce/'.$x->chave. '.xml', $x->path_xml);
 			}
 			$zip->close();
 		}
 
-		$xmlCte = Cte::
-		whereBetween('data_registro', [
-			$this->parseDate($request->data_inicial), 
-			$this->parseDate($request->data_final, true)])
-		->where('cte_numero', '!=', 0)
-		->get();
-
-		if(count($xmlCte) > 0){
-
-			$zip_file = $public.'xmlcte.zip';
-			$zip = new \ZipArchive();
-			$zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-
-			foreach($xmlNfce as $x){
-				$zip->addFile($public.'xml_cte/'.$x->chave. '.xml', $x->path_xml);
-			}
-			$zip->close();
-		}
+		
 
 		$dataInicial = str_replace("/", "-", $request->data_inicial);
 		$dataFinal = str_replace("/", "-", $request->data_final);
@@ -144,11 +151,16 @@ class EnviarXmlController extends Controller
 	}
 
 	public function email($dataInicial, $dataFinal){
-		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+
 		$empresa = ConfigNota::first();
 		Mail::send('mail.xml', ['data_inicial' => $dataInicial, 'data_final' => $dataFinal,
 			'empresa' => $empresa->razao_social, 'cnpj' => $empresa->cnpj, 'tipo' => 'NFe'], function($m){
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 				$escritorio = EscritorioContabil::first();
+				if($escritorio == null){
+					echo "<h1>Configure o email do escritório <a target='_blank' href='/escritorio'>aqui</a></h1>";
+					die();
+				}
 				$nomeEmail = getenv('MAIL_NAME');
 				$nomeEmail = str_replace("_", " ", $nomeEmail);
 				$m->from(getenv('MAIL_USERNAME'), $nomeEmail);
@@ -160,11 +172,16 @@ class EnviarXmlController extends Controller
 	}
 
 	public function emailNfce($dataInicial, $dataFinal){
+
 		$empresa = ConfigNota::first();
 		Mail::send('mail.xml', ['data_inicial' => $dataInicial, 'data_final' => $dataFinal,
 			'empresa' => $empresa->razao_social, 'cnpj' => $empresa->cnpj, 'tipo' => 'NFCe'], function($m){
 				$escritorio = EscritorioContabil::first();
-
+				if($escritorio == null){
+					echo "<h1>Configure o email do escritório <a target='_blank' href='/escritorio'>aqui</a></h1>";
+					die();
+				}
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 				$m->from('financeiro@mslslym.com.br', 'MSL Madeiras');
 				$m->subject('Envio de XML');
 				$m->attach($public.'xmlnfce.zip');
@@ -176,11 +193,16 @@ class EnviarXmlController extends Controller
 	}
 
 	public function emailCte($dataInicial, $dataFinal){
+		
 		$empresa = ConfigNota::first();
 		Mail::send('mail.xml', ['data_inicial' => $dataInicial, 'data_final' => $dataFinal,
 			'empresa' => $empresa->razao_social, 'cnpj' => $empresa->cnpj, 'tipo' => 'NFCe'], function($m){
 				$escritorio = EscritorioContabil::first();
-
+				if($escritorio == null){
+					echo "<h1>Configure o email do escritório <a target='_blank' href='/escritorio'>aqui</a></h1>";
+					die();
+				}
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 				$m->from('financeiro@mslslym.com.br', 'MSL Madeiras');
 				$m->subject('Envio de XML');
 				$m->attach($public.'xmlcte.zip');

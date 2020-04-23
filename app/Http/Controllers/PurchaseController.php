@@ -174,8 +174,8 @@ class PurchaseController extends Controller
         $compra = Compra::
         where('id', $id)
         ->first();
-
-        return response()->download('xml_entrada/'.$compra->xml_path);
+        $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+        return response()->download($public.'xml_entrada/'.$compra->xml_path);
     }
 
 

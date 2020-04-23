@@ -16,7 +16,7 @@ class AuthKey
      */
     public function handle($request, Closure $next)
     {
-        $token = $request->header('APP_KEY');
+        $token = $request->header('auth');
         // return response()->json($request->header(), 401);
         $spl = explode(";", base64_decode($token));
 

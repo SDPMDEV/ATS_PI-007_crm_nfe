@@ -135,10 +135,10 @@
 						<div class="container">
 							<div class="row">
 								<div class="col s6">
-									<a target="_blank" style="width: 100%;" href="/enviarXml/downloadNfce" class="btn">Baixar Arquivos de XML CTe</a>
+									<a target="_blank" style="width: 100%;" href="/enviarXml/downloadCte" class="btn">Baixar Arquivos de XML CTe</a>
 								</div>
 								<div class="col s6">
-									<a style="width: 100%;" target="_blank" href="/enviarXml/emailNfce/{{$dataInicial}}/{{$dataFinal}}" class="btn orange">Enviar Arquivos de XML Cte</a>
+									<a style="width: 100%;" target="_blank" href="/enviarXml/emailCte/{{$dataInicial}}/{{$dataFinal}}" class="btn orange">Enviar Arquivos de XML Cte</a>
 								</div>
 							</div>
 							

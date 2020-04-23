@@ -33,4 +33,5 @@ class ClienteDelivery extends Model
     public function tokensWeb(){
         return $this->hasMany('App\TokenWeb', 'cliente_id', 'id');
     }
+
 }

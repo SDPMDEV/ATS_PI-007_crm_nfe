@@ -4,7 +4,7 @@
 	<div class="row">
 		<div class="col s12">
 
-			<h4>Lista de Tranportadora</h4>
+			<h4>Lista de Transportadoras</h4>
 
 			@if(session()->has('message'))
 			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">

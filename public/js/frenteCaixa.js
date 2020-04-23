@@ -272,6 +272,8 @@ function addItem(){
 			console.log(ITENS);
 			$('#body').html(t);
 			PRODUTO = null;
+			var audio = new Audio('/notificacao/beep.mp3');
+			audio.play();
 		}
 	}else{
 		Materialize.toast('Informe corretamente os campos para continuar!', 4000)
@@ -725,6 +727,7 @@ $('#autocomplete-produto').on('keyup', () => {
 			console.log(data);
 			setTimeout(() => {
 				addItem();
+				
 			}, 400)
 		})
 	}

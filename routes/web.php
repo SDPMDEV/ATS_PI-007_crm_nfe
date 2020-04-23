@@ -40,6 +40,7 @@ Route::group(['prefix' => '/cardapio'], function(){
 	Route::get('/', 'DeliveryController@cardapio');
 	Route::get('/{id}', 'DeliveryController@produtos');
 	Route::get('/acompanhamento/{id}', 'DeliveryController@acompanhamento');
+	Route::get('/verProduto/{id}', 'DeliveryController@verProduto');
 
 });
 
@@ -332,6 +333,7 @@ Route::group(['prefix' => 'vendasEmCredito'],function(){
 	Route::get('/somaVendas/{cliente_id}', 'CreditoVendaController@somaVendas');
 	
 	Route::get('/emitirNFe', 'CreditoVendaController@emitirNFe');
+	Route::get('/filtro', 'CreditoVendaController@filtro');
 	Route::get('/apenasReceber', 'CreditoVendaController@apenasReceber');
 
 });
@@ -360,8 +362,10 @@ Route::group(['prefix' => 'enviarXml'],function(){
 	Route::get('/filtro', 'EnviarXmlController@filtro');
 	Route::get('/download', 'EnviarXmlController@download');
 	Route::get('/downloadNfce', 'EnviarXmlController@downloadNfce');
+	Route::get('/downloadCte', 'EnviarXmlController@downloadCte');
 	Route::get('/email/{d1}/{d2}', 'EnviarXmlController@email');
 	Route::get('/emailNfce/{d1}/{d2}', 'EnviarXmlController@emailNfce');
+	Route::get('/emailCte/{d1}/{d2}', 'EnviarXmlController@emailCte');
 	Route::get('/send', 'EnviarXmlController@send');
 });
 
@@ -381,7 +385,6 @@ Route::group(['prefix' => 'nf'],function(){
 	Route::post('/inutilizar', 'NotaFiscalController@inutilizar');
 	Route::get('/certificado', 'NotaFiscalController@certificado');
 	Route::get('/enviarXml', 'NotaFiscalController@enviarXml');
-
 
 });
 
@@ -483,6 +486,8 @@ Route::group(['prefix' => 'clientesDelivery'],function(){
 	Route::get('/enderecos/{id}', 'ClienteDeliveryController@enderecos');
 	Route::get('/enderecosEdit/{id}', 'ClienteDeliveryController@enderecoEdit');
 	Route::get('/enderecosMap/{id}', 'ClienteDeliveryController@enderecosMap');
+	Route::get('/favoritos/{id}', 'ClienteDeliveryController@favoritos');
+	Route::get('/push/{id}', 'ClienteDeliveryController@push');
 	Route::post('/updateEndereco', 'ClienteDeliveryController@updateEndereco');
 	
 	Route::get('/pesquisa', 'ClienteDeliveryController@pesquisa');

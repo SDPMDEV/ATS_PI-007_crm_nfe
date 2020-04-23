@@ -7,6 +7,7 @@ use App\ClienteDelivery;
 use App\EnderecoDelivery;
 use App\Rules\CelularDup;
 use App\DeliveryConfig;
+use App\ProdutoFavoritoDelivery;
 
 class ClienteDeliveryController extends Controller
 {
@@ -31,6 +32,46 @@ class ClienteDeliveryController extends Controller
 		->with('title', 'Clientes')
 		->with('clientes', $clientes)
 		->with('links', true);
+	}
+
+	public function favoritos($id){
+		$cliente = ClienteDelivery::find($id);
+
+		return view('clienteDelivery/favoritos')
+		->with('title', 'Produtos favoritos')
+		->with('cliente', $cliente)
+		->with('favoritos', $cliente->favoritos);
+	}
+
+	public function push($id){
+		$favorito = ProdutoFavoritoDelivery::find($id);
+
+		return view('push/new')
+		->with('pushJs', true)
+		->with('titulo', $this->randomTitles())
+		->with('mensagem', $this->randomMensagem($favorito->produto))
+		->with('imagem', $favorito->produto->galeria[0]->path)
+		->with('referencia', $favorito->produto->id)
+		->with('cliente', $favorito->cliente->id." - ".$favorito->cliente->nome)
+		->with('title', 'Nova Push');
+	}
+
+	private function randomTitles(){
+		$titles = [
+			'Oferta especial para você 😘',
+			'Não perca isso 😊',
+			'Não deixe de comprar 😍'
+		];
+		return $titles[rand(0,2)];
+	}
+
+	private function randomMensagem($produto){
+		$messages = [
+			'Seu produto favorito '.$produto->produto->nome . ' está te aguardando 😍',
+			$produto->produto->nome . ' seu produto favorito com a gente 😍',
+			'Hoje é dia de comprar seu produto favorito 😋 '.$produto->produto->nome,
+		];
+		return $messages[rand(0,2)];
 	}
 
 	public function edit($id){

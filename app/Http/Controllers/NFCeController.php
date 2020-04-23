@@ -59,6 +59,7 @@ class NFCeController extends Controller
 			$nfce = $nfe_service->gerarNFCe($vendaId);
 
 			$signed = $nfe_service->sign($nfce['xml']);
+			file_put_contents($public.'xml_contigencia/'.$venda->id.'.xml',$signed);
 			$resultado = $nfe_service->transmitirNfce($signed, $nfce['chave']);
 
 			if(substr($resultado, 0, 4) != 'Erro'){

@@ -130,11 +130,13 @@ class ProductController extends Controller
         $produtos = Produto::where('categoria_id', $categoria)->get();
         $categorias = Categoria::all();
 
+        $nomeCategoria = Categoria::find($categoria);
+
 
         return view('produtos/list')
         ->with('produtos', $produtos)
         ->with('categorias', $categorias)
-        ->with('categoria', $produtos[0]->categoria->nome)
+        ->with('categoria', $nomeCategoria->nome)
         ->with('title', 'Filtro Produto');
     }
 
@@ -312,6 +314,7 @@ class ProductController extends Controller
             'NCM' => $produto['ncm'],
             // 'CFOP' => $produto['cfop'],
             'valor_venda' => $valorVenda,
+            'valor_livre' => false,
             'cor' => $produto['cor'],
             'conversao_unitaria' => (int) $produto['conversao_unitaria'],
             'categoria_id' => $produto['categoria_id'],

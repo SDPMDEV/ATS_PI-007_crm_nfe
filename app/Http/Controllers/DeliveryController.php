@@ -60,9 +60,7 @@ class DeliveryController extends Controller
 
     public function produtos($id){
 
-        $categoria = CategoriaProdutoDelivery
-        ::where('id', $id)
-        ->first();
+        $categoria = CategoriaProdutoDelivery::where('id', $id)->first();
 
         if(strpos($categoria->nome, 'izza') !== false){
 
@@ -82,7 +80,21 @@ class DeliveryController extends Controller
 
  }
 
- public function escolherSabores(Request $request){
+ public function verProduto($id){
+
+    $produto = ProdutoDelivery
+    ::where('id', $id)
+    ->first();
+
+    return view('delivery/ver_produto')
+    ->with('produto', $produto)
+    ->with('config', $this->config)
+    ->with('title', 'ADICIONAR'); 
+
+
+}
+
+public function escolherSabores(Request $request){
     $tipo = $request->tipo;
     $tamanho = explode("-", $tipo)[0];
     $sabores = explode("-", $tipo)[1];
@@ -557,7 +569,10 @@ public function enviarSenhaEmail(Request $request){
         $newPass = $this->randomPassword();
         Mail::send('mail.nova_senha', ['senha' => $newPass], function($m) use ($cliente){
 
-            $m->from('financeiro@mslslym.com.br', 'Musa Paes');
+            $nomeEmail = getenv('MAIL_NAME');
+            $nomeEmail = str_replace("_", " ", $nomeEmail);
+            $m->from(getenv('MAIL_USERNAME'), $nomeEmail);
+
             $m->subject('recuperacao de senha');
             $m->to($cliente->email);
         });

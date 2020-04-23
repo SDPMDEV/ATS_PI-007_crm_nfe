@@ -69,9 +69,20 @@ class PedidoDelivery extends Model
 	public function somaCarrinho(){
 		$config = DeliveryConfig::first();
 		$total = 0;
-		foreach($this->itens as $i){
-			if($this->valor_total == 0){
-				$total += $i->quantidade * $i->produto->valor;
+		if($this->valor_total == 0){
+			foreach($this->itens as $i){
+				if(count($i->sabores) > 0){
+					$maiorValor = 0;
+					foreach($i->sabores as $sb){
+						$sb->produto->produto;
+						$v = $sb->maiorValor($sb->sabor_id, $i->tamanho_id);
+						if($v > $maiorValor) $maiorValor = $v;
+					}
+					
+					$total += $i->quantidade * $maiorValor;
+				}else{
+					$total += $i->quantidade * $i->produto->valor;
+				}
 				foreach($i->itensAdicionais as $a){
 					$total += $a->quantidade * $a->adicional->valor;
 				}

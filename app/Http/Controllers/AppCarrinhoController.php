@@ -137,7 +137,7 @@ class AppCarrinhoController extends Controller
 
 
 				$cupom = null;
-				if($request->cupom != null){
+				if($request->cupom != 'null'){
 					$c = CodigoDesconto::
 					where('codigo', $request->cupom)
 					->first();

@@ -17,7 +17,7 @@
 					</form>
 				</div>
 			</nav>
-			<h4>Lista de Clientes de Delivery</h4>
+			<h4>Lista de Produtos Favoritos Cliente <strong>{{$cliente->nome}} {{$cliente->sobre_nome}}</strong></h4>
 
 			@if(session()->has('message'))
 			<div class="row">
@@ -30,48 +30,32 @@
 
 			<div class="row">
 				<div class="col s12">
-					<label>Numero de registros: {{count($clientes)}}</label>					
+					<label>Numero de registros: {{count($favoritos)}}</label>					
 				</div>
 				<table class="col s12">
 					<thead>
 						<tr>
-							<th>Código</th>
-							<th>Nome</th>
-							<th>Sobrenome</th>
-							<th>Celular</th>
-							<th>Email</th>
-							<th>Produtos Favoritos</th>
+							<th>#</th>
+							<th>Produto</th>
+							<th>Total de vezes que Comprou</th>
 							<th>Ações</th>
 						</tr>
 					</thead>
 
 					<tbody>
-						@foreach($clientes as $c)
+						@foreach($favoritos as $f)
 						<tr>
-							<th>{{ $c->id }}</th>
-							<th>{{ $c->nome }}</th>
-							<th>{{ $c->sobre_nome }}</th>
-							<th>{{ $c->celular }}</th>
-							<th>{{ $c->email }}</th>
-							<th>{{ count($c->favoritos) }}</th>
+
+							<th>{{ $f->id }}</th>
+							<th>{{ $f->produto->produto->nome }}</th>
+							<th>{{ $f->totalCompras() }}</th>
 							<th>
-								<a href="/clientesDelivery/edit/{{ $c->id }}">
-									<i class="material-icons left">edit</i>					
+								@if(count($f->cliente->tokens) > 0)
+								<a href="/clientesDelivery/push/{{ $f->id }}">
+									<i class="material-icons left green-text">notifications</i>					
 								</a>
+								@endif
 
-								<a title="pedidos" href="/clientesDelivery/pedidos/{{ $c->id }}">
-									<i class="material-icons left black-text">shopping_cart</i>					
-								</a>
-								
-								<a title="enderecos" href="/clientesDelivery/enderecos/{{ $c->id }}">
-									<i class="material-icons left red-text">map</i>					
-								</a>
-
-
-								<a title="enderecos" href="/clientesDelivery/favoritos/{{ $c->id }}">
-									<i class="material-icons left green-text">favorite</i>					
-								</a>
-								
 							</th>
 						</tr>
 						@endforeach

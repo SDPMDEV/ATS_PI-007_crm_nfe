@@ -81,11 +81,12 @@
 				</div>
 
 				<p>Abertura do carrinho: <strong>{{\Carbon\Carbon::parse($pedido->created_at)->format('d/m/Y H:i:s')}}</strong></p>
-
+				@if(count($pedido->cliente->tokens) > 0)
 				<a class="btn" href="/pedidosDelivery/push/{{$pedido->id}}">
 					<i class="material-icons left">notifications</i>
 					Enviar push App
 				</a>
+				@endif
 			</div>
 		</div>
 	</div>

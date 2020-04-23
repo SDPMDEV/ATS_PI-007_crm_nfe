@@ -343,90 +343,82 @@ class PedidoDeliveryController extends Controller
 	public function sendPush(Request $request){
 		$cliente = ClienteDelivery::where('id', $request->cliente)
 		->first();
-		if(count($cliente->tokensWeb) > 0){
-			$data = array(
-				'body' => $request->texto,
-				'title' => $request->titulo,
-				'click_action' => getenv('PATH_URL'),
-				'icon' => 'imgs/logo.png'
-			);
-			$temp = [];
-			foreach($cliente->tokensWeb as $tk){
-				if(!in_array($tk->token, $temp)) {
-					$res = $this->sendWeb($tk->token, $data);
-					// para nao enviar duplicado
-				}
-
-				array_push($temp, $tk->token);
-			}
-		}
-
+		$tkTemp = [];
 		if(count($cliente->tokens) > 0){
 			foreach($cliente->tokens as $t){
 				if(!in_array($t->token, $tkTemp)){
-    			// send
-					$data = array(
-						'message' => $request->texto,
-						'title' => $request->titulo
-					);
-
-					$this->sendGo($t->token, $data);
 
 					array_push($tkTemp, $t->token);
 				}
 			}
+
+			$data = [
+				'heading' => [
+					"en" => $request->texto
+				],
+				'content' => [
+					"en" => $request->titulo
+				],
+				'image' => '',
+				'referencia_produto' => 0,
+			];
+
+			$this->sendMessageOneSignal($data, $tkTemp);
 		}
 		echo json_encode('sucesso');
 
 	}
 
-	private function sendGo($to = '', $data = array()){
-		$apiKey = getenv('PUSH_KEY');
-		$fields = array('registration_ids' => [$to], 'data' => $data);
+	public function sendMessageOneSignal($data, $tokens = null){
 
-		$headers = array('Authorization:key = '.$apiKey, 'Content-Type: application/json');
+		$fields = [
+			'app_id' => getenv('ONE_SIGNAL_APP_ID'),
+			'contents' => $data['content'],
+			'headings' => $data['heading'],
+			'large_icon' => getenv('PATH_URL').'/imgs/logo.png',
+			'small_icon' => 'notification_icon'
+		];
 
-		$url = 'https://fcm.googleapis.com/fcm/send';
+		if($data['image'] != '')
+			$fields['big_picture'] = $data['image'];
+
+		if($tokens == null){
+			$fields['included_segments'] = array('All');
+			if($data['image'] != '')
+			$fields['chrome_web_image'] = $data['image'];
+		}else{
+			$fields['include_player_ids'] = $tokens;
+		}
+
+
+		if($data['referencia_produto'] > 0){
+			$fields['web_url'] = getenv('PATH_URL') . "/cardapio/verProduto/" . $data['referencia_produto'];
+			$produtoDelivery = ProdutoDelivery::find($data['referencia_produto']);
+			if($produtoDelivery != null){
+				$produtoDelivery->pizza;
+				$produtoDelivery->galeria;
+				$produtoDelivery->categoria;
+				$produtoDelivery->produto;
+				$fields['data'] = ["referencia" => $produtoDelivery];
+			}
+		}
+
+		$fields = json_encode($fields);
+		print("\nJSON sent:\n");
+		print($fields);
 
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_URL, "https://onesignal.com/api/v1/notifications");
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json; charset=utf-8',
+			'Authorization: Basic '.getenv('ONE_SIGNAL_KEY')));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($ch, CURLOPT_HEADER, FALSE);
+		curl_setopt($ch, CURLOPT_POST, TRUE);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-
-		$result = curl_exec($ch);
-		if($result === FALSE){
-			die('Curl failed: ' . curl_error($ch));
-		}
+		$response = curl_exec($ch);
 		curl_close($ch);
-		return $result;
-	}
-
-	private function sendWeb($to = '', $data = array()){
-		$apiKey = getenv('PUSH_KEY');
-		$fields = array('to' => $to, 'notification' => $data);
-
-		$headers = array('Authorization:key = '.$apiKey, 'Content-Type: application/json');
-
-		$url = 'https://fcm.googleapis.com/fcm/send';
-
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-
-		$result = curl_exec($ch);
-		if($result === FALSE){
-			die('Curl failed: ' . curl_error($ch));
-		}
-		curl_close($ch);
-		return $result;
+		return $response;
 	}
 }

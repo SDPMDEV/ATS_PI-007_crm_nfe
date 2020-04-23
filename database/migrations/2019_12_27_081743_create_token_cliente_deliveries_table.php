@@ -16,6 +16,7 @@ class CreateTokenClienteDeliveriesTable extends Migration
         Schema::create('token_cliente_deliveries', function (Blueprint $table) {
             $table->increments('id');
             $table->string('token', 200);
+            $table->string('user_id', 40);
             $table->integer('cliente_id')->nullable()->unsigned();
             $table->foreign('cliente_id')->references('id')
             ->on('cliente_deliveries')->onDelete('cascade');

@@ -13,6 +13,7 @@ use App\Rules\CelularDup;
 use App\Rules\EmailDup;
 use Comtele\Services\TextMessageService;
 use App\CodigoDesconto;
+use Mail;
 
 class AppUserController extends Controller
 {
@@ -131,9 +132,9 @@ class AppUserController extends Controller
 		return $n;
 	}
 
-	public function enderecos($usuarioId){
+	public function enderecos(Request $request){
 		$cliente = ClienteDelivery::
-		where('id', $usuarioId)
+		where('id', $request->cliente)
 		->first();
 		if(count($cliente->enderecos) > 0) return response()->json($cliente->enderecos, 200);
 		else return response()->json(null, 204);
@@ -156,6 +157,7 @@ class AppUserController extends Controller
 	public function saveToken(Request $request){
 		$result = TokenClienteDelivery::create([
 			'cliente_id' => $request->cliente > 0 ? $request->cliente : null, 
+			'user_id' => $request->user_id,
 			'token' => $request->token
 		]);
 
@@ -176,6 +178,7 @@ class AppUserController extends Controller
 
 		if($res){
 			$res->token = $request->token;
+			$res->user_id = $request->user_id;
 			$res->cliente_id = $request->cliente;
 			$result = $res->save();
 			return response()->json($res, 200);
@@ -258,6 +261,63 @@ class AppUserController extends Controller
 		->get();
 
 		return (count($pedido) > 0) ? true : false;
+	}
+
+	public function redefinirSenha(Request $request){
+		$mailPhone = $request->mail_phone;
+		$cliente = null;
+		if(is_numeric($mailPhone)){
+
+			$cliente = ClienteDelivery::where('celular', $this->setaMascaraPhone($mailPhone))
+			->first();
+
+		}else{
+			$cliente = ClienteDelivery::where('email', $mailPhone)
+			->first();
+		}
+
+		if($cliente == null){
+			return response()->json(['erro' => 'Nada encontrado :{'], 400);
+		}else{
+			$newPass = $this->randomPassword();
+			Mail::send('mail.nova_senha', ['senha' => $newPass], function($m) use ($cliente){
+
+				$nomeEmail = getenv('MAIL_NAME');
+				$nomeEmail = str_replace("_", " ", $nomeEmail);
+				$m->from(getenv('MAIL_USERNAME'), $nomeEmail);
+				$m->subject('recuperacao de senha');
+				$m->to($cliente->email);
+			});
+			$celular = str_replace(" ", "", $cliente->celular);
+			$celular = str_replace("-", "", $celular);
+			$res = $this->sendSmsSenha($celular, $newPass);
+			$cliente->senha = md5($newPass);
+        	$cliente->save();
+        	if($res) return response()->json(
+        		['mensagem' => 'Nova senha enviada para email e celular cadastrado!'], 200);
+			else return response()->json("Erro", 403);
+		}
+	}
+
+	private function sendSmsSenha($phone, $senha){
+		$nomeEmpresa = getenv('SMS_NOME_EMPRESA');
+		$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+		$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+		$content = $nomeEmpresa. " Nova senha de acesso ". $senha;
+		$textMessageService = new TextMessageService(getenv('SMS_KEY'));
+		$res = $textMessageService->send("Sender", $content, [$phone]);
+		return $res;
+	}
+
+	private function randomPassword() {
+		$alphabet = 'abcdefghijklmnopqrstuvwxyz1234567890';
+		$pass = array(); 
+		$alphaLength = strlen($alphabet) - 1; 
+		for ($i = 0; $i < 4; $i++) {
+			$n = rand(0, $alphaLength);
+			$pass[] = $alphabet[$n];
+		}
+		return implode($pass); 
 	}
 
 }

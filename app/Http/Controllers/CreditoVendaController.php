@@ -205,6 +205,10 @@ class CreditoVendaController extends Controller
 		->with('vendas', $vendas)
 		->with('somaCareditos', $somaCareditos)
 		->with('creditoVenda', true)
+		->with('dataInicial', $dataInicial)
+		->with('dataFinal', $dataFinal)
+		->with('status', $status)
+		->with('cliente', $cliente)
 		->with('title', 'Vendas em Credito');
 	}
 
