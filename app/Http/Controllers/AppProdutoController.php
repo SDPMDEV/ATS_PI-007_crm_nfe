@@ -247,4 +247,27 @@ class AppProdutoController extends Controller
 		}
 	}
 
+	public function pesquisaProduto(Request $request){
+		$pesquisa = $request->pesquisa;
+		$produtos = ProdutoDelivery::
+		select('produto_deliveries.*')
+		->join('produtos', 'produtos.id', '=', 'produto_deliveries.produto_id')
+		->where('produtos.nome', 'LIKE', "%$pesquisa%")
+		->where('produto_deliveries.status', true)
+		->get();
+		if($request->usuario_id > 0){
+			$produtos = $this->verificaFavoritos($produtos, $request->usuario_id);
+		}else{
+			foreach($produtos as $p){
+				$p['color'] = '#e57373';
+				$p['icon'] = 'star-outline';
+				$p->categoria;
+				if(strpos($p->categoria->nome, 'izza') !== false){
+					foreach($p->pizza as $s) $s->tamanho;
+				}
+			}
+		}
+		return response()->json($produtos, 200);
+	}
+
 }

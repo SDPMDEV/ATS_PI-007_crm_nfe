@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Produto;
 use App\Categoria;
 use App\ConfigNota;
+use App\Tributacao;
 class ProductController extends Controller
 {
     public function __construct(){
@@ -40,6 +41,7 @@ class ProductController extends Controller
         $listaCSTCSOSN = Produto::listaCSTCSOSN();
         $listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
         $listaCST_IPI = Produto::listaCST_IPI();
+        $tributacao = Tributacao::first();
 
         $unidadesDeMedida = Produto::unidadesMedida();
         $config = ConfigNota::first();
@@ -52,6 +54,7 @@ class ProductController extends Controller
         ->with('listaCST_IPI', $listaCST_IPI)
 
         ->with('config', $config)
+        ->with('tributacao', $tributacao)
         ->with('produtoJs', true)
         ->with('title', 'Cadastrar Produto');
     }
@@ -96,12 +99,14 @@ class ProductController extends Controller
         $categorias = Categoria::all();
         $unidadesDeMedida = Produto::unidadesMedida();
         $config = ConfigNota::first();
+        $tributacao = Tributacao::first();
         $resp = $produto
         ->where('id', $id)->first();  
 
         return view('produtos/register')
         ->with('produto', $resp)
         ->with('config', $config)
+        ->with('tributacao', $tributacao)
 
         ->with('listaCSTCSOSN', $listaCSTCSOSN)
         ->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
@@ -178,6 +183,12 @@ class ProductController extends Controller
         $resp->unidade_compra = $request->input('unidade_compra');
         $resp->conversao_unitaria = $request->input('conversao_unitaria') ? $request->input('conversao_unitaria') : $resp->conversao_unitaria;
         $resp->codBarras = $request->input('codBarras') ?? 'SEM GTIN';
+
+        $resp->perc_icms = $request->input('perc_icms');
+        $resp->perc_pis = $request->input('perc_pis');
+        $resp->perc_cofins = $request->input('perc_cofins');
+        $resp->perc_ipi = $request->input('perc_ipi');
+
         
         if($request->input('composto')) $resp->composto = 1;
         if($request->input('valor_livre')) $resp->valor_livre = 1;
@@ -220,6 +231,10 @@ class ProductController extends Controller
             'nome' => 'required|max:50',
             'valor_venda' => 'required',
             'NCM' => 'required',
+            'perc_icms' => 'required',
+            'perc_pis' => 'required',
+            'perc_cofins' => 'required',
+            'perc_ipi' => 'required',
             // 'CFOP' => 'required',
             // 'CEST' => 'required'
         ];
@@ -230,7 +245,12 @@ class ProductController extends Controller
             // 'CFOP.required' => 'O campo CFOP é obrigatório.',
             'CEST.required' => 'O campo CEST é obrigatório.',
             'valor_venda.required' => 'O campo valor é obrigatório.',
-            'nome.max' => '50 caracteres maximos permitidos.'
+            'nome.max' => '50 caracteres maximos permitidos.',
+            'perc_icms.required' => 'O campo %ICMS é obrigatório.',
+            'perc_pis.required' => 'O campo %PIS é obrigatório.',
+            'perc_cofins.required' => 'O campo %COFINS é obrigatório.',
+            'perc_ipi.required' => 'O campo %IPI é obrigatório.',
+
         ];
         $this->validate($request, $rules, $messages);
     }

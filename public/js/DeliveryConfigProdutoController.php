@@ -329,7 +329,6 @@ public function push($id){
     ->with('titulo', $this->randomTitles())
     ->with('mensagem', $this->randomMensagem($produto))
     ->with('imagem', $produto->galeria[0]->path)
-    ->with('referencia', $produto->id)
     ->with('title', 'Nova Push');
 }
 

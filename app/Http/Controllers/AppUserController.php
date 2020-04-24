@@ -147,8 +147,8 @@ class AppUserController extends Controller
 			'numero' => $request->numero,
 			'bairro' => $request->bairro, 
 			'referencia' => $request->referencia,
-			'latitude' => $request->latitude ?? '',
-			'longitude' => $request->longitude ?? ''
+			'latitude' => $request->latitude ? substr($request->latitude, 0, 10) : '',
+			'longitude' => $request->longitude ? substr($request->longitude, 0, 10) : ''
 		]);
 		if($result) return response()->json($result, 200);
 		else return response()->json(null, 204);

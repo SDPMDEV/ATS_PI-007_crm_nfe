@@ -22,6 +22,9 @@ Route::group(['prefix' => 'appProduto'],function(){
 	Route::get('/categorias/{usuario_id}', 'AppProdutoController@categorias');
 	Route::get('/destaques/{usuario_id}', 'AppProdutoController@destaques');
 	Route::get('/adicionais/{produto_id}', 'AppProdutoController@adicionais');
+
+	Route::get('/pesquisaProduto', 'AppProdutoController@pesquisaProduto');
+	
 	Route::post('/favorito', 'AppProdutoController@favorito')->middleware('token');
 	Route::post('/enviaProduto', 'AppProdutoController@enviaProduto')->middleware('token');
 

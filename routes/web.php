@@ -795,4 +795,10 @@ Route::group(['prefix' => 'devolucao'],function(){
 	Route::get('/downloadXmlDevolucao/{id}', 'DevolucaoController@downloadXmlDevolucao');
 });
 
+Route::group(['prefix' => 'controleCozinha'],function(){
+	Route::get('/', 'CozinhaController@index');
+	Route::get('/buscar', 'CozinhaController@buscar');
+	Route::get('/concluido', 'CozinhaController@concluido');
+});
+
 

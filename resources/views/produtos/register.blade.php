@@ -273,7 +273,7 @@
 
 					<div class="row">
 						<div class="input-field col s3">
-							<input value="{{{ isset($produto->codBarras) ? $produto->codBarras : old('codBarras') }}}" id="ncm" name="codBarras" type="text" class="validate">
+							<input value="{{{ isset($produto->codBarras) ? $produto->codBarras : old('codBarras') }}}" id="codBarras" name="codBarras" type="text" class="validate">
 							<label for="codBarras">Código de Barras</label>
 
 							@if($errors->has('codBarras'))
@@ -284,18 +284,54 @@
 
 						</div> 
 					</div>
-					<!-- <div class="row">
-						<div class="input-field col s3">
-							<input value="{{{ isset($produto->conversao_unitaria) ? $produto->conversao_unitaria : old('conversao_unitaria') }}}" id="ncm" name="conversao_unitaria" type="text" class="validate">
-							<label for="conversao_unitaria">Conversão Unitária</label>
 
-							@if($errors->has('conversao_unitaria'))
+					<div class="row">
+						<div class="input-field col s2">
+							<input value="{{{ isset($produto->perc_icms) ? $produto->perc_icms : $tributacao->icms }}}" id="perc_icms" name="perc_icms" type="text" class="validate">
+							<label for="perc_icms">%ICMS</label>
+
+							@if($errors->has('perc_icms'))
 							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('conversao_unitaria') }}</span>
+								<span class="white-text">{{ $errors->first('perc_icms') }}</span>
 							</div>
 							@endif
-						</div>
-					</div> -->
+
+						</div> 
+						<div class="input-field col s2">
+							<input value="{{{ isset($produto->perc_pis) ? $produto->perc_pis : $tributacao->pis }}}" id="perc_pis" name="perc_pis" type="text" class="validate">
+							<label for="perc_pis">%PIS</label>
+
+							@if($errors->has('perc_pis'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('perc_pis') }}</span>
+							</div>
+							@endif
+
+						</div> 
+						<div class="input-field col s2">
+							<input value="{{{ isset($produto->perc_cofins) ? $produto->perc_cofins : $tributacao->icms }}}" id="perc_cofins" name="perc_cofins" type="text" class="validate">
+							<label for="perc_cofins">%COFINS</label>
+
+							@if($errors->has('perc_cofins'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('perc_cofins') }}</span>
+							</div>
+							@endif
+
+						</div> 
+						<div class="input-field col s2">
+							<input value="{{{ isset($produto->perc_ipi) ? $produto->perc_ipi : $tributacao->icms }}}" id="perc_ipi" name="perc_ipi" type="text" class="validate">
+							<label for="perc_ipi">%IPI</label>
+
+							@if($errors->has('perc_ipi'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('perc_ipi') }}</span>
+							</div>
+							@endif
+
+						</div> 
+					</div>
+					
 
 					<div class="row">
 						<div class="col s2">

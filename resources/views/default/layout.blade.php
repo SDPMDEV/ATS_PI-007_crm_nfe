@@ -144,6 +144,8 @@
 			</a></div>
 			<ul class="submenu">
 				<li><a href="/pedidos"><span class="left material-icons">radio_button_unchecked</span>Listar</a></li>
+				<li><a href="/controleCozinha"><span class="left material-icons">radio_button_unchecked</span>Controle de Pedidos</a></li>
+
 			</ul> 
 		</li>
 
@@ -337,6 +339,10 @@
 
 @if(isset($cteEnvioJs))
 <script type="text/javascript" src="/js/cte_envio.js"></script>
+@endif
+
+@if(isset($cozinhaJs))
+<script type="text/javascript" src="/js/cozinha.js"></script>
 @endif
 
 @if(isset($codigoJs))

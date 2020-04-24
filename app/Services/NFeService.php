@@ -230,7 +230,7 @@ class NFeService{
 				$stdICMS->CST = $i->produto->CST_CSOSN;
 				$stdICMS->modBC = 0;
 				$stdICMS->vBC = $this->format($i->valor * $i->quantidade);
-				$stdICMS->pICMS = $this->format($tributacao->icms);
+				$stdICMS->pICMS = $this->format($i->produto->perc_icms);
 				$stdICMS->vICMS = $this->format(($i->valor * $i->quantidade) 
 					* ($stdICMS->pICMS/100));
 
@@ -247,8 +247,8 @@ class NFeService{
 				$stdICMS->item = $itemCont; 
 				$stdICMS->orig = 0;
 				$stdICMS->CSOSN = $i->produto->CST_CSOSN;
-				$stdICMS->pCredSN = $this->format($tributacao->icms);
-				$stdICMS->vCredICMSSN = $this->format($tributacao->icms);
+				$stdICMS->pCredSN = $this->format($i->produto->perc_icms);
+				$stdICMS->vCredICMSSN = $this->format($i->produto->perc_icms);
 				$ICMS = $nfe->tagICMSSN($stdICMS);
 
 				$somaICMS = 0;
@@ -258,18 +258,20 @@ class NFeService{
 			$stdPIS = new \stdClass();//PIS
 			$stdPIS->item = $itemCont; 
 			$stdPIS->CST = $i->produto->CST_PIS;
-			$stdPIS->vBC = $this->format($tributacao->pis) > 0 ? $stdProd->vProd : 0.00;
-			$stdPIS->pPIS = $this->format($tributacao->pis);
-			$stdPIS->vPIS = $this->format(($stdProd->vProd * $i->quantidade) * ($tributacao->pis/100));
+			$stdPIS->vBC = $this->format($i->produto->perc_pis) > 0 ? $stdProd->vProd : 0.00;
+			$stdPIS->pPIS = $this->format($i->produto->perc_pis);
+			$stdPIS->vPIS = $this->format(($stdProd->vProd * $i->quantidade) * 
+				($i->produto->perc_pis/100));
 			$PIS = $nfe->tagPIS($stdPIS);
 
 
 			$stdCOFINS = new \stdClass();//COFINS
 			$stdCOFINS->item = $itemCont; 
 			$stdCOFINS->CST = $i->produto->CST_COFINS;
-			$stdCOFINS->vBC = $this->format($tributacao->cofins) > 0 ? $stdProd->vProd : 0.00;
-			$stdCOFINS->pCOFINS = $this->format($tributacao->cofins);
-			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $i->quantidade) * ($tributacao->cofins/100));
+			$stdCOFINS->vBC = $this->format($i->produto->perc_cofins) > 0 ? $stdProd->vProd : 0.00;
+			$stdCOFINS->pCOFINS = $this->format($i->produto->perc_cofins);
+			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $i->quantidade) * 
+				($i->produto->perc_cofins/100));
 			$COFINS = $nfe->tagCOFINS($stdCOFINS);
 
 			
@@ -282,9 +284,9 @@ class NFeService{
 			$std->qSelo = null;
 			$std->cEnq = '999'; //999 – para tributação normal IPI
 			$std->CST = $i->produto->CST_IPI;
-			$std->vBC = $this->format($tributacao->cofins) > 0 ? $stdProd->vProd : 0.00;
-			$std->pIPI = $this->format($tributacao->ipi);
-			$std->vIPI = $stdProd->vProd * $this->format(($tributacao->ipi/100));
+			$std->vBC = $this->format($i->produto->perc_ipi) > 0 ? $stdProd->vProd : 0.00;
+			$std->pIPI = $this->format($i->produto->perc_ipi);
+			$std->vIPI = $stdProd->vProd * $this->format(($i->produto->perc_ipi/100));
 			$std->qUnid = null;
 			$std->vUnid = null;
 
@@ -850,7 +852,7 @@ class NFeService{
 				$stdICMS->orig = 0;
 				$stdICMS->CST = $i->produto->CST_CSOSN;
 				$stdICMS->modBC = 0;
-				$stdICMS->vBC = $this->format($tributacao->icms);
+				$stdICMS->vBC = $this->format($i->produto->perc_icms);
 				$stdICMS->pICMS = $this->format($i->valor * $i->quantidade);
 				$stdICMS->vICMS = $this->format(($i->valor * $i->quantidade) 	* ($stdICMS->pICMS/100));
 
@@ -867,8 +869,8 @@ class NFeService{
 				$stdICMS->item = $itemCont; 
 				$stdICMS->orig = 0;
 				$stdICMS->CSOSN = $i->produto->CST_CSOSN;
-				$stdICMS->pCredSN = $this->format($tributacao->icms);
-				$stdICMS->vCredICMSSN = $this->format($tributacao->icms);
+				$stdICMS->pCredSN = $this->format($i->produto->perc_icms);
+				$stdICMS->vCredICMSSN = $this->format($i->produto->perc_icms);
 				$ICMS = $nfe->tagICMSSN($stdICMS);
 
 				$somaICMS = 0;
@@ -879,18 +881,19 @@ class NFeService{
 			$stdPIS = new \stdClass();
 			$stdPIS->item = $itemCont; 
 			$stdPIS->CST = $i->produto->CST_PIS;
-			$stdPIS->vBC = $this->format($tributacao->pis) > 0 ? $stdProd->vProd : 0.00;
-			$stdPIS->pPIS = $this->format($tributacao->pis);
-			$stdPIS->vPIS = $this->format(($stdProd->vProd * $i->quantidade) * ($tributacao->pis/100));
+			$stdPIS->vBC = $this->format($i->produto->perc_pis) > 0 ? $stdProd->vProd : 0.00;
+			$stdPIS->pPIS = $this->format($i->produto->perc_pis);
+			$stdPIS->vPIS = $this->format(($stdProd->vProd * $i->quantidade) * ($i->produto->perc_pis/100));
 			$PIS = $nfe->tagPIS($stdPIS);
 
 		//COFINS
 			$stdCOFINS = new \stdClass();
 			$stdCOFINS->item = $itemCont; 
 			$stdCOFINS->CST = $i->produto->CST_COFINS;
-			$stdCOFINS->vBC = $this->format($tributacao->cofins) > 0 ? $stdProd->vProd : 0.00;
-			$stdCOFINS->pCOFINS = $this->format($tributacao->cofins);
-			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $i->quantidade) * ($tributacao->cofins/100));
+			$stdCOFINS->vBC = $this->format($i->produto->perc_cofins) > 0 ? $stdProd->vProd : 0.00;
+			$stdCOFINS->pCOFINS = $this->format($i->produto->perc_cofins);
+			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $i->quantidade) * 
+				($i->produto->perc_cofins/100));
 			$COFINS = $nfe->tagCOFINS($stdCOFINS);
 		}
 		
