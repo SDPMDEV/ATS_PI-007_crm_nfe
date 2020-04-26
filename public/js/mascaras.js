@@ -14,7 +14,7 @@ $('#desconto').mask('000000000000000,00', {reverse: true});
 $('#valor_recebido').mask('000000000000000,00', {reverse: true});
 $('#valor_componente').mask('000000000000000,00', {reverse: true});
 $('#valor_venda').mask('000000000,00', {reverse: true});
-$('#valor_item').mask('000000,00', {reverse: true});
+$('#valor_item').mask('000000.00', {reverse: true});
 $('#valor_transporte').mask('000000,00', {reverse: true});
 $('#valor_receber').mask('000000,00', {reverse: true});
 $('#ncm').mask('0000.00.00', {reverse: true});
@@ -28,6 +28,9 @@ $('#nInicio').mask('0000000', {reverse: true});
 $('#nFinal').mask('0000000', {reverse: true});
 $('#cep').mask('00000-000', {reverse: true});
 $('#numero_sms').mask('00 00000-0000', {reverse: true});
+
+$('.date-input').mask('00/00/0000', {reverse: true});
+
 
 $('#quantidade').mask('0000000000,000', {reverse: true});
 $('#quantidade_carga').mask('0000000000,0000', {reverse: true});

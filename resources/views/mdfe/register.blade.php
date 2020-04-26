@@ -62,6 +62,33 @@
 				</div>
 
 				<div class="row">
+					<div class="col s3">
+						<label>Tipo do Emitente</label>
+
+						<select id="tpEmit">
+							<option value="1">1 - Prestador de serviço de transporte</option>
+							<option value="2">2 - Transportador de Carga Própria</option>
+						</select>
+					</div>
+
+					<div class="col s2">
+						<label>Tipo do Transportador</label>
+
+						<select id="tpTransp">
+							<option value="1">1 - ETC</option>
+							<option value="2">2 - TAC</option>
+							<option value="3">3 - CTC</option>
+						</select>
+					</div>
+
+					<div class="col s2">
+						<label>Lacre Rodoviário</label>
+						<input type="text" class="validate" value="" id="lacre_rodo">
+
+					</div>
+				</div>
+
+				<div class="row">
 					<div class="col s3 input-field">
 						<input type="text" class="validate" value="" id="cnpj_contratante">
 						<label>CNPJ do Contratante</label>
@@ -164,7 +191,7 @@
 
 									<div class="card-content">
 										<div class="col s12">
-											<h5>Seguradora</h5>
+											<h5>Seguradora (opcional)</h5>
 
 											<div class="input-field col s5">
 												<input type="text" id="seguradora_nome">
@@ -201,7 +228,7 @@
 										<div class="col s12">
 											<h5>Municipio(s) de Carregamento</h5>
 											<div class="col s10 input-field">
-												<input autocomplete="off" type="text" name="cidade_tomador" id="autocomplete-cidade-carregamento" value=" " class="autocomplete-cidade-carregamento">
+												<input autocomplete="off" type="text" name="autocomplete-cidade-carregamento" id="autocomplete-cidade-carregamento" value=" " class="autocomplete-cidade-carregamento">
 												<label>Cidade</label>
 											</div>
 											<div class="col s2">
@@ -298,7 +325,7 @@
 
 									<div class="card-content">
 										<div class="col s12">
-											<h5>CIOT</h5>
+											<h5>CIOT (opcional)</h5>
 											<div class="col s3 input-field">
 												<input type="text" id="ciot_codigo">
 												<label>Código CIOT</label>
@@ -345,7 +372,7 @@
 
 									<div class="card-content">
 										<div class="col s12">
-											<h5>Vale Pedagio</h5>
+											<h5>Vale Pedagio (opcional)</h5>
 											<div class="col s2 input-field">
 												<input type="text" id="vale_cnpj_fornecedor">
 												<label>CNPJ Fornecedor</label>
@@ -402,6 +429,30 @@
 							</div>
 						</div>
 
+						<div class="col s12">
+							<div class="card">
+								<div class="row">
+
+									<div class="card-content">
+										<div class="col s12">
+											<h5>Condutor</h5>
+											<div class="col s4 input-field">
+												<input type="text" id="condutor_nome">
+												<label>Nome</label>
+											</div>
+											<div class="col s2 input-field">
+												<input type="text" id="condutor_cpf">
+												<label>CPF</label>
+
+											</div>
+
+											
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
 					</div>
 				</div>
 
@@ -433,7 +484,7 @@
 												</div>
 
 												<div class="input-field col s3">
-													<input type="text" id="id_unid_transp">
+													<input class="upper-input" type="text" id="id_unid_transp">
 													<label>ID da Unidade de Transporte (Placa)</label>
 												</div>
 
@@ -565,6 +616,26 @@
 																		</tr>
 																	</tbody>
 																</table>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="col s12">
+												<div class="card">
+													<div class="row">
+
+														<div class="card-content">
+															<h5>Municipio de Descarregamento</h5>
+
+															
+															<div class="input-field col s6">
+																<input autocomplete="off" type="text" name="autocomplete-cidade-descarregamento" 
+																id="autocomplete-cidade-descarregamento" value="{{old('cidade')}}" class="autocomplete-cidade-descarregamento">
+																<label for="autocomplete-cidade-descarregamento">Cidade</label>
+																<input type="hidden" id="cidadeId" value="{{{ isset($cliente) ? $cliente->cidade_id : 0 }}}" 
+																>
 															</div>
 														</div>
 													</div>

@@ -94,7 +94,7 @@ table tbody{
 
 					<div class="input-field col s6">
 						<i class="material-icons prefix">attach_money</i>
-						<input type="text" id="valor_item" value="0,00">
+						<input type="text" id="valor_item" value="0.00">
 						<label for="valor_item">Valor do Item</label>
 
 					</div>

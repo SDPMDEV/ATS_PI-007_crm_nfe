@@ -103,6 +103,7 @@
 				<li><a href="/contasPagar"><span class="left material-icons">radio_button_unchecked</span>Contas a Pagar</a></li>
 				<li><a href="/contasReceber"><span class="left material-icons">radio_button_unchecked</span>Contas a Receber</a></li>
 				<li><a href="/fluxoCaixa"><span class="left material-icons">radio_button_unchecked</span>Fluxo de Caixa</a></li>
+				<li><a href="/graficos"><span class="left material-icons">radio_button_unchecked</span>Gráfico</a></li>
 			</ul> 
 		</li>
 
@@ -375,6 +376,13 @@
 async defer></script>
 <script type="text/javascript" src="/js/map.js"></script>
 @endif
+
+@if(isset($graficoHomeJs)){
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
+	
+	<script type="text/javascript" src="/js/grafico_home.js"></script>
+@endif
+
 
 
 <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>

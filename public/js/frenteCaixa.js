@@ -272,8 +272,8 @@ function addItem(){
 			console.log(ITENS);
 			$('#body').html(t);
 			PRODUTO = null;
-			var audio = new Audio('/notificacao/beep.mp3');
-			audio.play();
+			// var audio = new Audio('/notificacao/beep.mp3');
+			// audio.play();
 		}
 	}else{
 		Materialize.toast('Informe corretamente os campos para continuar!', 4000)

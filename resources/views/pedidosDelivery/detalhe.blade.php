@@ -8,7 +8,7 @@
 		</div>
 		
 		<div class="row">
-			<div class="col s6">
+			<div class="col s12">
 				<h4>Cliente: <strong class="cyan-text">{{$pedido->cliente->nome}}</strong></h4>
 				<h4>Horario: <strong class="cyan-text">{{ \Carbon\Carbon::parse($pedido->data_registro)->format('H:i:s')}}</strong></h4>
 				<h4>Estado Atual: @if($pedido->estado == 'nv')

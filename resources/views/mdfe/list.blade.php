@@ -94,7 +94,11 @@
 						<td>
 							@if($m->estado == 'NOVO')
 							<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/mdfe/delete/{{ $m->id }}">
-								<i class="material-icons left red-text">delete</i>					
+								<i class="material-icons left red-text">delete</i>	
+							</a>
+
+							<a onclick = "if (! confirm('Deseja editar este registro?')) { return false; }" href="/mdfe/edit/{{ $m->id }}">
+								<i class="material-icons left blue-text">edit</i>	
 							</a>
 							@endif
 						</td>

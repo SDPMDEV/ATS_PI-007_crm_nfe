@@ -354,10 +354,10 @@ class PedidoDeliveryController extends Controller
 
 			$data = [
 				'heading' => [
-					"en" => $request->texto
+					"en" => $request->titulo
 				],
 				'content' => [
-					"en" => $request->titulo
+					"en" => $request->texto
 				],
 				'image' => '',
 				'referencia_produto' => 0,

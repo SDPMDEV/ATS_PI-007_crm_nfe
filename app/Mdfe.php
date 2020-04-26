@@ -11,7 +11,8 @@ class Mdfe extends Model
 		'uf_inicio', 'uf_fim', 'data_inicio_viagem', 'carga_posterior', 'veiculo_tracao_id', 
 		'veiculo_reboque_id', 'estado', 'seguradora_nome', 'seguradora_cnpj', 'numero_apolice',
 		'numero_averbacao', 'valor_carga', 'quantidade_carga', 'info_complementar', 
-		'info_adicional_fisco', 'cnpj_contratante', 'mdfe_numero', 'condutor_nome', 'condutor_cpf'
+		'info_adicional_fisco', 'cnpj_contratante', 'mdfe_numero', 'condutor_nome', 'condutor_cpf',
+		'tp_emit', 'tp_transp', 'lac_rodo'
 	];
 
 	public function veiculoTracao(){

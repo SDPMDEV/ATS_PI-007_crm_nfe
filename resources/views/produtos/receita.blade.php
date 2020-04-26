@@ -101,6 +101,12 @@
 									<label>Tempo de preparo</label>
 								</div>
 							</div>
+							<div class="row">
+								<div class="col s8 input-field">
+									<input value="{{$produto->receita->pedacos}}" type="text" name="pedacos">
+									<label>Pedaços</label>
+								</div>
+							</div>
 							<input type="hidden" name="_token" value="{{ csrf_token() }}">
 
 							<div class="row">

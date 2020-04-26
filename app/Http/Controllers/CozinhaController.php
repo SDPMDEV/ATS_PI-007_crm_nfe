@@ -8,6 +8,17 @@ use App\ItemPedido;
 
 class CozinhaController extends Controller
 {
+
+    public function __construct(){
+        $this->middleware(function ($request, $next) {
+            $value = session('user_logged');
+            if(!$value){
+                return redirect("/login");
+            }
+            return $next($request);
+        });
+    }
+    
     public function index(){
     	return view('controleCozinha/index')
     	->with('cozinhaJs', true)

@@ -190,6 +190,7 @@ class AppUserController extends Controller
 	public function appComToken(Request $request){
 		$res = TokenClienteDelivery::
 		where('token', $request->token)
+		->where('user_id', $request->user_id)
 		->first();
 		if($res) return response()->json($res, 200);
 		else return response()->json(false, 204);

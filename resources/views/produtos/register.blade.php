@@ -274,7 +274,7 @@
 					<div class="row">
 						<div class="input-field col s3">
 							<input value="{{{ isset($produto->codBarras) ? $produto->codBarras : old('codBarras') }}}" id="codBarras" name="codBarras" type="text" class="validate">
-							<label for="codBarras">Código de Barras</label>
+							<label for="codBarras">Código de Barras EAN13</label>
 
 							@if($errors->has('codBarras'))
 							<div class="center-align red lighten-2">

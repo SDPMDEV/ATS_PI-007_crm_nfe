@@ -78,7 +78,7 @@
 								<input 
 								@if(isset($conta) && $conta->status) checked 
 								@endif type="checkbox" id="pago" name="status" />
-								<label for="pago">Conta Paga</label>
+								<label for="pago">Conta Recebida</label>
 							</p>
 						</div>
 						@endif

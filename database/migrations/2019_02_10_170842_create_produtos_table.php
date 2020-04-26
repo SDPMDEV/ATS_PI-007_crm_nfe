@@ -36,6 +36,12 @@ class CreateProdutosTable extends Migration
             $table->boolean('composto')->default(false);
             $table->boolean('valor_livre');
 
+            $table->decimal('perc_icms', 10,2)->default(0);
+            $table->decimal('perc_pis', 10,2)->default(0);
+            $table->decimal('perc_cofins', 10,2)->default(0);
+            $table->decimal('perc_ipi', 10,2)->default(0);
+
+
             $table->timestamps();
         });
     }

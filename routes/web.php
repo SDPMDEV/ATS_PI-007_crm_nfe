@@ -801,4 +801,12 @@ Route::group(['prefix' => 'controleCozinha'],function(){
 	Route::get('/concluido', 'CozinhaController@concluido');
 });
 
+Route::group(['prefix' => 'graficos'],function(){
+	Route::get('/', 'HomeController@index');
+	Route::get('/faturamentoDosUltimosSeteDias', 'HomeController@faturamentoDosUltimosSeteDias');
+	Route::get('/faturamentoFiltrado', 'HomeController@faturamentoFiltrado');
+
+});
+
+
 

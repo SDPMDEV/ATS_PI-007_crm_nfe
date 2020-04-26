@@ -23,6 +23,14 @@ $(function () {
 			},
 			minLength: 1,
 		});
+
+		$('input.autocomplete-cidade-descarregamento').autocomplete({
+			data: data,
+			limit: 20, 
+			onAutocomplete: function(val) {
+			},
+			minLength: 1,
+		});
 	});
 
 });
@@ -441,7 +449,8 @@ $('#btn-add-info-desc').click(() => {
 				chaveCTe: chaveCTe,
 				segCodCTe: segCodCTe,
 				lacresUnidTransp: LACRESTRANSP,
-				lacresUnidCarga: LACRESUNIDCARGA
+				lacresUnidCarga: LACRESUNIDCARGA,
+				municipio: $('#autocomplete-cidade-descarregamento').val()
 			}
 			contInfo++;
 
@@ -472,6 +481,9 @@ function validaInsertInfo(call){
 	}
 	if($('#qtd_rateio_unid_carga').val().length == 0){
 		msg += "Informe a quantidade de rateio da unidade da carga\n";
+	}
+	if($('#autocomplete-cidade-descarregamento').val().length == 0){
+		msg += "Informe o municipio de decarregamento\n";
 	}
 	call(msg);
 }
@@ -552,12 +564,27 @@ $('#seg_cod_cte').on('keyup', () => {
 	$('#chave_cte').val('');
 })
 
+$('#condutor_nome').on('keyup', () => { 
+	habilitaBtnSalvar()
+})
+
+$('#condutor_cpf').on('keyup', () => { 
+	habilitaBtnSalvar()
+})
 
 
 function habilitaBtnSalvar(){
-	console.log(MUNIPIOSCARREGAMENTO)
+	let camposValidos = true;
+
+	if($('#condutor_nome').val().length < 2){
+		camposValidos = false;
+	}
+	if($('#condutor_cpf').val().length < 11){
+		camposValidos = false;
+	}
+
 	if(MUNIPIOSCARREGAMENTO.length > 0 && PERCURSO.length > 0 && INFODESCARGA.length > 0 && $('#cnpj_contratante').val().length > 10
-		&& VEICULOREBOQUE != null && VEICULOTRACAO != null){
+		&& VEICULOREBOQUE != null && VEICULOTRACAO != null && camposValidos){
 		$('#finalizar').removeClass('disabled')
 }
 }
@@ -588,13 +615,19 @@ function salvarCTe(){
 				qtd_carga: $('#quantidade_carga').val(),
 				info_complementar: $('#info_complementar').val(),
 				info_fisco: $('#info_fisco').val(),
-
+				condutor_nome: $('#condutor_nome').val(),
+				condutor_cpf: $('#condutor_cpf').val(),
+				tp_emit: $('#tpEmit').val(),
+				tp_transp: $('#tpTransp').val(),
+				lacre_rodo: $('#lacre_rodo').val()
 			}
 
 			console.log(js)
 			$.post(path+'mdfe/salvar', {_token: $('#_token').val(), data: js})
 			.done((res) => {
 				console.log(res)
+				sucesso();
+
 			})
 			.fail((err) => {
 				console.log(err)
@@ -603,6 +636,14 @@ function salvarCTe(){
 			alert(msgErro)
 		}
 	})
+}
+
+function sucesso(){
+	$('#content').css('display', 'none');
+	$('#anime').css('display', 'block');
+	setTimeout(() => {
+		location.href = path+'mdfe';
+	}, 4500)
 }
 
 function validaMDFe(call){

@@ -8,6 +8,7 @@ use App\Mdfe;
 use App\MunicipioCarregamento;
 use App\Percurso;
 use App\Ciot;
+use App\Cidade;
 use App\ValePedagio;
 use App\InfoDescarga;
 use App\NFeDescarga;
@@ -117,6 +118,14 @@ class MdfeController extends Controller
 		$infoComplementar = $data['info_complementar'] ?? '';
 		$infoFisco = $data['info_fisco'] ?? '';
 
+		$condutorNome = $data['condutor_nome'];
+		$condutorCpf = $data['condutor_cpf'];
+		$tpEmit = $data['tp_emit'];
+		$tpTransp = $data['tp_transp'];
+		$lacreRodo = $data['lacre_rodo'];
+
+
+
 		$mdfe = Mdfe::create([
 			'uf_inicio' => $ufInicio,
 			'uf_fim' => $ufFim,
@@ -134,7 +143,12 @@ class MdfeController extends Controller
 			'info_complementar' => $infoComplementar,
 			'info_adicional_fisco' => $infoFisco,
 			'cnpj_contratante' => $cnpjContratante,
-			'mdfe_numero' => 0
+			'mdfe_numero' => 0,
+			'condutor_nome' => $condutorNome,
+			'condutor_cpf' => $condutorCpf,
+			'tp_emit' => $tpEmit,
+			'tp_transp' => $tpTransp,
+			'lac_rodo' => $lacreRodo
 
 		]);
 
@@ -180,20 +194,25 @@ class MdfeController extends Controller
 				'mdfe_id' => $mdfe->id,
 				'tp_unid_transp' => $i['tpTransp'],
 				'id_unid_transp' => $i['idUnidTransp'],
-				'quantidade_rateio' => $i['qtdRateioTransp']
+				'quantidade_rateio' => $i['qtdRateioTransp'],
+				'cidade_id' => (int)explode("-", $i['municipio'])[0]
 			]);
 
-			NFeDescarga::Create([
-				'info_id' => $info->id,
-				'chave' => str_replace(" ", "", $i['chaveNFe']),
-				'seg_cod_barras' => str_replace(" ", "", $i['segCodNFe'])
-			]);
+			if($i['chaveNFe'] || $i['segCodNFe']){
+				NFeDescarga::Create([
+					'info_id' => $info->id,
+					'chave' => str_replace(" ", "", $i['chaveNFe']),
+					'seg_cod_barras' => str_replace(" ", "", $i['segCodNFe'])
+				]);
+			}
 
-			CTeDescarga::Create([
-				'info_id' => $info->id,
-				'chave' => str_replace(" ", "", $i['chaveCTe']),
-				'seg_cod_barras' => str_replace(" ", "", $i['segCodCTe'])
-			]);
+			if($i['chaveCTe'] || $i['segCodCTe']){
+				CTeDescarga::Create([
+					'info_id' => $info->id,
+					'chave' => str_replace(" ", "", $i['chaveCTe']),
+					'seg_cod_barras' => str_replace(" ", "", $i['segCodCTe'])
+				]);
+			}
 
 			foreach($i['lacresUnidCarga'] as $l){
 				LacreUnidadeCarga::create([

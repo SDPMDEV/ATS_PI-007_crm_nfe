@@ -7,6 +7,8 @@ use App\Produto;
 use App\Categoria;
 use App\ConfigNota;
 use App\Tributacao;
+use App\Rules\EAN13;
+
 class ProductController extends Controller
 {
     public function __construct(){
@@ -235,6 +237,7 @@ class ProductController extends Controller
             'perc_pis' => 'required',
             'perc_cofins' => 'required',
             'perc_ipi' => 'required',
+            'codBarras' => [new EAN13]
             // 'CFOP' => 'required',
             // 'CEST' => 'required'
         ];
@@ -351,8 +354,5 @@ class ProductController extends Controller
 
         echo json_encode($result);  
     }
-
-
-
 
 }

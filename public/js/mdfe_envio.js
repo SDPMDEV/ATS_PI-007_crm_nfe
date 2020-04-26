@@ -28,27 +28,43 @@ function enviar(){
 			$('#preloader1').css('display', 'none');
 
 			console.log(e)
-			let recibo = e;
-			let retorno = recibo.substring(0,4);
-			let mensagem = recibo.substring(5,recibo.length);
-			if(retorno == 'Erro'){
-				let m = JSON.parse(mensagem);
-				console.log(m.protCTe.infProt.xMotivo)
-				// alert("[" + m.protCTe.infProt.cStat + "] : " + m.protCTe.infProt.xMotivo)
+			let cStat = e.cStat;
+			let protMDFe = e.protMDFe;
+			let infProt = protMDFe.infProt;
+
+			let cStatProt = infProt.cStat;
+			let motivoProt = infProt.xMotivo;
+
+
+			console.log(cStat)
+			console.log(infProt)
+			console.log(cStatProt)
+			if(cStatProt != '103'){
+				console.log(motivoProt)
 				$('#modal-alert-erro').modal('open');
-				$('#evento-erro').html("[" + m.protCTe.infProt.cStat + "] : " + m.protCTe.infProt.xMotivo)
-			}
-			else if(e == 'Apro'){
-				alert("Esta MDF-e já esta aprovada, não é possível enviar novamente!");
-			}
-			else{
-				// $('#modal-alert').modal('open');
-				$('#evento').html("MDF-e gerada com sucesso RECIBO: "+recibo)
-				//window.open(path+"/mdfeSefaz/imprimir/"+id, "_blank");
-				// location.href= path + "cte";
+				$('#evento-erro').html("[" + cStatProt + "] : " + motivoProt)
 			}
 
-			$('#preloader1').css('display', 'none');
+			// let retorno = recibo.substring(0,4);
+			// let mensagem = recibo.substring(5,recibo.length);
+			// if(retorno == 'Erro'){
+			// 	let m = JSON.parse(mensagem);
+			// 	console.log(m.protCTe.infProt.xMotivo)
+			// 	// alert("[" + m.protCTe.infProt.cStat + "] : " + m.protCTe.infProt.xMotivo)
+			// 	$('#modal-alert-erro').modal('open');
+			// 	$('#evento-erro').html("[" + m.protCTe.infProt.cStat + "] : " + m.protCTe.infProt.xMotivo)
+			// }
+			// else if(e == 'Apro'){
+			// 	alert("Esta MDF-e já esta aprovada, não é possível enviar novamente!");
+			// }
+			// else{
+			// 	// $('#modal-alert').modal('open');
+			// 	$('#evento').html("MDF-e gerada com sucesso RECIBO: "+recibo)
+			// 	//window.open(path+"/mdfeSefaz/imprimir/"+id, "_blank");
+			// 	// location.href= path + "cte";
+			// }
+
+
 		}, error: function(e){
 			Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
 			console.log(e)

@@ -37,8 +37,8 @@ class MDFeService{
 		$std = new \stdClass();
 		$std->cUF = $emitente->cUF;
 		$std->tpAmb = (int)$emitente->ambiente;
-		$std->tpEmit = '2'; //adicionar no bd
-		$std->tpTransp = '2'; //adicionar no bd
+		$std->tpEmit = $mdfe->tp_emit; 
+		$std->tpTransp = $mdfe->tp_transp; 
 		$std->mod = '58';
 		$std->serie = '0';
 
@@ -71,7 +71,7 @@ class MDFeService{
 
 			$infPercurso = new \stdClass();
 			$infPercurso->UFPer = $p->uf;
-			// $mdfex->taginfPercurso($infPercurso);
+			$mdfex->taginfPercurso($infPercurso);
 		}
 
 		$std = new \stdClass();
@@ -154,8 +154,8 @@ class MDFeService{
 		$veicTracao->UF = $mdfe->veiculoTracao->uf;
 
 		$condutor = new \stdClass();
-		$condutor->xNome = 'JOAO DA SILVA'; // banco
-		$condutor->CPF = '09520985980'; // banco
+		$condutor->xNome = $mdfe->condutor_nome; // banco
+		$condutor->CPF = $mdfe->condutor_cpf; // banco
 		$veicTracao->condutor = [$condutor];
 
 		$prop = new \stdClass();
@@ -204,7 +204,7 @@ class MDFeService{
 		$mdfex->tagveicReboque($veicReboque);
 
 		$lacRodo = new \stdClass();
-		$lacRodo->nLacre = '1502400';//ver no banco
+		$lacRodo->nLacre = $mdfe->lac_rodo;//ver no banco
 		$mdfex->taglacRodo($lacRodo);
 
 
@@ -236,7 +236,7 @@ class MDFeService{
 			/* Informações das Unidades de Transporte (Carreta/Reboque/Vagão) */
 			$stdinfUnidTransp = new \stdClass();
 			$stdinfUnidTransp->tpUnidTransp = $info->tp_unid_transp;
-			$stdinfUnidTransp->idUnidTransp = $info->id_unid_transp;
+			$stdinfUnidTransp->idUnidTransp = strtoupper($info->id_unid_transp);
 
 			/* Lacres das Unidades de Transporte */
 
@@ -334,10 +334,12 @@ class MDFeService{
 			$std = $st->toStd($resp);
 
 
-			sleep(3);
+			sleep(2);
 
 			$resp = $this->tools->sefazConsultaRecibo($std->infRec->nRec);
 			$std = $st->toStd($resp);
+			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+			// file_put_contents($public.'xml_mdfe/'.$chave.'.xml',$xml);
 
 			return $std;
 
