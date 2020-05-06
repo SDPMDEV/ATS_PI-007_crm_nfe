@@ -253,6 +253,7 @@ public function finalizar($id){
 
  $atributes = $this->addAtributes($pedido->itens);
  $pedido->status = 1;
+ $pedido->desativado = 1;
  $pedido->save();
 
  $tiposPagamento = VendaCaixa::tiposPagamento();
@@ -291,7 +292,7 @@ private function addAtributes($itens){
       }
       $i->maiorValor = $maiorValor;
     }
-    $i->produto->valor_venda = $i->produto->valor_venda;
+    $i->produto->valor_venda = $i->valor;
     $i->produto_id = $i->produto->id;
     $i->produto->nome = $i->produto->nome;
     $i->item_pedido = $i->id;
@@ -341,6 +342,21 @@ public function imprimirPedido($id){
 
   header('Content-Type: application/pdf');
   echo $pdf;
+}
+
+public function itensParaFrenteCaixa(Request $request){
+  $cod = $request->cod;
+
+  $pedido = Pedido::
+  where('comanda', $cod)
+  ->where('status', 0)
+  ->where('desativado', 0)
+  ->first();
+
+  if($pedido == null) return response()->json("Nao existe", 401);
+
+  $atributes = $this->addAtributes($pedido->itens);
+  return response()->json($atributes, 200);
 }
 
 }

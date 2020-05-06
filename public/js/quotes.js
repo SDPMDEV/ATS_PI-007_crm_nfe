@@ -1,6 +1,7 @@
 
 let TOTAL = 0;
 
+
 $(function () {
 	$('#value').val('');
 	$('#payment_form').val('');

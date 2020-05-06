@@ -52,6 +52,7 @@ class FrontBoxController extends Controller
            ->with('frenteCaixa', true)
            ->with('tiposPagamento', $tiposPagamento)
            ->with('config', $config)
+           ->with('disableFooter', true)
            ->with('title', 'Frente de Caixa');
        }
    }

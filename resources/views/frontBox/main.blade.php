@@ -2,7 +2,7 @@
 @section('content')
 <style type="text/css">
 .table{
-	height: 300px;
+	height: 310px;
 	overflow-x:auto;
 }
 table tbody{
@@ -18,14 +18,14 @@ table tbody{
 	width: 80px;
 }
 </style>
-<nav>
+<!-- <nav>
 	<div style="margin-top: -20px;" class="nav-wrapper black">
 		<ul class="right hide-on-med-and-down">
 			<li><a><i class="material-icons left yellow-text">update</i> <strong id="horas">00:00</strong></a></li>
 			<li><a><i class="material-icons left yellow-text">date_range</i> <strong id="data"></strong></a></li>
 
 		</ul>
-
+	
 		<ul class="left hide-on-med-and-down">
 			<li><a><i class="material-icons left yellow-text">person</i> {{ session('user_logged')['nome']}}</a></li>
 
@@ -42,7 +42,7 @@ table tbody{
 
 		</ul>
 	</div>
-</nav>
+</nav> -->
 
 <div class="row">
 	<input type="hidden" id="_token" value="{{ csrf_token() }}">
@@ -68,7 +68,7 @@ table tbody{
 				</div>
 				
 				<div class="col s12">
-					<h6 id="cliente-nao" class="red-text">*Sem cliente identificado</h6>
+					<h6 id="cliente-nao" class="red-text">*Nenhum cliente identificado</h6>
 				</div>
 			</div>
 		</div>
@@ -100,29 +100,34 @@ table tbody{
 					</div>
 				</div>
 
-				<div class="row">
+				<div class="">
 					<button id="adicionar-item" class="btn-large green accent-3" style="width: 100%;">Adicionar Item</button>
 				</div>
 
 
 				<div class="row">
-
+					<br>
 					<h5 class="center-align">ATALHOS</h5>
-					<div class="row">
-						<div class="col s6">
-							<button style="width: 100%;" href="#modal2" class="btn-large modal-trigger grey lighten-1">Sangria</button>
-						</div>
-						<div class="col s6">
-							<a href="/frenteCaixa/devolucao" style="width: 100%;" class="btn-large red lighten-1">Devolução</a>
+					<div>
+						<div class="col s12" style="margin-top: 10px;">
+							<button style="width: 100%;" href="#modal-comanda" class="btn modal-trigger teal lighten-1">Apontar Comanda</button>
 						</div>
 					</div>
-					<div class="row">
-						<div class="col s6">
-							<button onclick="fluxoDiario()" style="width: 100%;" class="btn-large blue lighten-1">Fluxo Diário</button>
+					<div>
+						<div class="col s6" style="margin-top: 10px;">
+							<button style="width: 100%;" href="#modal2" class="btn modal-trigger grey lighten-1">Sangria</button>
+						</div>
+						<div class="col s6" style="margin-top: 10px;">
+							<a href="/frenteCaixa/devolucao" style="width: 100%;" class="btn red lighten-1">Devolução</a>
+						</div>
+					</div>
+					<div class="">
+						<div class="col s6" style="margin-top: 10px;">
+							<button onclick="fluxoDiario()" style="width: 100%;" class="btn blue lighten-1">Fluxo Diário</button>
 						</div>
 
-						<div class="col s6">
-							<a href="/frenteCaixa/list" style="width: 100%;" class="btn-large green lighten-1">Lista de Vendas</a>
+						<div class="col s6" style="margin-top: 10px;">
+							<a href="/frenteCaixa/list" style="width: 100%;" class="btn green lighten-1">Lista de Vendas</a>
 						</div>
 					</div>
 				</div>
@@ -207,6 +212,21 @@ table tbody{
 			
 
 		</div>
+	</div>
+</div>
+
+<div id="modal-comanda" class="modal">
+	<div class="modal-content">
+		<h5>Informe o código da comanda</h5>
+		<div class="row">
+			<div class="col s6 input-field">
+				<input type="text" id="cod-comanda" name="">
+				<label>Código</label>
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<a href="#!" onclick="apontarComanda()" class="btn">Apontar</a>
 	</div>
 </div>
 

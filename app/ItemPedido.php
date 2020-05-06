@@ -29,4 +29,18 @@ class ItemPedido extends Model
     public function sabores(){
         return $this->hasMany('App\ItemPizzaPedidoLocal', 'item_pedido', 'id');
     }
+
+    public function nomeDoProduto(){
+        if(count($this->sabores) == 0){
+            return $this->produto->nome;
+        }else{
+            $cont = 1;
+            $nome = "";
+            foreach($this->sabores as $s){
+                $nome .= $cont."/".count($this->sabores) . " " . $s->produto->produto->nome;
+            }
+            $nome .= " | Tamanho: " . $this->tamanho->nome;
+            return $nome;
+        }
+    }
 }

@@ -66,7 +66,8 @@ function consultaCadastro(){
 					$('#rua').val(info.ender.xLgr)
 					$('#numero').val(info.ender.nro)
 					$('#bairro').val(info.ender.xBairro)
-					$('#cep').val(info.ender.CEP)
+					let cep = info.ender.CEP;
+					$('#cep').val(cep.substring(0, 5) + '-' + cep.substring(5, 9))
 					Materialize.updateTextFields();
 					findNomeCidade(info.ender.xMun, (res) => {
 						let jsCidade = JSON.parse(res);

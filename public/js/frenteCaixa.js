@@ -56,6 +56,7 @@ $(function () {
 					})
 				}else{
 					alert('Por favor abra o caixa!');
+					location.href = path+'frenteCaixa'
 					location.reload();
 				}
 			},
@@ -1049,4 +1050,66 @@ function enviarWhatsApp(){
 	window.open(api)
 }
 
+function apontarComanda(){
+	let cod = $('#cod-comanda').val()
+	$.get(path+'pedidos/itensParaFrenteCaixa', {cod: cod})
+	.done((success) => {
+		console.log(success)
+		montarComanda(success, (rs) => {
+			if(rs){
+				$('#modal-comanda').modal('close')
+			}
+		})
+	})
+	.fail((err) => {
+		if(err.status == 401){
+			alert("Nada encontrado!!!");
+		}
+		console.log(err)
+	})
+}
+
+function montarComanda(itens, call){
+	let cont = 0;
+	itens.map((v) => {
+		console.log(v)
+		let nome = '';
+		let valorUnit = 0;
+		if(v.sabores.length > 0){
+
+			let cont = 0;
+			v.sabores.map((sb) => {
+				cont++;
+				valorUnit = v.maiorValor;
+				nome += sb.produto.produto.nome + 
+				(cont == v.sabores.length ? '' : ' | ')
+			})
+
+
+		}else{
+			nome = v.produto.nome;
+			valorUnit = v.produto.valor_venda
+		}
+
+		let item = {
+			cont: cont++,
+			id: v.produto_id,
+			nome: nome,
+			quantidade: v.quantidade,
+			valor: parseFloat(valorUnit) + parseFloat(v.valorAdicional),
+			pizza: v.maiorValor ? true : false,
+			itemPedido: v.item_pedido
+		}
+		console.log(item)
+
+		ITENS.push(item)
+			// console.log(item)
+			TOTAL += parseFloat(item.valor)*(item.quantidade);
+		});
+	let t = montaTabela();
+
+	atualizaTotal();
+	$('#body').html(t);
+	call(true)
+}
 

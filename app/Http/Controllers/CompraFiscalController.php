@@ -11,6 +11,7 @@ use App\Compra;
 use App\Helpers\StockMove;
 use App\Cidade;
 use App\ConfigNota;
+use App\Services\DFeService;
 
 class CompraFiscalController extends Controller
 {
@@ -27,6 +28,31 @@ class CompraFiscalController extends Controller
 			}
 			return $next($request);
 		});
+	}
+
+	public function dfe(){
+
+		$config = ConfigNota::first();
+
+		$cnpj = str_replace(".", "", $config->cnpj);
+		$cnpj = str_replace("/", "", $cnpj);
+		$cnpj = str_replace("-", "", $cnpj);
+		$cnpj = str_replace(" ", "", $cnpj);
+
+		$dfe_service = new DFeService([
+			"atualizacao" => date('Y-m-d h:i:s'),
+			"tpAmb" => $config->ambiente,
+			"razaosocial" => $config->razao_social,
+			"siglaUF" => $config->UF,
+			"cnpj" => $cnpj,
+			"schemes" => "PL_009_V4",
+			"versao" => "4.00",
+			"tokenIBPT" => "AAAAAAA",
+			"CSC" => getenv('CSC'),
+			"CSCid" => getenv('CSCid')
+		], 55);
+
+		echo $dfe_service->consulta();
 	}
 
 	public function index(){
@@ -108,230 +134,228 @@ class CompraFiscalController extends Controller
 						'qCom' => $item->prod->qCom,
 						'codBarras' => $item->prod->cEAN,
 						'produtoNovo' => $produtoNovo,
-					'produtoId' => $produtoNovo ? '0' : $produto->id,// se produto ja tiver cadastrado
-					'conversao_unitaria' => $produtoNovo ? '' : $produto->conversao_unitaria
+						'produtoId' => $produtoNovo ? '0' : $produto->id,
+						'conversao_unitaria' => $produtoNovo ? '' : $produto->conversao_unitaria
+					];
+					array_push($itens, $item);
+				}
+				$chave = substr($xml->NFe->infNFe->attributes()->Id, 3, 44);
+				$dadosNf = [
+					'chave' => $chave,
+					'vProd' => $xml->NFe->infNFe->total->ICMSTot->vProd,
+					'indPag' => $xml->NFe->infNFe->ide->indPag,
+					'nNf' => $xml->NFe->infNFe->ide->nNF,
+					'vFrete' => $vFrete,
+					'vDesc' => $vDesc,
+					'contSemRegistro' => $contSemRegistro
 				];
-				array_push($itens, $item);
-			}
-			$chave = substr($xml->NFe->infNFe->attributes()->Id, 3, 44);
-			$dadosNf = [
-				'chave' => $chave,
-				'vProd' => $xml->NFe->infNFe->total->ICMSTot->vProd,
-				'indPag' => $xml->NFe->infNFe->ide->indPag,
-				'nNf' => $xml->NFe->infNFe->ide->nNF,
-				'vFrete' => $vFrete,
-				'vDesc' => $vDesc,
-				'contSemRegistro' => $contSemRegistro
-			];
 
 
 			//Pagamento
-			$fatura = [];
-			if (!empty($xml->NFe->infNFe->cobr->dup))
-			{
-				foreach($xml->NFe->infNFe->cobr->dup as $dup) {
-					$titulo = $dup->nDup;
-					$vencimento = $dup->dVenc;
-					$vencimento = explode('-', $vencimento);
-					$vencimento = $vencimento[2]."/".$vencimento[1]."/".$vencimento[0];
-					$vlr_parcela = number_format((double) $dup->vDup, 2, ",", ".");	
+				$fatura = [];
+				if (!empty($xml->NFe->infNFe->cobr->dup))
+				{
+					foreach($xml->NFe->infNFe->cobr->dup as $dup) {
+						$titulo = $dup->nDup;
+						$vencimento = $dup->dVenc;
+						$vencimento = explode('-', $vencimento);
+						$vencimento = $vencimento[2]."/".$vencimento[1]."/".$vencimento[0];
+						$vlr_parcela = number_format((double) $dup->vDup, 2, ",", ".");	
 
-					$parcela = [
-						'numero' => $titulo,
-						'vencimento' => $vencimento,
-						'valor_parcela' => $vlr_parcela
-					];
-					array_push($fatura, $parcela);
+						$parcela = [
+							'numero' => $titulo,
+							'vencimento' => $vencimento,
+							'valor_parcela' => $vlr_parcela
+						];
+						array_push($fatura, $parcela);
+					}
 				}
-			}
 
 			//upload
-			$file = $request->file;
-			$nameArchive = $chave . ".xml" ;
+				$file = $request->file;
+				$nameArchive = $chave . ".xml" ;
 
-			$pathXml = $file->move(public_path('xml_entrada'), $nameArchive);
+				$pathXml = $file->move(public_path('xml_entrada'), $nameArchive);
 
             //fim upload
 
-			$categorias = Categoria::all();
-			$unidadesDeMedida = Produto::unidadesMedida();
+				$categorias = Categoria::all();
+				$unidadesDeMedida = Produto::unidadesMedida();
 
-			$listaCSTCSOSN = Produto::listaCSTCSOSN();
-			$listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
-			$listaCST_IPI = Produto::listaCST_IPI();
-			$config = ConfigNota::first();
+				$listaCSTCSOSN = Produto::listaCSTCSOSN();
+				$listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
+				$listaCST_IPI = Produto::listaCST_IPI();
+				$config = ConfigNota::first();
 
-			return view('compraFiscal/visualizaNota')
-			->with('title', 'Nota Fiscal')
-			->with('itens', $itens)
-			->with('fatura', $fatura)
-			->with('pathXml', $nameArchive)
-			->with('compraFiscalJs', true)
-			->with('idFornecedor', $idFornecedor)
-			->with('dadosNf', $dadosNf)
-			->with('listaCSTCSOSN', $listaCSTCSOSN)
-			->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
-			->with('listaCST_IPI', $listaCST_IPI)
-			->with('config', $config)
-			->with('unidadesDeMedida', $unidadesDeMedida)
-			->with('categorias', $categorias)
-			->with('dadosEmitente', $dadosEmitente)
-			->with('dadosAtualizados', $dadosAtualizados);
+				return view('compraFiscal/visualizaNota')
+				->with('title', 'Nota Fiscal')
+				->with('itens', $itens)
+				->with('fatura', $fatura)
+				->with('pathXml', $nameArchive)
+				->with('compraFiscalJs', true)
+				->with('idFornecedor', $idFornecedor)
+				->with('dadosNf', $dadosNf)
+				->with('listaCSTCSOSN', $listaCSTCSOSN)
+				->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
+				->with('listaCST_IPI', $listaCST_IPI)
+				->with('config', $config)
+				->with('unidadesDeMedida', $unidadesDeMedida)
+				->with('categorias', $categorias)
+				->with('dadosEmitente', $dadosEmitente)
+				->with('dadosAtualizados', $dadosAtualizados);
+			}else{
+				session()->flash('color', 'red');
+				session()->flash('message', 'Esta NFe de entrada já esta incluida no sistema!');
+				return redirect("/compraFiscal");
+			}
+
 		}else{
 			session()->flash('color', 'red');
-			session()->flash('message', 'Esta NFe de entrada já esta incluida no sistema!');
+			session()->flash('message', 'XML inválido!');
 			return redirect("/compraFiscal");
 		}
 
-	}else{
-		session()->flash('color', 'red');
-		session()->flash('message', 'XML inválido!');
-		return redirect("/compraFiscal");
 	}
 
-}
+	public function teste(){
+		$itens = ItemCompra::all();
+		echo json_encode($itens);
+	}
 
-public function teste(){
-	$itens = ItemCompra::all();
-	echo json_encode($itens);
-}
+	private function verificaFornecedor($cnpj){
+		$forn = Fornecedor::verificaCadastrado($this->formataCnpj($cnpj));
+		return $forn;
+	}
 
-private function verificaFornecedor($cnpj){
-	$forn = Fornecedor::verificaCadastrado($this->formataCnpj($cnpj));
-	return $forn;
-}
+	private function verificaAtualizacao($fornecedorEncontrado, $dadosEmitente){
+		$dadosAtualizados = [];
 
-private function verificaAtualizacao($fornecedorEncontrado, $dadosEmitente){
-	$dadosAtualizados = [];
+		$verifica = $this->dadosAtualizados('Razao Social', $fornecedorEncontrado->razao_social,
+			$dadosEmitente['razaoSocial']);
+		if($verifica) array_push($dadosAtualizados, $verifica);
 
-	$verifica = $this->dadosAtualizados('Razao Social', $fornecedorEncontrado->razao_social,
-		$dadosEmitente['razaoSocial']);
-	if($verifica) array_push($dadosAtualizados, $verifica);
+		$verifica = $this->dadosAtualizados('Nome Fantasia', $fornecedorEncontrado->nome_fantasia,
+			$dadosEmitente['nomeFantasia']);
+		if($verifica) array_push($dadosAtualizados, $verifica);
 
-	$verifica = $this->dadosAtualizados('Nome Fantasia', $fornecedorEncontrado->nome_fantasia,
-		$dadosEmitente['nomeFantasia']);
-	if($verifica) array_push($dadosAtualizados, $verifica);
+		$verifica = $this->dadosAtualizados('Rua', $fornecedorEncontrado->rua,
+			$dadosEmitente['logradouro']);
+		if($verifica) array_push($dadosAtualizados, $verifica);
 
-	$verifica = $this->dadosAtualizados('Rua', $fornecedorEncontrado->rua,
-		$dadosEmitente['logradouro']);
-	if($verifica) array_push($dadosAtualizados, $verifica);
+		$verifica = $this->dadosAtualizados('Numero', $fornecedorEncontrado->numero,
+			$dadosEmitente['numero']);
+		if($verifica) array_push($dadosAtualizados, $verifica);
 
-	$verifica = $this->dadosAtualizados('Numero', $fornecedorEncontrado->numero,
-		$dadosEmitente['numero']);
-	if($verifica) array_push($dadosAtualizados, $verifica);
+		$verifica = $this->dadosAtualizados('Bairro', $fornecedorEncontrado->bairro,
+			$dadosEmitente['bairro']);
+		if($verifica) array_push($dadosAtualizados, $verifica);
 
-	$verifica = $this->dadosAtualizados('Bairro', $fornecedorEncontrado->bairro,
-		$dadosEmitente['bairro']);
-	if($verifica) array_push($dadosAtualizados, $verifica);
+		$verifica = $this->dadosAtualizados('IE', $fornecedorEncontrado->ie_rg,
+			$dadosEmitente['ie']);
+		if($verifica) array_push($dadosAtualizados, $verifica);
 
-	$verifica = $this->dadosAtualizados('IE', $fornecedorEncontrado->ie_rg,
-		$dadosEmitente['ie']);
-	if($verifica) array_push($dadosAtualizados, $verifica);
+		$this->atualizar($fornecedorEncontrado, $dadosEmitente);
+		return $dadosAtualizados;
+	}
 
-	$this->atualizar($fornecedorEncontrado, $dadosEmitente);
-	return $dadosAtualizados;
-}
+	private function atualizar($fornecedor, $dadosEmitente){
+		$fornecedor->razao_social = $dadosEmitente['razaoSocial'];
+		$fornecedor->nome_fantasia = $dadosEmitente['nomeFantasia'];
+		$fornecedor->rua = $dadosEmitente['logradouro'];
+		$fornecedor->ie_rg = $dadosEmitente['ie'];
+		$fornecedor->bairro = $dadosEmitente['bairro'];
+		$fornecedor->numero = $dadosEmitente['numero'];
+		$fornecedor->save();
+	}
 
-private function atualizar($fornecedor, $dadosEmitente){
-	$fornecedor->razao_social = $dadosEmitente['razaoSocial'];
-	$fornecedor->nome_fantasia = $dadosEmitente['nomeFantasia'];
-	$fornecedor->rua = $dadosEmitente['logradouro'];
-	$fornecedor->ie_rg = $dadosEmitente['ie'];
-	$fornecedor->bairro = $dadosEmitente['bairro'];
-	$fornecedor->numero = $dadosEmitente['numero'];
-	$fornecedor->save();
-}
+	private function dadosAtualizados($campo, $anterior, $atual){
+		if($anterior != $atual){
+			return $campo . " atualizado";
+		} 
+		return false;
+	}
 
-private function dadosAtualizados($campo, $anterior, $atual){
-	if($anterior != $atual){
-		return $campo . " atualizado";
-	} 
-	return false;
-}
 
-public function carregaView($dadosAtualizados, $itens, $dadosNf){
+	private function cadastrarFornecedor($fornecedor){
+		$result = Fornecedor::create([
+			'razao_social' => $fornecedor['razaoSocial'],
+			'nome_fantasia' => $fornecedor['nomeFantasia'],
+			'rua' => $fornecedor['logradouro'],
+			'numero' => $fornecedor['numero'],
+			'bairro' => $fornecedor['bairro'],
+			'cep' => $this->formataCep($fornecedor['cep']),
+			'cpf_cnpj' => $this->formataCnpj($fornecedor['cnpj']),
+			'ie_rg' => $fornecedor['ie'],
+			'celular' => '*',
+			'telefone' => $this->formataTelefone($fornecedor['fone']),
+			'email' => '*',
+			'cidade_id' => $fornecedor['cidade_id']
+		]);
+		return $result->id;
+	}
 
-}
+	private function formataCnpj($cnpj){
+		$temp = substr($cnpj, 0, 2);
+		$temp .= ".".substr($cnpj, 2, 3);
+		$temp .= ".".substr($cnpj, 5, 3);
+		$temp .= "/".substr($cnpj, 8, 4);
+		$temp .= "-".substr($cnpj, 12, 2);
+		return $temp;
+	}
 
-private function cadastrarFornecedor($fornecedor){
-	$result = Fornecedor::create([
-		'razao_social' => $fornecedor['razaoSocial'],
-		'nome_fantasia' => $fornecedor['nomeFantasia'],
-		'rua' => $fornecedor['logradouro'],
-		'numero' => $fornecedor['numero'],
-		'bairro' => $fornecedor['bairro'],
-		'cep' => $this->formataCep($fornecedor['cep']),
-		'cpf_cnpj' => $this->formataCnpj($fornecedor['cnpj']),
-		'ie_rg' => $fornecedor['ie'],
-		'celular' => '*',
-		'telefone' => $this->formataTelefone($fornecedor['fone']),
-		'email' => '*',
-		'cidade_id' => $fornecedor['cidade_id']
-	]);
-	return $result->id;
-}
+	private function formataCep($cep){
+		$temp = substr($cep, 0, 5);
+		$temp .= "-".substr($cep, 5, 3);
+		return $temp;
+	}
 
-private function formataCnpj($cnpj){
-	$temp = substr($cnpj, 0, 2);
-	$temp .= ".".substr($cnpj, 2, 3);
-	$temp .= ".".substr($cnpj, 5, 3);
-	$temp .= "/".substr($cnpj, 8, 4);
-	$temp .= "-".substr($cnpj, 12, 2);
-	return $temp;
-}
+	private function formataTelefone($fone){
+		$temp = substr($fone, 0, 2);
+		$temp .= " ".substr($fone, 2, 4);
+		$temp .= "-".substr($fone, 4, 4);
+		return $temp;
+	}
 
-private function formataCep($cep){
-	$temp = substr($cep, 0, 5);
-	$temp .= "-".substr($cep, 5, 3);
-	return $temp;
-}
+	public function salvarNfFiscal(Request $request){
+		$nf = $request->nf;
 
-private function formataTelefone($fone){
-	$temp = substr($fone, 0, 2);
-	$temp .= " ".substr($fone, 2, 4);
-	$temp .= "-".substr($fone, 4, 4);
-	return $temp;
-}
-
-public function salvarNfFiscal(Request $request){
-	$nf = $request->nf;
-
-	$result = Compra::create([
-		'fornecedor_id' => $nf['fornecedor_id'],
-		'usuario_id' => get_id_user(),
-		'nf' => $nf['nNf'],
-		'observacao' => $nf['observacao'],
-		'valor' => str_replace(",", ".", $nf['valor_nf']),
-		'desconto' => str_replace(",", ".", $nf['desconto']),
-		'xml_path' => $nf['xml_path'],
+		$result = Compra::create([
+			'fornecedor_id' => $nf['fornecedor_id'],
+			'usuario_id' => get_id_user(),
+			'nf' => $nf['nNf'],
+			'observacao' => $nf['observacao'],
+			'valor' => str_replace(",", ".", $nf['valor_nf']),
+			'desconto' => str_replace(",", ".", $nf['desconto']),
+			'xml_path' => $nf['xml_path'],
 		//'categoria_id' => 1,
-		'chave' => $nf['chave'] 
-	]);
+			'chave' => $nf['chave'] 
+		]);
 
-	echo json_encode($result);
-}
+		echo json_encode($result);
+	}
 
-public function salvarItem(Request $request){
-	$prod = $request->produto;
+	public function salvarItem(Request $request){
+		$prod = $request->produto;
 
-	$produtoBD = Produto::
-	where('id', (int) $prod['produto_id'])
-	->first();
+		$produtoBD = Produto::
+		where('id', (int) $prod['produto_id'])
+		->first();
 
-	$result = ItemCompra::create([
-		'compra_id' => (int) $prod['compra_id'],
-		'produto_id' => (int) $prod['produto_id'],
-		'quantidade' =>  str_replace(",", ".", $prod['quantidade']),
-		'valor_unitario' => str_replace(",", ".", $prod['valor']),
-		'unidade_compra' => $prod['unidade'],
-	]);
+		$result = ItemCompra::create([
+			'compra_id' => (int) $prod['compra_id'],
+			'produto_id' => (int) $prod['produto_id'],
+			'quantidade' =>  str_replace(",", ".", $prod['quantidade']),
+			'valor_unitario' => str_replace(",", ".", $prod['valor']),
+			'unidade_compra' => $prod['unidade'],
+		]);
 
-	$stockMove = new StockMove();
-	$stockMove->pluStock((int) $prod['produto_id'], 
-		str_replace(",", ".", $prod['quantidade'] * $produtoBD->conversao_unitaria),
-		str_replace(",", ".", $produtoBD->valor_venda));
+		$valor = $produtoBD->valor_venda > 0 ? $produtoBD->valor_venda : $prod['valor'];
+		$stockMove = new StockMove();
+		$stockMove->pluStock((int) $prod['produto_id'], 
+			str_replace(",", ".", $prod['quantidade'] * $produtoBD->conversao_unitaria),
+			str_replace(",", ".", $valor));
 
-	echo json_encode($result);
-}
+		echo json_encode($result);
+	}
 
 }

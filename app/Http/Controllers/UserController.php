@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Usuario;
+use App\ConfigNota;
 class UserController extends Controller
 {
 
@@ -23,11 +24,13 @@ class UserController extends Controller
     	->first();
 
     	if($usr != null){
-    		
+    		$config = ConfigNota::first();
+            $ambiente = $config == null ? 'não configurado' : $config->ambiente == 1 ? 'Produção' : 'Homologação'; 
     		$session = [
     			'id' => $usr->id,
     			'nome' => $usr->nome,
     			'adm' => $usr->adm,
+                'ambiente' => $ambiente,
                 'acesso_cliente' => $usr->acesso_cliente,
                 'acesso_fornecedor' => $usr->acesso_fornecedor,
                 'acesso_produto' => $usr->acesso_produto,

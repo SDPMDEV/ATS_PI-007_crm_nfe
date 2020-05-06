@@ -20,6 +20,8 @@ Route::group(['prefix' => '/'], function(){
 	Route::get('/', 'DeliveryController@index');
 });
 
+Route::get('/dfe', 'CompraFiscalController@dfe');
+
 Route::group(['prefix' => '/autenticar'], function(){
 	Route::get('/', 'DeliveryController@login');
 	Route::post('/', 'DeliveryController@autenticar');
@@ -184,6 +186,7 @@ Route::group(['prefix' => 'pedidos'], function(){
 
 	Route::post('/sms', 'PedidoController@sms');
 	Route::get('/imprimirPedido/{id}', 'PedidoController@imprimirPedido');
+	Route::get('/itensParaFrenteCaixa', 'PedidoController@itensParaFrenteCaixa');
 
 });
 

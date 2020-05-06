@@ -41,7 +41,7 @@ class NFCeController extends Controller
 
 		$nfe_service = new NFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -143,7 +143,7 @@ class NFCeController extends Controller
 		$cnpj = str_replace(" ", "", $cnpj);
 		$nfe_service = new NFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,

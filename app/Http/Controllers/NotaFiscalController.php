@@ -44,7 +44,7 @@ class NotaFiscalController extends Controller
 
 		$nfe_service = new NFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -95,7 +95,7 @@ class NotaFiscalController extends Controller
 
 		$nfe_service = new NFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -125,7 +125,7 @@ class NotaFiscalController extends Controller
 
 		$nfe_service = new NFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -260,7 +260,7 @@ class NotaFiscalController extends Controller
 
 		$nfe_service = new NFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -310,7 +310,7 @@ class NotaFiscalController extends Controller
 
 		$nfe_service = new NFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -336,7 +336,7 @@ class NotaFiscalController extends Controller
 		$cnpj = str_replace(" ", "", $cnpj);
 		$nfe_service = new NFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -368,24 +368,25 @@ class NotaFiscalController extends Controller
 		Mail::send('mail.xml_send', ['emissao' => $venda->data_registro, 'nf' => $venda->NfNumero,
 			'valor' => $venda->valor_total, 'usuario' => $value['nome']], function($m) use ($venda, $email){
 
-				$nomeEmpresa = getenv('SMS_NOME_EMPRESA');
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+				$nomeEmpresa = getenv('MAIL_NAME');
 				$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
 				$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
 				$emailEnvio = getenv('MAIL_USERNAME');
 
-				$message->from($emailEnvio, $nomeEmpresa);
+				$m->from($emailEnvio, $nomeEmpresa);
 				$m->subject('Envio de XML NF ' . $venda->NfNumero);
-				$m->attach('xml_nfe/'.$venda->path_xml);
-				$m->attach('pdf/DANFE.pdf');
+				$m->attach($public.'xml_nfe/'.$venda->path_xml);
+				$m->attach($public.'pdf/DANFE.pdf');
 				$m->to($email);
 			});
 		return "ok";
 	}
 
 	private function criarPdfParaEnvio($venda){
-
-		$xml = file_get_contents('xml_nfe/'.$venda->chave.'.xml');
-		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents('imgs/logo.jpg'));
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		$xml = file_get_contents($public.'xml_nfe/'.$venda->chave.'.xml');
+		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
 		// $docxml = FilesFolders::readFile($xml);
 
 		try {

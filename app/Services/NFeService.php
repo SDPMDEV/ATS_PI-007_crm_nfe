@@ -453,9 +453,12 @@ class NFeService{
 		$std->xContato= getenv('RESP_NOME'); //Nome da pessoa a ser contatada
 		$std->email = getenv('RESP_EMAIL'); //E-mail da pessoa jurídica a ser contatada
 		$std->fone = getenv('RESP_FONE'); //Telefone da pessoa jurídica/física a ser contatada
-		
-		
 		$nfe->taginfRespTec($std);
+		
+		// $std = new \stdClass();
+		// $std->CNPJ = '13937073000156'; 
+		// $std->CPF = null;
+		// $nfe->tagautXML($std);
 
 		if($nfe->montaNFe()){
 			$arr = [
@@ -1084,11 +1087,11 @@ class NFeService{
 
 				return "[$std->cStat] - $std->xMotivo";
 			}
-			sleep(1);
+			sleep(3);
 			$recibo = $std->infRec->nRec; 
 			
 			$protocolo = $this->tools->sefazConsultaRecibo($recibo);
-			sleep(3);
+			sleep(4);
 			//return $protocolo;
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 			try {

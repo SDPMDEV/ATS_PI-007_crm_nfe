@@ -22,6 +22,7 @@ class CreatePushesTable extends Migration
             $table->string('titulo', 50);
             $table->string('texto', 100);
             $table->string('path_img', 200);
+            $table->integer('referencia_produto');
             $table->timestamp('data_registro')->useCurrent();
             $table->boolean('status');
             $table->timestamps();

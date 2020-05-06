@@ -111,8 +111,8 @@
 									@endif
 
 
-									<!-- <a href="/frenteCaixa/deleteVenda/{{$v->id}}" onclick = "if (! confirm('Deseja enviar cancelar esta venda?')) { return false; }else{emitirNFCe({{$v->id}})}" title="CANCELAR" >
-										<i class="material-icons red-text">delete</i>
+									<!-- <a href="/frenteCaixa/cancelarNFCe/{{$v->id}}" onclick = "if (! confirm('Deseja  esta venda?')) { return false; }else{emitirNFCe({{$v->id}})}" title="CANCELAR" >
+										<i class="material-icons red-text">close</i>
 									</a> -->
 
 								</th>

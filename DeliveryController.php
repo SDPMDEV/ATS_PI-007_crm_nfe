@@ -60,7 +60,9 @@ class DeliveryController extends Controller
 
     public function produtos($id){
 
-        $categoria = CategoriaProdutoDelivery::where('id', $id)->first();
+        $categoria = CategoriaProdutoDelivery
+        ::where('id', $id)
+        ->first();
 
         if(strpos($categoria->nome, 'izza') !== false){
 
@@ -71,30 +73,16 @@ class DeliveryController extends Controller
             ->with('title', 'TIPO DA PIZZA'); 
 
         }else{
-         return view('delivery/produtos')
-         ->with('produtos', $categoria->produtos)
-         ->with('categoria', $categoria)
-         ->with('config', $this->config)
-         ->with('title', 'PRODUTOS'); 
-     }
+           return view('delivery/produtos')
+           ->with('produtos', $categoria->produtos)
+           ->with('categoria', $categoria)
+           ->with('config', $this->config)
+           ->with('title', 'PRODUTOS'); 
+       }
 
- }
+   }
 
- public function verProduto($id){
-
-    $produto = ProdutoDelivery
-    ::where('id', $id)
-    ->first();
-
-    return view('delivery/ver_produto')
-    ->with('produto', $produto)
-    ->with('config', $this->config)
-    ->with('title', 'ADICIONAR'); 
-
-
-}
-
-public function escolherSabores(Request $request){
+   public function escolherSabores(Request $request){
     $tipo = $request->tipo;
     $tamanho = explode("-", $tipo)[0];
     $sabores = explode("-", $tipo)[1];
@@ -240,17 +228,17 @@ public function pizzas(Request $request){
             $p->produto->delivery->galeria;
             foreach($p->produto->delivery->pizza as $pp){
                 if($request->tamanho == $pp->tamanho_id){
-                   $p->tamanhoValor = $pp->valor;
-               }
-           }
+                 $p->tamanhoValor = $pp->valor;
+             }
+         }
 
-       } else{
-         $p->produto;
-         $p->tamanhoValor = 0;
-     }
- }
+     } else{
+       $p->produto;
+       $p->tamanhoValor = 0;
+   }
+}
 
- echo json_encode($categoria->produtos);
+echo json_encode($categoria->produtos);
 }
 
 
@@ -393,7 +381,7 @@ public function refreshToken(Request $request){
     $celular = str_replace(" ", "", $celular);
     $celular = str_replace("-", "", $celular);
     $this->sendSms($celular, $cod);
-    // $this->sendEmailCod($cliente->email, $cod);
+    $this->sendEmailCod($cliente->email, $cod);
     $cliente->token = $cod;
     if($cliente->save())
         return response()->json($cliente, 200);
@@ -439,7 +427,7 @@ public function salvarRegistro(Request $request){
         $celular = str_replace(" ", "", $celular);
         $celular = str_replace("-", "", $celular);
         $this->sendSms($celular, $cod);
-        // $this->sendEmailCod($request->email, $cod);
+        $this->sendEmailCod($request->email, $cod);
 
         return view('delivery/autenticarCliente')
         ->with('config', $this->config)
@@ -572,7 +560,6 @@ public function enviarSenhaEmail(Request $request){
             $nomeEmail = getenv('MAIL_NAME');
             $nomeEmail = str_replace("_", " ", $nomeEmail);
             $m->from(getenv('MAIL_USERNAME'), $nomeEmail);
-
             $m->subject('recuperacao de senha');
             $m->to($cliente->email);
         });

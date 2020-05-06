@@ -205,18 +205,35 @@
 
 
 <div class="row space black" style="margin-top: 0">
-	<div class="col s6" style="margin-top: 5px;">
+	<div class="col s3" style="margin-top: 5px;">
 		<i style="margin-top: 5px;" class="material-icons white-text left">local_pizza</i>
 		<h6 class="white-text">Pedidos Mesa/Comanda: <strong class="pedidos-aberto" id="pedidos-aberto">x0</strong></h6>
 	</div>
-	<div class="col s6" style="margin-top: 5px;">
+	<div class="col s3" style="margin-top: 5px;">
 		<i style="margin-top: 5px;" class="material-icons white-text left">local_pizza</i>
 		<h6 class="white-text">Pedidos Delivery: <strong class="pedidos-aberto" id="pedidos-aberto-delivery">x0</strong></h6>
+	</div>
+
+	<div class="col s3" style="margin-top: 5px;">
+
+		<i style="margin-top: 5px;"  class="material-icons left yellow-text">layers</i> 
+		<h6 class="white-text">Ambiente: 
+			<strong class="blue-text">{{session('user_logged')['ambiente']}}</strong>
+		</h6>
+
+
+
+	</div>
+
+	<div class="col s2 offset-s1" style="margin-top: 5px;">
+		<i style="margin-top: 5px;" class="material-icons white-text left">timer</i>
+		<h6 class="white-text"<strong id="timer">00:00:00</strong></h6>
 	</div>
 </div>
 <!-- FIM MENU -->
 <div class="space">
 	@yield('content')
+
 </div>
 
 <script type="text/javascript" src="/js/jquery-3.2.1.min.js"></script>
@@ -378,9 +395,9 @@ async defer></script>
 @endif
 
 @if(isset($graficoHomeJs)){
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
-	
-	<script type="text/javascript" src="/js/grafico_home.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
+
+<script type="text/javascript" src="/js/grafico_home.js"></script>
 @endif
 
 
@@ -555,20 +572,24 @@ async defer></script>
 <?php 
 $protocol = ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 if(getenv('PATH_URL') != $protocol.$_SERVER['HTTP_HOST']){
-	echo "<script type='text/javascript'>alert('Por favor configure a variavel PATH_URL dp arquivo .env corretamente')</script>";
+	echo "<script type='text/javascript'>alert('Por favor configure a variavel PATH_URL do arquivo .env corretamente')</script>";
+
+
 }
 
 ?>
 
 <br><br>
 
+@if(!isset($disableFooter))
 <footer class="page-footer black space">
 	<label class="info-user right white-text">
 		Usuário: <strong class="blue-text">{{ session('user_logged')['nome']}} </strong> 
 		| <a class="red-text" href="/login/logoff">Sair</a></label>
-		<span class="green-text text-accent-3" style="margin-left: 10px;"><i class="material-icons">timer</i><strong id="timer">00:00:00</strong></span>
+		<!-- <span class="green-text text-accent-3" style="margin-left: 10px;"><i class="material-icons">timer</i><strong id="timer">00:00:00</strong></span> -->
 		
 
 	</footer>
+	@endif
 </body>
 </html>

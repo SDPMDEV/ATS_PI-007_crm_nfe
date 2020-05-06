@@ -98,7 +98,10 @@ class PedidoRestController extends Controller
 					'desativado' => false
 				]);
 			}else{
-				$result = Pedido::where('comanda', $request->comanda)->first();
+				$result = Pedido::where('comanda', $request->comanda)
+				->where('status', false)
+				->where('desativado', false)
+				->first();
 			}
 
 			$res = ItemPedido::create([

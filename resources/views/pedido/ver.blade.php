@@ -264,13 +264,13 @@
 		<br>
 
 		<div class="row">
-			<div class="col s3">
+			<!-- <div class="col s3">
 				<a href="#modal1" class="btn blue modal-trigger" style="width: 100%">Enviar SMS</a>
 			</div>
 
 			<div class="col s3">
 				<a href="#modal2" class="btn green accent-3 modal-trigger" style="width: 100%">Enviar WhatsApp</a>
-			</div>
+			</div> -->
 
 			@if(count($pedido->itens) > 0)
 			<div class="col s3">
