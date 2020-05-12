@@ -103,7 +103,8 @@
 				<li><a href="/contasPagar"><span class="left material-icons">radio_button_unchecked</span>Contas a Pagar</a></li>
 				<li><a href="/contasReceber"><span class="left material-icons">radio_button_unchecked</span>Contas a Receber</a></li>
 				<li><a href="/fluxoCaixa"><span class="left material-icons">radio_button_unchecked</span>Fluxo de Caixa</a></li>
-				<li><a href="/graficos"><span class="left material-icons">radio_button_unchecked</span>Gráfico</a></li>
+				<li><a href="/graficos"><span class="left material-icons">radio_button_unchecked</span>Gráficos</a></li>
+				<li><a href="/relatorios"><span class="left material-icons">radio_button_unchecked</span>Relatórios</a></li>
 			</ul> 
 		</li>
 

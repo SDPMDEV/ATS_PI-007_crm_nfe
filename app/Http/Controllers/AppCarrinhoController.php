@@ -135,6 +135,14 @@ class AppCarrinhoController extends Controller
 					}
 				}
 
+				if($request->desconto){
+					$total -= str_replace(",", ".", $request->desconto);
+				}
+
+				if($request->endereco_id != 'balcao'){
+					$config = DeliveryConfig::first();
+					$total += $config->valor_entrega;
+				}
 
 				$cupom = null;
 				if($request->cupom != 'null'){

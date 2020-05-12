@@ -34,7 +34,7 @@ class PedidoDelivery extends Model
 		$total = 0;
 
 		if($this->valor_total > 0){
-			return $this->valor_total - $this->desconto + ($this->endereco_id != NULL ? $config->valor_entrega : 0);
+			return $this->valor_total;
 		} else{
 
 			foreach($this->itens as $i){
