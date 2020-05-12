@@ -327,13 +327,13 @@ class AppCarrinhoController extends Controller
 		$dias = FuncionamentoDelivery::dias();
 		$hoje = $dias[date('w')];
 		$func = FuncionamentoDelivery::where('dia', $hoje)->first();
+		if($func == null) return response()->json("vazio", 403);
 		// echo strtotime($func->fim_expediente)."<br>";
 		if($atual >= strtotime($func->inicio_expediente) && $atual < strtotime($func->fim_expediente) && $func->ativo){
 			return response()->json($func, 200);
 		}else{
 			return response()->json($func, 401);
 		}
-
 	}
 
 }

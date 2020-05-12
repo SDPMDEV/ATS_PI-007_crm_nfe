@@ -287,7 +287,7 @@
 
 					<div class="row">
 						<div class="input-field col s2">
-							<input value="{{{ isset($produto->perc_icms) ? $produto->perc_icms : $tributacao->icms }}}" id="perc_icms" name="perc_icms" type="text" class="validate">
+							<input value="{{{ isset($produto->perc_icms) ? $produto->perc_icms : isset($tributacao->icms) ? $tributacao->icms : 0 }}}" id="perc_icms" name="perc_icms" type="text" class="validate">
 							<label for="perc_icms">%ICMS</label>
 
 							@if($errors->has('perc_icms'))
@@ -298,7 +298,7 @@
 
 						</div> 
 						<div class="input-field col s2">
-							<input value="{{{ isset($produto->perc_pis) ? $produto->perc_pis : $tributacao->pis }}}" id="perc_pis" name="perc_pis" type="text" class="validate">
+							<input value="{{{ isset($produto->perc_pis) ? $produto->perc_pis : isset($tributacao->pis) ? $tributacao->pis : 0 }}}" id="perc_pis" name="perc_pis" type="text" class="validate">
 							<label for="perc_pis">%PIS</label>
 
 							@if($errors->has('perc_pis'))
@@ -309,7 +309,7 @@
 
 						</div> 
 						<div class="input-field col s2">
-							<input value="{{{ isset($produto->perc_cofins) ? $produto->perc_cofins : $tributacao->icms }}}" id="perc_cofins" name="perc_cofins" type="text" class="validate">
+							<input value="{{{ isset($produto->perc_cofins) ? $produto->perc_cofins : isset($tributacao->cofins) ? $tributacao->cofins : 0 }}}" id="perc_cofins" name="perc_cofins" type="text" class="validate">
 							<label for="perc_cofins">%COFINS</label>
 
 							@if($errors->has('perc_cofins'))
@@ -320,7 +320,7 @@
 
 						</div> 
 						<div class="input-field col s2">
-							<input value="{{{ isset($produto->perc_ipi) ? $produto->perc_ipi : $tributacao->icms }}}" id="perc_ipi" name="perc_ipi" type="text" class="validate">
+							<input value="{{{ isset($produto->perc_ipi) ? $produto->perc_ipi : isset($tributacao->ipi) ? $tributacao->ipi : 0 }}}" id="perc_ipi" name="perc_ipi" type="text" class="validate">
 							<label for="perc_ipi">%IPI</label>
 
 							@if($errors->has('perc_ipi'))

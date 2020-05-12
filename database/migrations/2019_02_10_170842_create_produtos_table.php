@@ -41,7 +41,6 @@ class CreateProdutosTable extends Migration
             $table->decimal('perc_cofins', 10,2)->default(0);
             $table->decimal('perc_ipi', 10,2)->default(0);
 
-
             $table->timestamps();
         });
     }

@@ -11,6 +11,7 @@ use App\ConfigNota;
 use App\PedidoDelivery;
 use App\Produto;
 use App\ProdutoPizza;
+use App\Pedido;
 
 class VendaCaixaController extends Controller
 {
@@ -37,10 +38,22 @@ class VendaCaixaController extends Controller
     'cpf' => $venda['cpf'] ?? ''
   ]);
 
-   $itens = $venda['itens'];
-   $stockMove = new StockMove();
+   if($venda['codigo_comanda'] > 0){
+    $pedido = Pedido::
+    where('comanda', $venda['codigo_comanda'])
+    ->where('status', 0)
+    ->where('desativado', 0)
+    ->first();
+    
+    $pedido->status = 1;
+    $pedido->desativado = 1;
+    $pedido->save();
+  }
 
-   foreach ($itens as $i) {
+  $itens = $venda['itens'];
+  $stockMove = new StockMove();
+
+  foreach ($itens as $i) {
 
     ItemVendaCaixa::create([
       'venda_caixa_id' => $result->id,

@@ -263,6 +263,13 @@
 				<label>Texto</label>
 			</div>
 		</div>
+
+		<div class="row">
+			<div class="col s12 input-field">
+				<input type="text" id="imagem-push">
+				<label>URL Imagem (opcional)</label>
+			</div>
+		</div>
 	</div>
 	<div class="modal-footer">
 		<a href="#!" id="btn-enviar-push" class="modal-action btn blue">Enviar</a>

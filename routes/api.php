@@ -15,7 +15,8 @@ Route::group(['prefix' => 'appUser'],function(){
 	Route::post('/refreshToken', 'AppUserController@refreshToken');
 	Route::post('/validaToken', 'AppUserController@validaToken');
 	Route::post('/validaCupom', 'AppUserController@validaCupom')->middleware('token');
-
+	Route::post('/redefinirSenha', 'AppUserController@redefinirSenha');
+	
 });
 
 Route::group(['prefix' => 'appProduto'],function(){

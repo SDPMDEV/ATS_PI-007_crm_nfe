@@ -239,18 +239,15 @@ class AppUserController extends Controller
 		if($cupom != null){
 			if($cupom->cliente_id != $request->cliente){
 				if($this->validaClienteUsouCupom($request->cliente, $cupom))
-					$cupom = null;
+					return response()->json(false, 204);
 
 			}else{
-				$cupom = null;
+				return response()->json($cupom, 200);
 			}
+		}else{
+			return response()->json(false, 204);
 		}
 
-
-		if($cupom != null)
-			return response()->json($cupom, 200);
-		else
-			return response()->json(false, 204);
 
 	}
 

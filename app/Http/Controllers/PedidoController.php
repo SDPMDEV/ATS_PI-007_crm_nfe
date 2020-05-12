@@ -252,14 +252,16 @@ public function finalizar($id){
  ->first();
 
  $atributes = $this->addAtributes($pedido->itens);
- $pedido->status = 1;
- $pedido->desativado = 1;
- $pedido->save();
+
+ // $pedido->status = 1;
+ // $pedido->desativado = 1;
+ // $pedido->save();
 
  $tiposPagamento = VendaCaixa::tiposPagamento();
  $config = ConfigNota::first();
  return view('frontBox/main')
  ->with('itens', $atributes)
+ ->with('cod_comanda', $pedido->comanda)
  ->with('frenteCaixa', true)
  ->with('tiposPagamento', $tiposPagamento)
  ->with('config', $config)

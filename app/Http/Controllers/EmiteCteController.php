@@ -332,19 +332,19 @@ class EmiteCteController extends Controller
 			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
 			$emailEnvio = getenv('MAIL_USERNAME');
 
-			$message->from($emailEnvio, $nomeEmpresa);
+			$m->from($emailEnvio, $nomeEmpresa);
 			$m->subject('Envio de XML NF ' . $venda->NfNumero);
-			$m->attach('xml_cte/'.$cte->path_xml);
-			$m->attach('pdf/DANFE.pdf');
+			$m->attach($public.'xml_cte/'.$cte->path_xml);
+			$m->attach($public.'pdf/DANFE.pdf');
 			$m->to($email);
 		});
 		return "ok";
 	}
 
 	private function criarPdfParaEnvio($cte){
-
-		$xml = file_get_contents('xml_cte/'.$cte->chave.'.xml');
-		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents('imgs/logo.jpg'));
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		$xml = file_get_contents($public.'xml_cte/'.$cte->chave.'.xml');
+		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
 		// $docxml = FilesFolders::readFile($xml);
 
 		try {
@@ -355,7 +355,7 @@ class EmiteCteController extends Controller
 			$dacte->monta();
 			$pdf = $dacte->render();
 			header('Content-Type: application/pdf');
-			file_put_contents('pdf/CTe.pdf',$pdf);
+			file_put_contents($public.'pdf/CTe.pdf',$pdf);
 		} catch (InvalidArgumentException $e) {
 			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
 		}  

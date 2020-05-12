@@ -22,6 +22,16 @@ Route::group(['prefix' => '/'], function(){
 
 Route::get('/dfe', 'CompraFiscalController@dfe');
 
+Route::group(['prefix' => '/relatorios'], function(){
+	Route::get('/', 'RelatorioController@index');
+	Route::get('/filtroVendas', 'RelatorioController@filtroVendas');
+	Route::get('/filtroCompras', 'RelatorioController@filtroCompras');
+	Route::get('/filtroVendaProdutos', 'RelatorioController@filtroVendaProdutos');
+	Route::get('/filtroVendaClientes', 'RelatorioController@filtroVendaClientes');
+
+});
+
+
 Route::group(['prefix' => '/autenticar'], function(){
 	Route::get('/', 'DeliveryController@login');
 	Route::post('/', 'DeliveryController@autenticar');

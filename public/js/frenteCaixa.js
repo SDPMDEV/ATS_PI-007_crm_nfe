@@ -5,6 +5,7 @@ var caixaAberto = false;
 var PRODUTO = null;
 var CLIENTE = null;
 var TOTALEMABERTOCLIENTE = null;
+var COMANDA = 0;
 
 $(function () {
 	novaHora();
@@ -118,6 +119,8 @@ $(function () {
 		// console.log(ITENS);
 		atualizaTotal();
 		$('#body').html(t);
+		let codigo_comanda = $('#codigo_comanda_hidden').val();
+		COMANDA = codigo_comanda;
 	}
 
 });
@@ -819,7 +822,8 @@ function finalizarVenda(acao) {
 			nome: $('#nome').val(),
 			cpf: $('#cpf').val(),
 			delivery_id: $('#delivery_id').val(),
-			pedido_local: $('#pedidoLocal').val() ? true : false
+			pedido_local: $('#pedidoLocal').val() ? true : false,
+			codigo_comanda: COMANDA
 		}
 
 		console.log(js)
@@ -1057,6 +1061,7 @@ function apontarComanda(){
 		console.log(success)
 		montarComanda(success, (rs) => {
 			if(rs){
+				COMANDA = cod;
 				$('#modal-comanda').modal('close')
 			}
 		})

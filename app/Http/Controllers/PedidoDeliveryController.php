@@ -348,7 +348,7 @@ class PedidoDeliveryController extends Controller
 			foreach($cliente->tokens as $t){
 				if(!in_array($t->token, $tkTemp)){
 
-					array_push($tkTemp, $t->token);
+					array_push($tkTemp, $t->user_id);
 				}
 			}
 
@@ -359,7 +359,7 @@ class PedidoDeliveryController extends Controller
 				'content' => [
 					"en" => $request->texto
 				],
-				'image' => '',
+				'image' => $request->imagem ?? '',
 				'referencia_produto' => 0,
 			];
 

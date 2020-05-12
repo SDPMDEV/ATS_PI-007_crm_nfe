@@ -156,7 +156,6 @@ class NotaFiscalController extends Controller
 			$id = $danfe->monta($logo);
 			$pdf = $danfe->render();
 			header('Content-Type: application/pdf');
-			file_put_contents('pdf/DANFE.pdf',$pdf);
 			echo $pdf;
 		} catch (InvalidArgumentException $e) {
 			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
@@ -394,7 +393,7 @@ class NotaFiscalController extends Controller
 			$id = $danfe->monta($logo);
 			$pdf = $danfe->render();
 			header('Content-Type: application/pdf');
-			file_put_contents('pdf/DANFE.pdf',$pdf);
+			file_put_contents($public.'pdf/DANFE.pdf',$pdf);
 		} catch (InvalidArgumentException $e) {
 			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
 		}  

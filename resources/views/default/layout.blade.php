@@ -400,6 +400,10 @@ async defer></script>
 <script type="text/javascript" src="/js/grafico_home.js"></script>
 @endif
 
+@if(isset($relatorioJS))
+<script type="text/javascript" src="/js/relatorios.js"></script>
+@endif
+
 
 
 <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>

@@ -2,10 +2,12 @@ $('#btn-enviar-push').click(() => {
 
 	let titulo = $('#titulo-push').val();
 	let texto = $('#texto-push').val();
+	let imagem = $('#imagem-push').val();
 
 	let js = {
 		titulo: titulo,
 		texto: texto,
+		imagem: imagem,
 		cliente: $('#cliente').val(),
 		_token: $('#token').val()
 	}
