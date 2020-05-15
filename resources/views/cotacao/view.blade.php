@@ -13,7 +13,7 @@
 					<div class="col s6">
 						<h5>Referencia: {{$cotacao->referencia}}</h5>
 						<h5>Observação: {{$cotacao->observacao}}</h5>
-						<h5>Link: <strong class="blue-text">{{$cotacao->link}}</strong></h5>
+						<h5>Link: <strong class="blue-text"> <a href="{{getenv('PATH_URL')}}/response/{{$cotacao->link}}" target="_blank">{{getenv('PATH_URL')}}/response/{{$cotacao->link}}</a></strong></h5>
 					</div>
 
 					<div class="col s6">
@@ -88,6 +88,19 @@
 						<a href="/cotacao/clonar/{{$cotacao->id}}" class="btn orange">
 							Clonar
 						</a>
+						@if(!$cotacao->escolhida())
+						<a onclick = "if (! confirm('Deseja marcar como escolhida esta cotação?')) { return false; }" href="/cotacao/escolher/{{$cotacao->id}}" class="btn green">
+							Marcar como Escolhida
+						</a>
+						@else
+							@if($cotacao->escolhida()->id == $cotacao->id)
+							<h5 class="red-text">Essa cotação já foi escolhida!</h5>
+							@else
+							<br>
+							<h5><a href="/cotacao/view/{{$cotacao->escolhida()->id}}">Essa refernência já foi definida para cotação {{$cotacao->escolhida()->id}}</a></h5>
+							@endif
+						
+						@endif
 					</div>
 				</div><br>
 			</div>

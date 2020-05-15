@@ -301,6 +301,7 @@ class PedidoDeliveryController extends Controller
 		$config = ConfigNota::first();
 		$tiposPagamento = VendaCaixa::tiposPagamento();
 
+		// if($pedido)
 		return view('frontBox/main')
 		->with('itens', $this->addAtributes($pedido->itens))
 		->with('frenteCaixa', true)

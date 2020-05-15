@@ -7,6 +7,8 @@ use App\Fornecedor;
 use App\Cotacao;
 use App\ItemCotacao;
 use Mail;
+use Dompdf\Dompdf;
+
 
 class CotacaoController extends Controller
 {
@@ -26,6 +28,50 @@ class CotacaoController extends Controller
 		->with('cotacoes', $cotacoes)
 		->with('title', 'Cotações');
 
+	}
+
+	public function filtro(Request $request){
+		$data_final = $request->data_final;
+		$data_inicial = $request->data_inicial;
+		$fornecedor = $request->fornecedor;
+		if($data_final && $data_final){
+			$data_inicial = $this->parseDate($data_inicial);
+			$data_final = $this->parseDate($data_final, true);
+		}
+
+		$cotacoes = Cotacao::
+		select('cotacaos.*')
+		->join('fornecedors', 'fornecedors.id', '=', 'cotacaos.fornecedor_id')
+		->orWhere(function($q) use ($fornecedor){
+			if($fornecedor){
+				return $q->where('fornecedors.razao_social', 'LIKE', "%$fornecedor%");
+			}
+		})
+
+		->Where(function($q) use ($data_inicial, $data_final){
+			if($data_final && $data_final){
+				return $q->whereBetween('cotacaos.created_at', [$data_inicial, 
+					$data_final]);
+			}
+		})
+
+		
+		->orderBy('cotacaos.id', 'desc')
+		->get();
+
+		return view('cotacao/list')
+		->with('cotacoes', $cotacoes)
+		->with('data_final', $request->data_final)
+		->with('data_inicial', $request->data_inicial)
+		->with('fornecedor', $request->fornecedor)
+		->with('title', 'Cotações');
+	}
+
+	private static function parseDate($date, $plusDay = false){
+		if($plusDay == false)
+			return date('Y-m-d', strtotime(str_replace("/", "-", $date)));
+		else
+			return date('Y-m-d', strtotime("+1 day",strtotime(str_replace("/", "-", $date))));
 	}
 
 	public function clonar($id){
@@ -64,7 +110,8 @@ class CotacaoController extends Controller
 				'referencia' => $cotacao->referencia,
 				'observacao' => $cotacao->observacao,
 				'resposta' => false,
-				'ativa' => true
+				'ativa' => true,
+				'escolhida' => false
 
 			]);
 
@@ -82,8 +129,6 @@ class CotacaoController extends Controller
 		}
 		echo json_encode($cotacao);
 	}
-
-
 
 	public function searchProvider(Request $request){
 		if($this->logged){
@@ -155,7 +200,8 @@ class CotacaoController extends Controller
 			'referencia' => $cotacao['referencia'] ?? '',
 			'observacao' => $cotacao['observacao'] ?? '',
 			'resposta' => false,
-			'ativa' => true
+			'ativa' => true,
+			'escolhida' => false
 
 		]);
 
@@ -368,4 +414,203 @@ class CotacaoController extends Controller
     	return redirect("/cotacao");
 
     }
+
+    public function listaPorReferencia(){
+    	$cotacoes = Cotacao::
+    	select(\DB::raw('referencia'))
+    	->where('referencia', '!=', '*')
+    	->groupBy('referencia')
+    	->get();
+
+    	return view('cotacao/lista_referencia')
+    	->with('title', 'Cotações Por Referência')
+    	->with('cotacoes', $cotacoes);
+    }
+
+    public function listaPorReferenciaFiltro(Request $request){
+    	$data_final = $request->data_final;
+    	$data_inicial = $request->data_inicial;
+    	$fornecedor = $request->fornecedor;
+
+
+    	if($data_final && $data_final){
+    		$data_inicial = $this->parseDate($data_inicial);
+    		$data_final = $this->parseDate($data_final, true);
+    	}
+
+    	$cotacoes = Cotacao::
+    	select(\DB::raw('referencia'))
+    	->join('fornecedors', 'fornecedors.id', '=', 'cotacaos.fornecedor_id')
+    	
+
+    	->Where(function($q) use ($fornecedor){
+    		if($fornecedor){
+    			return $q->where('fornecedors.razao_social', 'LIKE', "%$fornecedor%");
+    		}
+    	})
+    	->Where(function($q) use ($data_inicial, $data_final){
+    		if($data_final && $data_final){
+    			return $q->whereBetween('cotacaos.created_at', [$data_inicial, 
+    				$data_final]);
+    		}
+    	})
+    	->where('referencia', '!=', '*')
+
+    	->groupBy('referencia')
+    	->get();
+
+
+    	return view('cotacao/lista_referencia')
+    	->with('title', 'Cotações Por Referência')
+    	->with('data_final', $request->data_final)
+    	->with('data_inicial', $request->data_inicial)
+    	->with('fornecedor', $request->fornecedor)
+    	->with('cotacoes', $cotacoes);
+    }
+
+    public function referenciaView($referencia){
+    	$cotacoes = Cotacao::
+    	where('referencia', $referencia)
+    	->where('valor', '>', 0)
+    	->get();
+
+    	if(count($cotacoes) > 0){
+    		$itens = $this->preparaItens($cotacoes);
+
+    		$fornecedores = [];
+    		foreach($itens as $i){
+    			if(!$this->estaNoArray($fornecedores, $i)){
+    				array_push($fornecedores, 
+    					[
+    						'fornecedor' => $i['fornecedor'],
+    						'qtd' => 1
+    					]
+    				);
+    			}else{
+    				for($aux = 0; $aux < count($fornecedores); $aux++){
+    					if($fornecedores[$aux]['fornecedor'] == $i['fornecedor']) $fornecedores[$aux]['qtd'] += 1;
+    				}
+
+    			}
+    		}
+
+    		$melhorResultado = $cotacoes[0];
+
+    		foreach($cotacoes as $c){
+    			if($c->valor < $melhorResultado->valor) $melhorResultado = $c;
+    		}
+
+    		return view('cotacao/ver_resultados')
+    		->with('title', 'Cotações Por Referência')
+    		->with('itens', $itens)
+    		->with('melhorResultado', $melhorResultado)
+    		->with('fornecedores', $fornecedores)
+    		->with('cotacoes', $cotacoes);
+    	}else{
+    		session()->flash('color', 'red');
+    		session()->flash('message', 'Referência sem nehuma resposta!');
+    		return redirect('/cotacao/listaPorReferencia');
+    	}
+    }
+
+    private function estaNoArray($arr, $elem){
+    	foreach($arr as $a){
+    		if($a['fornecedor'] == $elem['fornecedor']) return true;
+    	}
+    	return false;
+    }
+
+    private function preparaItens($cotacoes){
+
+    	if(count($cotacoes) > 0){
+    	// echo $cotacoes;
+    		$melhoresItens = $this->itemInicial($cotacoes[0]);
+    		// print_r($itemInicial);
+
+    		foreach($cotacoes as $c){
+    			foreach($c->itens as $i){
+    				for($aux = 0; $aux < count($melhoresItens); $aux++){
+    					if($melhoresItens[$aux]['item'] == $i->produto->nome){
+    						$valorTemp = $i->valor * $i->quantidade;
+    						if($valorTemp < $melhoresItens[$aux]['valor_total']){
+    							$melhoresItens[$aux]['valor_total'] = $valorTemp;
+    							$melhoresItens[$aux]['valor_unitario'] = $i->valor;
+    							$melhoresItens[$aux]['fornecedor'] = $c->fornecedor->razao_social;
+    						}
+    					}
+    				}
+    			}
+
+    		}
+
+    		// print_r($melhoresItens);
+    		return $melhoresItens;
+    	}
+    }
+
+    private function itemInicial($cotacao){
+    	$itens = [];
+    	foreach($cotacao->itens as $i){
+    		$temp = [
+    			'item' => $i->produto->nome,
+    			'valor_unitario' => $i->valor,
+    			'quantidade' => $i->quantidade,
+    			'valor_total' => $i->valor * $i->quantidade,
+    			'fornecedor' => $cotacao->fornecedor->razao_social
+    		];
+    		array_push($itens, $temp);
+    	}
+    	return $itens;
+    }
+
+    public function escolher($id){
+    	$cotacao = Cotacao::find($id);
+    	$cotacao->escolhida = true;
+    	$cotacao->save();
+    	session()->flash('color', 'green');
+    	session()->flash('message', 'Cotação escolhida para referencia ' . $cotacao->referencia . '!');
+    	return redirect('/cotacao/listaPorReferencia');
+    }
+
+    public function imprimirMelhorResultado(Request $request){
+    	$fornecedor = $request->fornecedor;
+    	$referencia = $request->referencia;
+
+    	$cotacoes = Cotacao::
+    	where('referencia', $referencia)
+    	->where('valor', '>', 0)
+    	->get();
+
+    	$temp = [];
+    	if(count($cotacoes) > 0){
+    		$itens = $this->preparaItens($cotacoes);
+
+    		foreach($itens as $i){
+    			if($i['fornecedor'] == $fornecedor){
+    				array_push($temp, $i);
+    			}
+    		}
+
+    	}
+
+    	$fornecedorByNome = Fornecedor::where('razao_social', $fornecedor)->first();
+    	$p = view('cotacao/relatorio')
+		->with('cotacao', $cotacoes[0])
+		->with('fornecedor', $fornecedorByNome)
+		->with('itens', $temp);
+
+		// return $p;
+
+
+
+		$domPdf = new Dompdf(["enable_remote" => true]);
+		$domPdf->loadHtml($p);
+
+		$pdf = ob_get_clean();
+
+		$domPdf->setPaper("A4");
+		$domPdf->render();
+		$domPdf->stream("Refencia_{$cotacoes[0]->referencia}_Fornecedor_{$fornecedorByNome->razao_social}.pdf");
+    }
+
 }

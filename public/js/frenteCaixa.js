@@ -848,7 +848,7 @@ function finalizarVenda(acao) {
 					} else{
 						console.log("Imprime nao fiscal");
 						window.open(path + 'nfce/imprimirNaoFiscal/'+e.id, '_blank');
-						location.reload();
+						location.href=path+'frenteCaixa';
 					}
 
 				}, error: function(e){
@@ -1097,7 +1097,7 @@ function montarComanda(itens, call){
 		}
 
 		let item = {
-			cont: cont++,
+			cont: cont+1,
 			id: v.produto_id,
 			nome: nome,
 			quantidade: v.quantidade,

@@ -91,13 +91,13 @@
 					<h4>Dados Adicionais</h4>
 					<div class="row">
 						<div class="col s6 input-field">
-							<input type="text" id="referencia">
-							<label>Referencia</label>
+							<input type="text" id="referencia" data-length="20">
+							<label>Referencia <strong class="red-text">(Necessário para clonar)</strong></label>
 						</div>
 					</div>
 					<div class="row">
 						<div class="col s10 input-field">
-							<input type="text" id="obs">
+							<input type="text" id="obs" data-length="100">
 							<label>Observação</label>
 						</div>
 

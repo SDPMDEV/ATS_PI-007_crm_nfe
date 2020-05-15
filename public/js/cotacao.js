@@ -159,36 +159,55 @@ function deleteItem(id){
 
 
 $('#salvar-cotacao').click(() => {
+	valida((msg) => {
+		if(msg == ""){
+			let fornecedor = $('#autocomplete-fornecedor').val().split('-')[0];
+			let js = {
+				obsevacao: $('#obs').val(),
+				referencia: $('#referencia').val(),
+				itens: ITENS,
+				fornecedor: parseInt(fornecedor),
+			}
+			let token = $('#_token').val();
+			$.ajax
+			({
+				type: 'POST',
+				data: {
+					cotacao: js,
+					_token: token
+				},
+				url: path + 'cotacao/salvar',
+				dataType: 'json',
+				success: function(e){
+					console.log(e)
+					sucesso();
 
-	let produto = $('#autocomplete-produto').val().split('-')[0];
-	let fornecedor = $('#autocomplete-fornecedor').val().split('-')[0];
-	let js = {
-		obsevacao: $('#obs').val(),
-		referencia: $('#referencia').val(),
-		itens: ITENS,
-		fornecedor: parseInt(fornecedor),
-	}
-	let token = $('#_token').val();
-	$.ajax
-	({
-		type: 'POST',
-		data: {
-			cotacao: js,
-			_token: token
-		},
-		url: path + 'cotacao/salvar',
-		dataType: 'json',
-		success: function(e){
-			console.log(e)
-			sucesso();
+				}, error: function(e){
+					console.log(e)
+				}
+			});
+		}else{
+			Materialize.toast(msg, 4000)
 
-		}, error: function(e){
-			console.log(e)
 		}
-	});
+	})
 
-	console.log(js)
 })
+
+function valida(call){
+	let msg = "";
+
+	let fornecedor = $('#autocomplete-fornecedor').val().split('-')[0];
+	if(!fornecedor){
+		msg = "Informe o Fornecedor";
+	}
+
+	if(ITENS.length == 0){
+		msg = "Informe os Itens";
+	}
+
+	call(msg)
+}
 
 function sucesso(){
 	$('#content').css('display', 'none');

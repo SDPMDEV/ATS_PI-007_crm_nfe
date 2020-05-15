@@ -12,6 +12,11 @@
 				<i class="material-icons left">add</i>	
 				Nova Cotação		
 			</a>
+
+			<a href="/cotacao/listaPorReferencia" class="btn blue accent-3">
+				<i class="material-icons left">playlist_add_check</i>	
+				Cotações por referencia		
+			</a>
 		</div>
 
 		@if(session()->has('message'))
@@ -26,16 +31,16 @@
 		<form method="get" action="/cotacao/filtro">
 			<div class="row">
 				<div class="col s4 input-field">
-					<input value="{{{ isset($fornecedor) ? $fornecedor : '' }}}" type="text" class="validate" name="cliente">
+					<input value="{{{ isset($fornecedor) ? $fornecedor : '' }}}" type="text" class="validate" name="fornecedor">
 					<label>Fornecedor</label>
 				</div>
 
 				<div class="col s2 input-field">
-					<input value="{{{ isset($dataInicial) ? $dataInicial : '' }}}" type="text" class="datepicker" name="data_inicial">
+					<input value="{{{ isset($data_inicial) ? $data_inicial : '' }}}" type="text" class="datepicker" name="data_inicial">
 					<label>Data Inicial</label>
 				</div>
 				<div class="col s2 input-field">
-					<input value="{{{ isset($dataFinal) ? $dataFinal : '' }}}" type="text" class="datepicker" name="data_final">
+					<input value="{{{ isset($data_final) ? $data_final : '' }}}" type="text" class="datepicker" name="data_final">
 					<label>Data Final</label>
 				</div>
 

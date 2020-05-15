@@ -97,8 +97,6 @@ class EnviarXmlController extends Controller
 			$zip->close();
 		}
 
-		
-
 		$dataInicial = str_replace("/", "-", $request->data_inicial);
 		$dataFinal = str_replace("/", "-", $request->data_final);
 

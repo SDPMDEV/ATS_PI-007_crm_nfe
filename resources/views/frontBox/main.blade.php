@@ -52,7 +52,7 @@ table tbody{
 	@if(isset($itens))
 	<input type="hidden" id="itens_pedido" value="{{json_encode($itens)}}">
 	<input type="hidden" id="delivery_id" @if(isset($delivery_id)) value="{{$delivery_id}}" @else value='0' @endif>
-	<input type="hidden" id="codigo_comanda_hidden" value="{{$cod_comanda}}" name="">
+	<input type="hidden" id="codigo_comanda_hidden" @if(isset($cod_comanda)) value="{{$cod_comanda}}" @else value='0' @endif name="">
 	@endif
 	<div class="col s5">
 		<div class="row">

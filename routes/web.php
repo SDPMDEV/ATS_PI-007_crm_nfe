@@ -701,6 +701,7 @@ Route::group(['prefix' => 'cotacao'],function(){
 
 
 	Route::get('/response/{code}', 'CotacaoController@response');
+	Route::get('/filtro', 'CotacaoController@filtro');
 
 
 	Route::get('/searchProvider', 'CotacaoController@searchProvider');
@@ -708,7 +709,14 @@ Route::group(['prefix' => 'cotacao'],function(){
 
 
 	Route::get('/sendMail/{id}', 'CotacaoController@sendMail');
-	
+	Route::get('/listaPorReferencia', 'CotacaoController@listaPorReferencia');
+	Route::get('/listaPorReferencia/filtro', 'CotacaoController@listaPorReferenciaFiltro');
+	Route::get('/referenciaView/{referencia}', 'CotacaoController@referenciaView');
+	Route::get('/escolher/{id}', 'CotacaoController@escolher');
+	Route::get('/imprimirMelhorResultado', 'CotacaoController@imprimirMelhorResultado');
+
+
+
 });
 
 Route::get('/response/{code}', 'CotacaoResponseController@response');

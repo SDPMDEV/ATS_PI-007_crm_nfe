@@ -28,6 +28,7 @@ class CreateCotacaosTable extends Migration
             $table->boolean('ativa');
             $table->decimal('valor', 10,2);
             $table->decimal('desconto', 10,2);
+            $table->boolean('escolhida');
             $table->timestamp('data_registro')->useCurrent();
 
             $table->timestamps();

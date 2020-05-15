@@ -62,6 +62,12 @@
 				<h4>Total do Pedido: <strong class="cyan-text">{{number_format($pedido->somaItens(),2 , ',', '.')}}</strong></h4>
 				<h4>Total de Itens: <strong class="cyan-text">{{count($pedido->itens)}}</strong></h4>
 				<h4>Forma de pagamento: <strong class="cyan-text">{{strtoupper($pedido->forma_pagamento)}}</strong></h4>
+				@if($pedido->observacao != '')
+				<h4>Observação: <strong class="cyan-text">{{$pedido->observacao}}</strong></h4>
+				@endif
+				@if($pedido->troco_para > 0)
+				<h4>Troco Para: <strong class="cyan-text">{{$pedido->troco_para}}</strong></h4>
+				@endif
 			</div>
 		</div>
 
