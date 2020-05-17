@@ -405,6 +405,12 @@ async defer></script>
 <script type="text/javascript" src="/js/relatorios.js"></script>
 @endif
 
+@if(isset($dfeJS))
+<script type="text/javascript" src="/js/dfe.js"></script>
+@endif
+
+
+
 
 
 <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>

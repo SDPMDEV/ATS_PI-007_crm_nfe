@@ -30,31 +30,7 @@ class CompraFiscalController extends Controller
 		});
 	}
 
-	public function dfe(){
-
-		$config = ConfigNota::first();
-
-		$cnpj = str_replace(".", "", $config->cnpj);
-		$cnpj = str_replace("/", "", $cnpj);
-		$cnpj = str_replace("-", "", $cnpj);
-		$cnpj = str_replace(" ", "", $cnpj);
-
-		$dfe_service = new DFeService([
-			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
-			"razaosocial" => $config->razao_social,
-			"siglaUF" => $config->UF,
-			"cnpj" => $cnpj,
-			"schemes" => "PL_009_V4",
-			"versao" => "4.00",
-			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => getenv('CSCid')
-		], 55);
-
-		echo $dfe_service->consulta();
-	}
-
+	
 	public function index(){
 
 		return view('compraFiscal/new')
@@ -277,6 +253,7 @@ class CompraFiscalController extends Controller
 
 
 	private function cadastrarFornecedor($fornecedor){
+		
 		$result = Fornecedor::create([
 			'razao_social' => $fornecedor['razaoSocial'],
 			'nome_fantasia' => $fornecedor['nomeFantasia'],

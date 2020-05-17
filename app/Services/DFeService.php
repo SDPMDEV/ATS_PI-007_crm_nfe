@@ -22,15 +22,15 @@ class DFeService{
 		$this->tools->setEnvironment(1);
 	}
 
-	public function consulta(){
+	public function consulta($data_inicial, $data_final){
 		$ultNSU = 0;
 		$maxNSU = $ultNSU;
-		$loopLimit = 10;
+		$loopLimit = 50;
 		$iCount = 0;
 		//executa a busca de DFe em loop
 		$last = "";
 		$imprime = false;
-		$arrXml = [];
+		$arrayDocs = [];
 		while ($ultNSU <= $maxNSU) {
 			$iCount++;
 			if ($iCount >= $loopLimit) {
@@ -51,7 +51,10 @@ class DFeService{
 				$ultNSU = $node->getElementsByTagName('ultNSU')->item(0)->nodeValue;
 				$maxNSU = $node->getElementsByTagName('maxNSU')->item(0)->nodeValue;
 				$lote = $node->getElementsByTagName('loteDistDFeInt')->item(0);
-
+				if (empty($lote)) {
+        //lote vazio
+					continue;
+				}
 				if($last != $ultNSU){
 					
 					$last = $ultNSU;
@@ -62,93 +65,74 @@ class DFeService{
     				//essas tags irão conter os documentos zipados
 					$docs = $lote->getElementsByTagName('docZip');
 
+					
+
 					foreach ($docs as $doc) {
 
 						$numnsu = $doc->getAttribute('NSU');
 						$schema = $doc->getAttribute('schema');
 
 						$content = gzdecode(base64_decode($doc->nodeValue));
-
-						if($iCount){ // TESTE
-							// dd($content);
-							$xml = simplexml_load_string($content);
-
-							if(!in_array($xml->chNFe, $arrXml)){
-
-
-								$xmlCompleto = $this->teste2($xml->chNFe);							
-
-								// try {
-								// 	$stz = new Standardize($xmlCompleto);
-								// 	$std = $stz->toStd();
-								// 	if ($std->cStat != 138) {
-								// 		// echo "Documento não retornado. [$std->cStat] $std->xMotivo";  
-								// 		// die;
-								// 	}    
-								// 	echo $xml->chNFe . "<br>";
-
-								// 	$zip = $std->loteDistDFeInt->docZip;
-								// 	$esc = gzdecode(base64_decode($zip));
-								// 	print($esc);
-								// 	// header('Content-type: text/xml; charset=UTF-8');
-								// 	// echo $xml;
-
-								// } catch (\Exception $e) {
-								// 	echo str_replace("\n", "<br/>", $e->getMessage());
-								// }
-								array_push($arrXml, $xml->chNFe);
-							}
-							
+						$xml = simplexml_load_string($content);
+						// print_r($xml);
+						// print_r($xml->chNFe);
+						$temp = [
+							'cnpj' => $xml->CNPJ,
+							'nome' => $xml->xNome,
+							'data_emissao' => $xml->dhEmi,
+							'valor' => $xml->vNF,
+							'num_prot' => $xml->nProt,
+							'chave' => $xml->chNFe
+						];
+						$data_dfe = \Carbon\Carbon::parse($xml->dhEmi)->format('Y-m-d');
+						if(strtotime($data_dfe) >= strtotime($data_inicial) && strtotime($data_dfe) <= strtotime($data_final)){
+							array_push($arrayDocs, $temp);
 						}
 
-        				//identifica o tipo de documento
 						$tipo = substr($schema, 0, 6);
 
 					}
-					sleep(2.5);
+					sleep(2);
 				}
 			} catch (\Exception $e) {
 				echo $e->getMessage();
 			}
 
-    		//extrair e salvar os retornos
-
+			return $arrayDocs;
 		}
 	}
 
-	public function downloadXmlPelaChave($chave){
+	public function manifesta($chave, $nSeqEvento){
 		try {
 
-			$this->tools->setEnvironment(1);
-			$response = $this->tools->sefazDownload($chave);
+			$chNFe = $chave;
+			$tpEvento = '210210'; 
+			$xJust = ''; 
+			$nSeqEvento = $nSeqEvento;
 
-			return $response;
+			$response = $this->tools->sefazManifesta($chNFe, $tpEvento, $xJust = '', $nSeqEvento);
 
-		} catch (\Exception $e) {
-			return str_replace("\n", "<br/>", $e->getMessage());
-		}
-	}
+			$st = new Standardize($response);
 
-	public function teste2($chave){
-		try {
+			$arr = $st->toArray();
 
-			$response = $this->tools->sefazConsultaChave($chave);
-
-    //você pode padronizar os dados de retorno atraves da classe abaixo
-    //de forma a facilitar a extração dos dados do XML
-    //NOTA: mas lembre-se que esse XML muitas vezes será necessário, 
-    //      quando houver a necessidade de protocolos
-			$stdCl = new Standardize($response);
-    //nesse caso $std irá conter uma representação em stdClass do XML
-			$std = $stdCl->toStd();
-    //nesse caso o $arr irá conter uma representação em array do XML
-			$arr = $stdCl->toArray();
-    //nesse caso o $json irá conter uma representação em JSON do XML
-			$json = $stdCl->toJson();
 			return $arr;
 
 		} catch (\Exception $e) {
 			echo $e->getMessage();
+		}
+	}
+
+	public function download($chave){
+		try {
+
+			$this->tools->setEnvironment(1);
+			$chave = $chave;
+			$response = $this->tools->sefazDownload($chave);
+			return $response;
+
+		} catch (\Exception $e) {
+			echo str_replace("\n", "<br/>", $e->getMessage());
 		}
 	}
 

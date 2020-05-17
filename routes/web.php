@@ -20,7 +20,13 @@ Route::group(['prefix' => '/'], function(){
 	Route::get('/', 'DeliveryController@index');
 });
 
-Route::get('/dfe', 'CompraFiscalController@dfe');
+Route::group(['prefix' => '/dfe'], function(){
+	Route::get('/', 'DFeController@index');
+	Route::get('/getDocumentos', 'DFeController@getDocumentos');
+	Route::get('/manifestar', 'DFeController@manifestar');
+	Route::get('/download/{chave}', 'DFeController@download');
+	Route::get('/salvarFatura', 'DFeController@salvarFatura');
+});
 
 Route::group(['prefix' => '/relatorios'], function(){
 	Route::get('/', 'RelatorioController@index');

@@ -9,6 +9,20 @@ use App\ItemReceita;
 class ReceitaController extends Controller
 {
 
+	public function __construct(){
+        $this->middleware(function ($request, $next) {
+            $value = session('user_logged');
+            if(!$value){
+                return redirect("/login");
+            }else{
+                if($value['acesso_cliente'] == 0){
+                    return redirect("/sempermissao");
+                }
+            }
+            return $next($request);
+        });
+    }
+    
 	public function save(Request $request){
 
 		$request->merge(['rendimento' => $request->rendimento > 0 ?

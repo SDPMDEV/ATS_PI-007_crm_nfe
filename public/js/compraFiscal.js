@@ -95,8 +95,8 @@ function cadProd(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade)
 		$('#modal1').modal('open');
 	})
 
-
 }
+
 function deleteProd(item){
 	if (confirm('Deseja excluir este item, se confirmar sua NF ficará informal?')) { 
 		var tr = $(item).closest('tr');	

@@ -13,6 +13,20 @@ use Dompdf\Dompdf;
 class FluxoCaixaController extends Controller
 {
 
+	public function __construct(){
+        $this->middleware(function ($request, $next) {
+            $value = session('user_logged');
+            if(!$value){
+                return redirect("/login");
+            }else{
+                if($value['acesso_cliente'] == 0){
+                    return redirect("/sempermissao");
+                }
+            }
+            return $next($request);
+        });
+    }
+    
 	private function parseDate($date, $plusDay = false){
 		if($plusDay == false)
 			return date('Y-m-d', strtotime(str_replace("/", "-", $date)));
