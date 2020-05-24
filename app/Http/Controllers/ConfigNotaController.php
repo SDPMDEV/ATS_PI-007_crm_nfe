@@ -228,4 +228,11 @@ class ConfigNotaController extends Controller
 		}
 	}
 
+	public function deleteCertificado(){
+		Certificado::truncate();
+		session()->flash('color', 'green');
+		session()->flash("message", "Certificado Removido!");
+		return redirect('configNF');
+	}
+
 }

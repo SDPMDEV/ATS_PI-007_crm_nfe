@@ -11,6 +11,7 @@ use App\Cidade;
 use App\Produto;
 use App\Categoria;
 use App\Fornecedor;
+use App\Compra;
 use App\ContaPagar;
 
 class DFeController extends Controller
@@ -144,8 +145,7 @@ class DFeController extends Controller
 				'valor' => $request->valor,
 				'num_prot' => $request->num_prot,
 				'data_emissao' => $request->data_emissao,
-				'sequencia_evento' => 1,
-				'fornecedor_salvo' => false,	 
+				'sequencia_evento' => 1, 
 				'fatura_salva' => false,	 
 			];
 
@@ -226,11 +226,16 @@ class DFeController extends Controller
 
 			$manifesto = ManifestaDfe::where('chave', $chave)->first();
 
+			$compra = Compra::
+			where('chave', $chave)
+			->first();
+
 			return view('dfe/view')
 			->with('fornecedor', $fornecedor)
 			->with('itens', $itens)
 			->with('infos', $infos)
 			->with('dfeJS', true)
+			->with('compraFiscal', $compra != null ? true : false)
 			->with('fatura', $fatura)
 			->with('listaCSTCSOSN', $listaCSTCSOSN)
 			->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)

@@ -35,7 +35,9 @@ class VendaCaixaController extends Controller
     'chave' => '',
     'path_xml' => '',
     'nome' => $venda['nome'] ?? '',
-    'cpf' => $venda['cpf'] ?? ''
+    'cpf' => $venda['cpf'] ?? '',
+    'observacao' => $venda['observacao'],
+    'desconto' => $venda['desconto']
   ]);
 
    if($venda['codigo_comanda'] > 0){

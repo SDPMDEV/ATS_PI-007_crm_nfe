@@ -119,6 +119,7 @@
 				<li><a href="/naturezaOperacao"><span class="left material-icons">radio_button_unchecked</span>Natureza de Operação</a></li>
 				<li><a href="/tributos"><span class="left material-icons">radio_button_unchecked</span>Tributação</a></li>
 				<li><a href="/enviarXml"><span class="left material-icons">radio_button_unchecked</span>Enviar XML</a></li>
+				<li><a href="/dfe"><span class="left material-icons">radio_button_unchecked</span>Manifesto</a></li>
 			</ul> 
 		</li>
 
@@ -204,9 +205,12 @@
 	</ul>
 </nav>
 
-
+	
 <div class="row space black" style="margin-top: 0">
+
+	@if(session('user_logged')['delivery'] == true)
 	<div class="col s3" style="margin-top: 5px;">
+
 		<i style="margin-top: 5px;" class="material-icons white-text left">local_pizza</i>
 		<h6 class="white-text">Pedidos Mesa/Comanda: <strong class="pedidos-aberto" id="pedidos-aberto">x0</strong></h6>
 	</div>
@@ -214,7 +218,7 @@
 		<i style="margin-top: 5px;" class="material-icons white-text left">local_pizza</i>
 		<h6 class="white-text">Pedidos Delivery: <strong class="pedidos-aberto" id="pedidos-aberto-delivery">x0</strong></h6>
 	</div>
-
+	@endif
 	<div class="col s3" style="margin-top: 5px;">
 
 		<i style="margin-top: 5px;"  class="material-icons left yellow-text">layers</i> 
@@ -226,7 +230,7 @@
 
 	</div>
 
-	<div class="col s2 offset-s1" style="margin-top: 5px;">
+	<div class="col s2 @if(!session('user_logged')['delivery']) offset-s7 @endif" style="margin-top: 5px;">
 		<i style="margin-top: 5px;" class="material-icons white-text left">timer</i>
 		<h6 class="white-text"<strong id="timer">00:00:00</strong></h6>
 	</div>
@@ -409,7 +413,9 @@ async defer></script>
 <script type="text/javascript" src="/js/dfe.js"></script>
 @endif
 
-
+@if(isset($naoEncerradosMDFeJS))
+<script type="text/javascript" src="/js/naoEncerradosMDFe.js"></script>
+@endif
 
 
 

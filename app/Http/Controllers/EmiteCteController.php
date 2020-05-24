@@ -325,17 +325,17 @@ class EmiteCteController extends Controller
 		->first();
 		$this->criarPdfParaEnvio($cte);
 		$value = session('user_logged');
-		Mail::send('mail.xml_send_cte', ['emissao' => $cte->data_registro, 'cte' => $cte->cte_numero, 'usuario' => $value['nome']], function($m) use ($venda, $email){
-
+		Mail::send('mail.xml_send_cte', ['emissao' => $cte->data_registro, 'cte' => $cte->cte_numero, 'usuario' => $value['nome']], function($m) use ($cte, $email){
+			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 			$nomeEmpresa = getenv('SMS_NOME_EMPRESA');
 			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
 			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
 			$emailEnvio = getenv('MAIL_USERNAME');
 
 			$m->from($emailEnvio, $nomeEmpresa);
-			$m->subject('Envio de XML NF ' . $venda->NfNumero);
+			$m->subject('Envio de XML CT-e ' . $cte->cte_numero);
 			$m->attach($public.'xml_cte/'.$cte->path_xml);
-			$m->attach($public.'pdf/DANFE.pdf');
+			$m->attach($public.'pdf/CTe.pdf');
 			$m->to($email);
 		});
 		return "ok";

@@ -9,7 +9,7 @@ class VendaCaixa extends Model
 {
 	protected $fillable = [
 		'cliente_id', 'usuario_id', 'valor_total', 'NFcNumero',
-		'natureza_id', 'chave', 'path_xml', 'estado', 'tipo_pagamento', 'forma_pagamento', 'dinheiro_recebido','troco', 'nome', 'cpf'
+		'natureza_id', 'chave', 'path_xml', 'estado', 'tipo_pagamento', 'forma_pagamento', 'dinheiro_recebido','troco', 'nome', 'cpf', 'observacao', 'desconto'
 	];
 
 	public function itens(){

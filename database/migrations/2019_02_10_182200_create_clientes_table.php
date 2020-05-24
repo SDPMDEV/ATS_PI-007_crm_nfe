@@ -36,6 +36,15 @@ class CreateClientesTable extends Migration
 
             $table->decimal('limite_venda', 10,2)->default(0);
 
+            $table->string('rua_cobranca', 100);
+            $table->string('numero_cobranca', 10);
+            $table->string('bairro_cobranca', 30);
+            $table->string('cep_cobranca', 9);
+
+            $table->integer('cidade_cobranca_id')->nullable()->unsigned();
+            $table->foreign('cidade_cobranca_id')->references('id')
+            ->on('cidades')->onDelete('cascade');
+
             // $table->string('cidade', 10)->default("null");
 
             $table->timestamps();

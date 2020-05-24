@@ -8,6 +8,7 @@ var ncm = "";
 var cfop = "";
 var unidade = "";
 var valor = "";
+var valorCompra = "";
 var quantidade = "";
 var codBarras = "";
 
@@ -34,6 +35,7 @@ function filtrar(){
 function montaHTML(resultado, call){
 	let html = "";
 	resultado.map((element) => {
+		// console.log(element)
 		let acao = "";
 		if(element.incluso){
 			acao = '<a target="_blank" href="/dfe/download/'+ element.chave[0] +'" class="btn green">Completa</a>';
@@ -48,37 +50,39 @@ function montaHTML(resultado, call){
 			acao += '<button type="submit" class="btn red">Manifestar</button>';
 			acao += '</form>';
 		}
+		if(element.nome[0]){
+			html += "<tr>";
+			html += "<td>" + element.nome[0] + "</td>";
+			html += "<td>" + element.cnpj[0] + "</td>";
+			html += "<td>" + element.valor[0] + "</td>";
+			html += "<td>" + element.data_emissao + "</td>";
+			html += "<td>" + element.num_prot[0] + "</td>";
+			html += "<td>" + element.chave[0] + "</td>";
 
-		html += "<tr>";
-		html += "<td>" + element.nome[0] + "</td>";
-		html += "<td>" + element.cnpj[0] + "</td>";
-		html += "<td>" + element.valor[0] + "</td>";
-		html += "<td>" + element.data_emissao + "</td>";
-		html += "<td>" + element.num_prot[0] + "</td>";
-		html += "<td>" + element.chave[0] + "</td>";
-
-		html += "<td>";
-		html += acao;
-		html += "</td>";
+			html += "<td>";
+			html += acao;
+			html += "</td>";
+		}
 
 	})
 
 	call(html);
 }
 
-function _construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade){
+function _construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra){
 	this.codigo = codigo;
 	this.nome = nome;
 	this.ncm = ncm;
 	this.cfop = cfop;
 	this.unidade = unidade;
 	this.valor = valor;
+	this.valorCompra = valorCompra;
 	this.quantidade = quantidade;
 	this.codBarras = codBarras.substring(0, 13);
 }
 
-function cadProd(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade){
-	_construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade);
+function cadProd(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra){
+	_construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra);
 	$('#nome').val(nome);
 	$("#nome").focus();
 
@@ -159,6 +163,7 @@ $('#salvar').click(() => {
 	$("#th_"+this.codigo).removeClass("red-text");
 	$("#th_"+this.codigo).html($('#nome').val());
 	let valorVenda = $('#valor_venda').val();
+	let valorCompra = $('#valor_compra').val();
 	let unidadeVenda = $('#unidade_venda').val();
 	let conversaoEstoque =$('#conv_estoque').val();
 	let categoria_id =$('#categoria_id').val();
@@ -171,6 +176,7 @@ $('#salvar').click(() => {
 
 	let prod = {
 		valorVenda: valorVenda,
+		valorCompra: this.valorCompra,
 		unidadeVenda: unidadeVenda,
 		conversao_unitaria: conversaoEstoque,
 		categoria_id: categoria_id,
@@ -200,7 +206,7 @@ $('#salvar').click(() => {
 			produto: prod,
 			_token: token
 		},
-		url: path + 'produtos/salvarProdutoDaNota',
+		url: path + 'produtos/salvarProdutoDaNotaComEstoque',
 		dataType: 'json',
 		success: function(e){
 			$("#th_prod_id_"+codigo).html(e.id);
@@ -208,6 +214,7 @@ $('#salvar').click(() => {
 			$("#th_acao2_"+codigo).css('display', 'block');
 			$('#preloader').css('display', 'none');
 			$('#modal1').modal('close');
+			location.reload();
 
 		}, error: function(e){
 			console.log(e)

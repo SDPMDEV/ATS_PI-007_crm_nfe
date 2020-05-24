@@ -18,6 +18,7 @@ class CreateMdvesTable extends Migration
 
             $table->string('uf_inicio', 2);
             $table->string('uf_fim', 2);
+            $table->boolean('encerrado');
             $table->date('data_inicio_viagem');
             $table->boolean('carga_posterior');
             $table->string('cnpj_contratante', 18);
@@ -32,6 +33,8 @@ class CreateMdvesTable extends Migration
 
             $table->string('estado', 20);
             $table->integer('mdfe_numero');
+            $table->string('chave', 44);
+            $table->string('protocolo', 16);
 
             $table->string('seguradora_nome', 30);
             $table->string('seguradora_cnpj', 18);
@@ -43,10 +46,11 @@ class CreateMdvesTable extends Migration
             $table->string('info_complementar', 60);
             $table->string('info_adicional_fisco', 60);
 
-            $table->string('nome_condutor', 60);
-            $table->string('cpf_condutor', 15);
+            $table->string('condutor_nome', 60);
+            $table->string('condutor_cpf', 15);
             $table->string('lac_rodo', 8);
             $table->integer('tp_emit');
+            $table->integer('tp_transp');
 
 
             $table->timestamps();

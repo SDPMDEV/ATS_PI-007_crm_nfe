@@ -16,18 +16,35 @@
 		<div class="card">
 			<div class="row">
 				<div class="col s12">
+					@if(!isset($mdfe))
 					<h4 class="center-align">EMISSÃO DE MDF-e</h4>
+					@else
+					<h4 class="center-align">ALTERAÇÃO DE MDF-e</h4>
+					@endif
 					<h5 class="grey-text">DADOS INICIAIS</h5>
 
+					@if(!isset($mdfe))
 					<h6>Ultima MDF-e: <strong>{{$lastMdfe}}</strong></h6>
-				</div>
-				
+					@endif
 
+				</div>
+
+				<!-- hiddens -->
+				@if(isset($mdfe))
+				<input type="hidden" value="{{$mdfe->id}}" id="mdfe_id">
+				<input type="hidden" value="{{json_encode($municipiosDeCarregamento)}}" id="municipios_hidden">
+				<input type="hidden" value="{{json_encode($percurso)}}" id="percurso_hidden">
+				<input type="hidden" value="{{json_encode($ciots)}}" id="ciots_hidden">
+				<input type="hidden" value="{{json_encode($valesPedagio)}}" id="vales_pedagio_hidden">
+				<input type="hidden" value="{{json_encode($infoDescarga)}}" id="info_descarga_hidden">
+				@endif
+
+				<!-- fim hiddens -->
 				<div class="row">
 					<div class="col s2 input-field">
 						<select id="uf_inicio">
 							@foreach($ufs as $key => $u)
-							<option value="{{$u}}">{{$u}}</option>
+							<option value="{{$u}}" @isset($mdfe) @if($mdfe->uf_inicio == $u) selected @endif @endisset>{{$u}}</option>
 							@endforeach
 						</select>
 						<label>UF Inicial</label>
@@ -36,14 +53,14 @@
 					<div class="col s2 input-field">
 						<select id="uf_fim">
 							@foreach($ufs as $key => $u)
-							<option value="{{$u}}">{{$u}}</option>
+							<option value="{{$u}}" @isset($mdfe) @if($mdfe->uf_fim == $u) selected @endif @endisset>{{$u}}</option>
 							@endforeach
 						</select>
 						<label>UF Final</label>
 					</div>
 
 					<div class="col s2 input-field">
-						<input type="text" class="datepicker" value=" " id="data_inicio_viagem">
+						<input type="text" class="datepicker" value="@isset($mdfe) {{ \Carbon\Carbon::parse($mdfe->data_inicio_viagem)->format('d/m/Y')}} @endisset" id="data_inicio_viagem">
 						<label>Data Inicio da Viagem</label>
 					</div>
 
@@ -53,7 +70,7 @@
 						<div class="switch">
 							<label class="">
 								Não
-								<input value="true" id="carga_posteior" class="red-text" type="checkbox">
+								<input @isset($mdfe) @if($mdfe->carga_posterior) checked @endif @endisset value="true" id="carga_posteior" class="red-text" type="checkbox">
 								<span class="lever"></span>
 								Sim
 							</label>
@@ -66,8 +83,8 @@
 						<label>Tipo do Emitente</label>
 
 						<select id="tpEmit">
-							<option value="1">1 - Prestador de serviço de transporte</option>
-							<option value="2">2 - Transportador de Carga Própria</option>
+							<option @isset($mdfe) @if($mdfe->tp_emit == 1) selected @endif @endisset value="1">1 - Prestador de serviço de transporte</option>
+							<option @isset($mdfe) @if($mdfe->tp_emit == 2) selected @endif @endisset value="2">2 - Transportador de Carga Própria</option>
 						</select>
 					</div>
 
@@ -75,22 +92,22 @@
 						<label>Tipo do Transportador</label>
 
 						<select id="tpTransp">
-							<option value="1">1 - ETC</option>
-							<option value="2">2 - TAC</option>
-							<option value="3">3 - CTC</option>
+							<option @isset($mdfe) @if($mdfe->tp_transp == 1) selected @endif @endisset value="1">1 - ETC</option>
+							<option @isset($mdfe) @if($mdfe->tp_transp == 2) selected @endif @endisset value="2">2 - TAC</option>
+							<option @isset($mdfe) @if($mdfe->tp_transp == 3) selected @endif @endisset value="3">3 - CTC</option>
 						</select>
 					</div>
 
 					<div class="col s2">
 						<label>Lacre Rodoviário</label>
-						<input type="text" class="validate" value="" id="lacre_rodo">
-
+						<input type="text" class="validate" value="{{{ isset($mdfe) ? $mdfe->lac_rodo : '' }}}" id="lacre_rodo">
 					</div>
 				</div>
 
 				<div class="row">
 					<div class="col s3 input-field">
-						<input type="text" class="validate" value="" id="cnpj_contratante">
+						<input type="text" class="validate" value="{{{ isset($mdfe) ? 
+						$mdfe->cnpj_contratante : '' }}}" id="cnpj_contratante">
 						<label>CNPJ do Contratante</label>
 					</div>
 				</div>
@@ -98,12 +115,14 @@
 				<div class="row">
 
 					<div class="col s2 input-field">
-						<input type="text" class="validate" value="" id="quantidade_carga">
+						<input type="text" class="validate" value="{{{ isset($mdfe) ? 
+						$mdfe->quantidade_carga : '' }}}" id="quantidade_carga">
 						<label>Quantidade da carga</label>
 					</div>
 
 					<div class="col s2 input-field">
-						<input type="text" class="validate" value="" id="valor_carga">
+						<input type="text" class="validate" value="{{{ isset($mdfe) ? 
+						$mdfe->valor_carga : '' }}}" id="valor_carga">
 						<label>Valor da Carga</label>
 					</div>
 					
@@ -114,7 +133,7 @@
 						<select id="veiculo_tracao">
 							<option value="null">--</option>
 							@foreach($veiculos as $v)
-							<option value="{{$v}}">{{$v->marca}} {{$v->modelo}} - {{$v->placa}}</option>
+							<option value="{{$v}}" @isset($mdfe) @if($v->id == $mdfe->veiculo_tracao_id) selected @endif @endisset>{{$v->marca}} {{$v->modelo}} - {{$v->placa}}</option>
 							@endforeach
 						</select>
 						<label>Veiculo de Tração</label>
@@ -139,7 +158,7 @@
 						<select id="veiculo_reboque">
 							<option value="null">--</option>
 							@foreach($veiculos as $v)
-							<option value="{{$v}}">{{$v->marca}} {{$v->modelo}} - {{$v->placa}}</option>
+							<option value="{{$v}}" @isset($mdfe) @if($v->id == $mdfe->veiculo_reboque_id) selected @endif @endisset>{{$v->marca}} {{$v->modelo}} - {{$v->placa}}</option>
 							@endforeach
 						</select>
 						<label>Veiculo de Reboque</label>
@@ -161,7 +180,6 @@
 						</div>
 					</div>
 				</div>
-				
 				
 			</div>
 		</div>
@@ -194,23 +212,23 @@
 											<h5>Seguradora (opcional)</h5>
 
 											<div class="input-field col s5">
-												<input type="text" id="seguradora_nome">
+												<input value="{{{ isset($mdfe) ? $mdfe->seguradora_nome : '' }}}" type="text"  id="seguradora_nome">
 												<label>Nome da Seguradora</label>
 											</div>
 
 											<div class="input-field col s3">
-												<input type="text" id="seguradora_cnpj">
+												<input value="{{{ isset($mdfe) ? $mdfe->seguradora_cnpj : '' }}}" type="text" id="seguradora_cnpj">
 												<label>CNPJ da Seguradora</label>
 											</div>
 										</div>
 										<div class="col s12">
 											<div class="input-field col s3">
-												<input type="text" id="seguradora_numero_apolice">
+												<input value="{{{ isset($mdfe) ? $mdfe->seguradora_numero_apolice : '' }}}" type="text" id="seguradora_numero_apolice">
 												<label>Numero da Apolice</label>
 											</div>
 
 											<div class="input-field col s3">
-												<input type="text" id="seguradora_numero_averbacao">
+												<input value="{{{ isset($mdfe) ? $mdfe->seguradora_numero_averbacao : '' }}}" type="text" id="seguradora_numero_averbacao">
 												<label>Numero de Averbação</label>
 											</div>
 										</div>
@@ -437,11 +455,13 @@
 										<div class="col s12">
 											<h5>Condutor</h5>
 											<div class="col s4 input-field">
-												<input type="text" id="condutor_nome">
+												<input value="{{{ isset($mdfe) ? 
+												$mdfe->condutor_nome : '' }}}" type="text" id="condutor_nome">
 												<label>Nome</label>
 											</div>
 											<div class="col s2 input-field">
-												<input type="text" id="condutor_cpf">
+												<input value="{{{ isset($mdfe) ? 
+												$mdfe->condutor_cpf : '' }}}" type="text" id="condutor_cpf">
 												<label>CPF</label>
 
 											</div>
@@ -656,6 +676,7 @@
 															<th>Quantidade rateio</th>
 															<th>NF-e Referênia</th>
 															<th>CT-e Referênia</th>
+															<th>Mun. Decarrega</th>
 
 															<th>Lacres de Transp</th>
 															<th>Lacres Unidade Carga</th>
@@ -665,6 +686,7 @@
 													</thead>
 													<tbody id="tbody-info-descarga">
 														<tr>
+															<td>--</td>
 															<td>--</td>
 															<td>--</td>
 															<td>--</td>
@@ -705,7 +727,7 @@
 
 					<div class="col s2 "><br>
 
-						<a id="finalizar" style="width: 100%;" href="#" onclick="salvarCTe()" class="btn-large red disabled">Finalizar</a>
+						<a id="finalizar" style="width: 100%;" href="#" onclick="salvarMDFe()" class="btn-large red disabled">Finalizar</a>
 					</div>
 				</div>
 			</div>

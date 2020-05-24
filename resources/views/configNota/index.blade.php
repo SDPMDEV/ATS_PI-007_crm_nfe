@@ -20,6 +20,10 @@
 				<a style="width: 100%" href="/configNF/certificado" class="btn-large blue pulse">
 					<i class="material-icons left">cloud</i>
 				Fazer upload agora</a>
+				@else
+				<a onclick = "if (! confirm('Deseja excluir o certificado')) { return false; }" class="btn red" href="/configNF/deleteCertificado">
+					<i class="material-icons left">close</i>
+				Deletar Certificado</a>
 				@endif
 			</div>
 		</div>

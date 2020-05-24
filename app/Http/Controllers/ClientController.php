@@ -64,12 +64,23 @@ class ClientController extends Controller
         $request->merge([ 'numero' => strtoupper($request->numero)]);
         $request->merge([ 'bairro' => strtoupper($request->bairro)]);
 
-
+        $request->merge([ 'rua_cobranca' => strtoupper($request->rua_cobranca ?? '')]);
+        $request->merge([ 'numero_cobranca' => strtoupper($request->numero_cobranca ?? '')]);
+        $request->merge([ 'bairro_cobranca' => strtoupper($request->bairro_cobranca ?? '')]);
+        $request->merge([ 'cep_cobranca' => strtoupper($request->cep_cobranca ?? '')]);
+        $request->merge([ 'cidade_cobranca_id' => NULL]); // inicia NULL
 
         $cidade = $request->input('cidade');
         $cidade = explode("-", $cidade);
         $cidade = $cidade[0];
         $request->merge([ 'cidade_id' => $cidade]);
+
+        if($request->input('cidade_cobranca')){
+            $cidade = $request->input('cidade_cobranca');
+            $cidade = explode("-", $cidade);
+            $cidade = $cidade[0];
+            $request->merge([ 'cidade_cobranca_id' => $cidade]);
+        }
 
         $result = $cliente->create($request->all());
 
@@ -137,6 +148,19 @@ class ClientController extends Controller
         $resp->consumidor_final = $request->input('consumidor_final');
         $resp->contribuinte = $request->input('contribuinte');
 
+
+        $resp->rua_cobranca = $request->input('rua_cobranca') ?? '';
+        $resp->numero_cobranca = $request->input('numero_cobranca') ?? '';
+        $resp->cep_cobranca = $request->input('cep_cobranca') ?? '';
+
+        if($request->input('cidade_cobranca')){
+            $cidade = $request->input('cidade_cobranca');
+            $cidade = explode("-", $cidade);
+            $cidade = $cidade[0];
+            $resp->cidade_cobranca_id = $cidade;
+        }
+
+
         $result = $resp->save();
         if($result){
             session()->flash('color', 'blue');
@@ -184,7 +208,11 @@ class ClientController extends Controller
             'cep' => 'required|min:9',
             'cidade' => 'required|min:5',
             'consumidor_final' => 'required',
-            'contribuinte' => 'required'
+            'contribuinte' => 'required',
+            'rua_cobranca' => 'max:80',
+            'numero_cobranca' => 'max:10',
+            'bairro_cobranca' => 'max:50',
+            'cep_cobranca' => 'max:9'
         ];
 
         $messages = [
@@ -212,6 +240,11 @@ class ClientController extends Controller
             'email.required' => 'O campo Email é obrigatório.',
             'email.max' => '40 caracteres maximos permitidos.',
             'email.email' => 'Email inválido.',
+
+            'rua_cobranca.max' => '80 caracteres maximos permitidos.',
+            'numero_cobranca.max' => '10 caracteres maximos permitidos.',
+            'bairro_cobranca.max' => '30 caracteres maximos permitidos.',
+            'cep_cobranca.max' => '9 caracteres maximos permitidos.',
 
         ];
         $this->validate($request, $rules, $messages);

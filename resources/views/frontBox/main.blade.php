@@ -2,7 +2,7 @@
 @section('content')
 <style type="text/css">
 .table{
-	height: 310px;
+	height: 298px;
 	overflow-x:auto;
 }
 table tbody{
@@ -17,6 +17,7 @@ table tbody{
 .money-moeda{
 	width: 80px;
 }
+
 </style>
 <!-- <nav>
 	<div style="margin-top: -20px;" class="nav-wrapper black">
@@ -55,7 +56,7 @@ table tbody{
 	<input type="hidden" id="codigo_comanda_hidden" @if(isset($cod_comanda)) value="{{$cod_comanda}}" @else value='0' @endif name="">
 	@endif
 	<div class="col s5">
-		<div class="row">
+		<div class="card">
 			<div class="row">
 				<div class="input-field col s10">
 					<i class="material-icons prefix">person</i>
@@ -72,7 +73,7 @@ table tbody{
 				</div>
 			</div>
 		</div>
-		<div class="card" >
+		<div class="card">
 			<div class="row">
 				
 				<div class="row">
@@ -184,11 +185,15 @@ table tbody{
 					</div>
 
 					<div class="">
-						<div class="col s6 input-field">
+						<div class="col s4 input-field">
 							<input type="text" id="valor_recebido" name="" value="">
 							<label>Valor Recebido</label>
 						</div>
-						<div class="input-field col s6">
+						<div class="col s3 input-field">
+							<input type="text" id="desconto" name="" value="0">
+							<label>Desconto</label>
+						</div>
+						<div class="input-field col s5">
 							<select id="tipo-pagamento">
 								<option value="--">Selecione o Tipo de pagamento</option>
 								@foreach($tiposPagamento as $key => $t)
@@ -205,7 +210,15 @@ table tbody{
 
 
 					<div class="row">
-						<button id="finalizar-venda" style="width: 100%;" class="btn-large green accent-3 modal-trigger disabled" href="#modal-venda">Finalizar Venda</button>
+						<div class="col s2 no-padding" >
+							<button id="btn-obs" style="width: 97%; background-color: : #000" class="btn-large indigo lighten-2 modal-trigger" href="#modal-obs">
+								<i class="material-icons">note</i>
+							</button>
+						</div>
+
+						<div class="col s10 no-padding">
+							<button id="finalizar-venda" style="width: 100%;" class="btn-large green accent-3 modal-trigger disabled" href="#modal-venda">Finalizar Venda</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -226,7 +239,7 @@ table tbody{
 		</div>
 	</div>
 	<div class="modal-footer">
-		<a href="#!" onclick="apontarComanda()" class="btn">Apontar</a>
+		<a href="#!" onclick="apontarComanda()" class="btn indigo lighten-2">Apontar</a>
 	</div>
 </div>
 
@@ -241,10 +254,24 @@ table tbody{
 		</div>
 	</div>
 	<div class="modal-footer">
-		<a href="#!" onclick="abrirCaixa()" class="btn">Abrir</a>
+		<a href="#!" onclick="abrirCaixa()" class="btn indigo lighten-2">Abrir</a>
 	</div>
 </div>
 
+<div id="modal-obs" class="modal">
+	<div class="modal-content">
+		<h4>Observação da Venda</h4>
+		<div class="row">
+			<div class="col s12 input-field">
+				<input type="text" id="obs" name="">
+				<label>Observação</label>
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<a href="#!" onclick="setarObservacao()" class="btn indigo lighten-2">OK</a>
+	</div>
+</div>
 
 <div id="modal2" class="modal">
 	<div class="modal-content">

@@ -44,7 +44,7 @@ class MDFeService{
 
 		$mdfeLast = Mdfe::lastMdfe();
 
-		$std->nMDF = $mdfeLast+2; // ver aqui
+		$std->nMDF = $mdfeLast+1; // ver aqui
 		$std->cMDF = rand(11111111, 99999999);
 		$std->cDV = '5';
 		$std->modal = '1';
@@ -214,8 +214,8 @@ class MDFeService{
 		$cont = 0;
 		foreach($mdfe->infoDescarga as $info) {
 			$infMunDescarga = new \stdClass();
-			$infMunDescarga->cMunDescarga = '3515509';
-			$infMunDescarga->xMunDescarga = 'FERNANDOPOLIS';
+			$infMunDescarga->cMunDescarga = $info->cidade->codigo;
+			$infMunDescarga->xMunDescarga = $info->cidade->nome;
 			$infMunDescarga->nItem = 0;
 			$mdfex->taginfMunDescarga($infMunDescarga);
 
@@ -313,7 +313,10 @@ class MDFeService{
 		$xml = $mdfex->getXML();
 		header("Content-type: text/xml");
 
-		return $xml;
+		return [
+			'xml' => $xml,
+			'numero' => $mdfeLast+1
+		];
 
 
 	}
@@ -338,16 +341,102 @@ class MDFeService{
 
 			$resp = $this->tools->sefazConsultaRecibo($std->infRec->nRec);
 			$std = $st->toStd($resp);
-			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-			// file_put_contents($public.'xml_mdfe/'.$chave.'.xml',$xml);
-
-			return $std;
+			// return $std;
+			$chave = $std->protMDFe->infProt->chMDFe;
+			$cStat = $std->protMDFe->infProt->cStat;
+			if($cStat == '100'){
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+				file_put_contents($public.'xml_mdfe/'.$chave.'.xml', $signXml);
+				return [
+					'chave' => $chave, 
+					'protocolo' => $std->protMDFe->infProt->nProt, 
+					'cStat' => $cStat
+				];
+			}else{
+				return [
+					'erro' => true, 
+					'message' => $std->protMDFe->infProt->xMotivo, 
+					'cStat' => $cStat
+				];
+			}
+			return $std->protMDFe->infProt->chMDFe;
 
 		} catch(\Exception $e){
-			return "Erro: ".$e->getMessage() ;
+			return [
+				'erro' => true, 
+				'message' => $e->getMessage(),
+				'cStat' => ''
+			];
 		}
 
 	}	
 
-	
+
+	public function naoEncerrados(){
+		try {
+			
+			$resp = $this->tools->sefazConsultaNaoEncerrados();
+
+			$st = new Standardize();
+			$std = $st->toArray($resp);
+
+			return $std;
+		} catch (Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+
+	public function encerrar($chave, $protocolo){
+		try {
+			$emitente = ConfigNota::first();
+			$chave = $chave;
+			$nProt = $protocolo;
+			$cUF = $emitente->cUF;
+			$cMun = $emitente->codMun;
+			$dtEnc = date('Y-m-d'); // Opcional, caso nao seja preenchido pegara HOJE
+			$resp = $this->tools->sefazEncerra($chave, $nProt, $cUF, $cMun, $dtEnc);
+
+			$st = new Standardize();
+			$std = $st->toStd($resp);
+
+			return $std;
+		} catch (Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+
+	public function consultar($chave){
+		try {
+			
+			$chave = $chave;
+			$resp = $this->tools->sefazConsultaChave($chave);
+
+			$st = new Standardize();
+			$std = $st->toStd($resp);
+
+			return $std;
+		} catch (Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+
+	public function cancelar($chave, $protocolo, $justificativa){
+		try {
+
+
+			$xJust = $justificativa;
+			$nProt = $protocolo;
+			
+			$chave = $chave;
+			$resp = $this->tools->sefazCancela($chave, $xJust, $nProt);
+
+			$st = new Standardize();
+			$std = $st->toStd($resp);
+			return $std;
+		} catch (Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+
+
 }

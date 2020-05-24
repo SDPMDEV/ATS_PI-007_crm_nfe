@@ -10,6 +10,10 @@ class InfoDescarga extends Model
 		'mdfe_id', 'tp_unid_transp', 'id_unid_transp', 'quantidade_rateio', 'cidade_id'
 	];
 
+	public function cidade(){
+		return $this->belongsTo(Cidade::class, 'cidade_id');
+	}
+
 	public function cte(){
 		return $this->hasOne('App\CTeDescarga', 'info_id', 'id');
 	}

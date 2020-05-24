@@ -804,6 +804,7 @@ class NFeService{
 		$somaICMS = 0;
 		//PRODUTOS
 		$itemCont = 0;
+		$totalItens = count($venda->itens);
 		foreach($venda->itens as $i){
 			$itemCont++;
 
@@ -828,6 +829,10 @@ class NFeService{
 			$stdProd->qTrib = $i->quantidade;
 			$stdProd->vUnTrib = $this->format($i->valor);
 			$stdProd->indTot = 1;
+
+			if($venda->desconto > 0){
+				$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
+			}
 
 			$somaProdutos += $i->quantidade * $i->valor;
 
@@ -1017,7 +1022,9 @@ class NFeService{
 
 		
 		$stdPag = new \stdClass();
+
 		$stdPag->vTroco = $this->format($venda->troco); 
+
 
 		$pag = $nfe->tagpag($stdPag);
 
@@ -1036,7 +1043,7 @@ class NFeService{
 		$stdDetPag->indPag = 0;
 
 		$stdDetPag->tPag = $venda->tipo_pagamento; 
-		$stdDetPag->vPag = $this->format($venda->dinheiro_recebido); //Obs: deve ser informado o valor pago pelo cliente
+		$stdDetPag->vPag = $this->format($venda->dinheiro_recebido - $venda->desconto); //Obs: deve ser informado o valor pago pelo cliente
 
 		if($venda->tipo_pagamento == '03' || $venda->tipo_pagamento == '04'){
 			$stdDetPag->CNPJ = '12345678901234';

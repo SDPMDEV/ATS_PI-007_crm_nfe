@@ -60,34 +60,7 @@
 				</thead>
 				<tbody id="tbl">
 					<tr>
-						@foreach($docs as $d)
-						<tr>
-							<td>{{$d['nome']}}</td>
-							<td>{{$d['cnpj']}}</td>
-							<td>{{$d['valor']}}</td>
-
-							<th>{{ \Carbon\Carbon::parse($d['data_emissao'])->format('d/m/Y H:i:s')}}</th>
-
-							<td>{{$d['num_prot']}}</td>
-							<td>{{$d['chave']}}</td>
-							<td>
-
-								@if(isset($d['incluso']))
-								<a href="/dfe/download/{{$d['chave']}}" class="btn green">Completa</a>
-								@else
-								<form method="get" action="/dfe/manifestar">
-									<input type="hidden" name="nome" value="{{$d['nome']}}">
-									<input type="hidden" name="cnpj" value="{{$d['cnpj']}}">
-									<input type="hidden" name="valor" value="{{$d['valor']}}">
-									<input type="hidden" name="data_emissao" value="{{$d['data_emissao']}}">
-									<input type="hidden" name="num_prot" value="{{$d['num_prot']}}">
-									<input type="hidden" name="chave" value="{{$d['chave']}}">
-									<button type="submit" class="btn red">Manifestar</button>
-								</form>
-								@endif
-							</td>
-						</tr>
-						@endforeach
+						
 					</tr>
 				</tbody>
 			</table>

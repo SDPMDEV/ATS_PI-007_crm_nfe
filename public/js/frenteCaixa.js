@@ -6,6 +6,7 @@ var PRODUTO = null;
 var CLIENTE = null;
 var TOTALEMABERTOCLIENTE = null;
 var COMANDA = 0;
+var OBSERVACAO = "";
 
 $(function () {
 	novaHora();
@@ -125,6 +126,17 @@ $(function () {
 
 });
 
+$('#desconto').on('blur', () => {
+	let desconto = $('#desconto').val();
+	desconto = parseFloat(desconto.replace(",", "."))
+
+	if(desconto > TOTAL){
+		Materialize.toast('ERRO, Valor desconto maior que o valor total', 4000)
+		$('#desconto').val("");
+	}
+
+})
+
 function pad(s) {
 	return (s < 10) ? '0' + s : s;
 }
@@ -142,6 +154,15 @@ function novaData() {
 	let v = [date.getDate(), date.getMonth()+1, date.getFullYear()].map(pad).join('/');
 	console.log(v)
 	$('#data').html(v);
+}
+
+function setarObservacao(){
+	let obs = $('#obs').val();
+	OBSERVACAO = obs;
+	console.log(obs)
+	if(obs != "") $('#btn-obs').css('border-left', '5px solid #1de9b6');
+	else $('#btn-obs').css('border-left', 'none');
+	$('#modal-obs').modal('close')
 }
 
 $('#autocomplete-cliente').on('keyup', () => {
@@ -808,7 +829,9 @@ function finalizarVenda(acao) {
 		if(valorRecebido.length > 0 && parseFloat(valorRecebido) > TOTAL){
 			troco = parseFloat(valorRecebido) - TOTAL;
 		}
-		console.log(ITENS)
+
+		let desconto = $('#desconto').val();
+		desconto = parseFloat(desconto.replace(",", "."))
 
 		let js = { 
 			itens: ITENS,
@@ -823,7 +846,9 @@ function finalizarVenda(acao) {
 			cpf: $('#cpf').val(),
 			delivery_id: $('#delivery_id').val(),
 			pedido_local: $('#pedidoLocal').val() ? true : false,
-			codigo_comanda: COMANDA
+			codigo_comanda: COMANDA,
+			desconto: desconto ? desconto : 0,
+			observacao: OBSERVACAO
 		}
 
 		console.log(js)

@@ -149,7 +149,7 @@ Route::group(['prefix' => 'configNF'], function(){
 	Route::post('/save', 'ConfigNotaController@save');
 	Route::get('/certificado', 'ConfigNotaController@certificado');
 	Route::post('/certificado', 'ConfigNotaController@saveCertificado');
-
+	Route::get('/deleteCertificado', 'ConfigNotaController@deleteCertificado');
 
 });
 

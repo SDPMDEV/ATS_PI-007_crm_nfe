@@ -11,6 +11,7 @@ use App\Compra;
 use App\Helpers\StockMove;
 use App\Cidade;
 use App\ConfigNota;
+use App\ManifestaDfe;
 use App\Services\DFeService;
 
 class CompraFiscalController extends Controller
@@ -38,11 +39,20 @@ class CompraFiscalController extends Controller
 	}
 
 	private function validaChave($chave){
+		$msg = "";
 		$chave = substr($chave, 3, 44);
+
 		$cp = Compra::
 		where('chave', $chave)
 		->first();
-		return $cp == null ? true : false;
+
+		$manifesto = ManifestaDfe::
+		where('chave', $chave)
+		->first();
+
+		if($cp != null) $msg = "XML já importado na compra fiscal";
+		if($manifesto != null) $msg .= "XML já importado através do manifesto fiscal";
+		return $msg;
 	}
 
 	public function new(Request $request){
@@ -50,8 +60,8 @@ class CompraFiscalController extends Controller
 			$arquivo = $request->hasFile('file');
 			$xml = simplexml_load_file($request->file);
 
-
-			if($this->validaChave($xml->NFe->infNFe->attributes()->Id)){
+			$msgImport = $this->validaChave($xml->NFe->infNFe->attributes()->Id);
+			if($msgImport == ""){
 			//var_dump($xml);
 
 				$cidade = Cidade::getCidadeCod($xml->NFe->infNFe->emit->enderEmit->cMun);
@@ -181,7 +191,7 @@ class CompraFiscalController extends Controller
 				->with('dadosAtualizados', $dadosAtualizados);
 			}else{
 				session()->flash('color', 'red');
-				session()->flash('message', 'Esta NFe de entrada já esta incluida no sistema!');
+				session()->flash('message', $msgImport);
 				return redirect("/compraFiscal");
 			}
 

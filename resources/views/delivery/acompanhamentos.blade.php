@@ -18,6 +18,17 @@
 			<div class="title-section text-center mb-md-5 mb-4">
 				<h3 class="w3ls-title mb-3"><span>Adiconais para o produto 
 					<strong style="color: black">{{$produto->produto->nome}}</strong> R$ <strong id="valor_produto">{{$produto->valor}}</strong></span></h3>
+					@if($produto->descricao)
+					<h4 class="w3ls-title mb-3"><span>Descrição: 
+						<strong style="color: black">{{$produto->descricao}}</strong></span></h4>
+
+					@endif
+
+					@if($produto->ingredientes)
+					<h4 class="w3ls-title mb-3"><span>Ingredientes: 
+						<strong style="color: black">{{$produto->ingredientes}}</strong></span></h4>
+
+					@endif
 				</div>
 
 				<input type="hidden" id="produto_id" value="{{$produto->id}}">
@@ -82,4 +93,4 @@
 		</div>
 
 
-@endsection	
+		@endsection	

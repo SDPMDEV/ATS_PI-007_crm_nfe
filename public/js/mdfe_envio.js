@@ -1,11 +1,11 @@
 
 
 function redireciona(){
-	location.href= path + "cte";
+	location.href= path + "mdfe";
 }
 
 function enviar(){
-	$('#preloader1').css('display', 'block');
+	$('#preloader').css('display', 'block');
 	let id = 0
 	$('#body tr').each(function(){
 		if($(this).find('#checkbox input').is(':checked'))
@@ -25,50 +25,34 @@ function enviar(){
 		url: path + 'mdfeSefaz/enviar',
 		dataType: 'json',
 		success: function(e){
-			$('#preloader1').css('display', 'none');
+			$('#preloader').css('display', 'none');
 
 			console.log(e)
-			let cStat = e.cStat;
-			let protMDFe = e.protMDFe;
-			let infProt = protMDFe.infProt;
-
-			let cStatProt = infProt.cStat;
-			let motivoProt = infProt.xMotivo;
 
 
-			console.log(cStat)
-			console.log(infProt)
-			console.log(cStatProt)
-			if(cStatProt != '103'){
-				console.log(motivoProt)
-				$('#modal-alert-erro').modal('open');
-				$('#evento-erro').html("[" + cStatProt + "] : " + motivoProt)
-			}
-
-			// let retorno = recibo.substring(0,4);
-			// let mensagem = recibo.substring(5,recibo.length);
-			// if(retorno == 'Erro'){
-			// 	let m = JSON.parse(mensagem);
-			// 	console.log(m.protCTe.infProt.xMotivo)
-			// 	// alert("[" + m.protCTe.infProt.cStat + "] : " + m.protCTe.infProt.xMotivo)
-			// 	$('#modal-alert-erro').modal('open');
-			// 	$('#evento-erro').html("[" + m.protCTe.infProt.cStat + "] : " + m.protCTe.infProt.xMotivo)
-			// }
-			// else if(e == 'Apro'){
-			// 	alert("Esta MDF-e já esta aprovada, não é possível enviar novamente!");
-			// }
-			// else{
-			// 	// $('#modal-alert').modal('open');
-			// 	$('#evento').html("MDF-e gerada com sucesso RECIBO: "+recibo)
-			// 	//window.open(path+"/mdfeSefaz/imprimir/"+id, "_blank");
-			// 	// location.href= path + "cte";
-			// }
-
+			$('#modal-alert').modal('open');
+			$('#evento').html("MDF-e gerada com sucesso Protocolo: " + e.protocolo)
+			window.open(path+"/mdfeSefaz/imprimir/"+id, "_blank");
+			
 
 		}, error: function(e){
-			Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
+			// Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
+			$('#preloader').css('display', 'none');
+
 			console.log(e)
-			$('#preloader1').css('display', 'none');
+			if(e.status == '403'){
+				let js = e.responseJSON;
+				console.log(js)
+				$('#modal-alert-erro').modal('open');
+				$('#evento-erro').html('[' + js.cStat + ']: ' + js.message);
+			}
+
+			if(e.status == '500'){
+				let js = e.responseJSON;
+				console.log(js)
+				$('#modal-alert-erro').modal('open');
+				$('#evento-erro').html('Esta MDF-e já esta aprovada');
+			}
 		}
 	});
 	
@@ -88,11 +72,12 @@ function imprimir(){
 	if(cont > 1){
 		Materialize.toast('Selecione apenas um documento para impressão!', 5000)
 	}else{
-		window.open(path+"/cteSefaz/imprimir/"+id, "_blank");
+		window.open(path+"mdfeSefaz/imprimir/"+id, "_blank");
 	}
 }
 
 function consultar(){
+	$('#preloader').css('display', 'block');
 	let id = 0;
 	let cont = 0;
 	$('#body tr').each(function(){
@@ -113,21 +98,21 @@ function consultar(){
 				id: id,
 				_token: token
 			},
-			url: path + 'cteSefaz/consultar',
+			url: path + 'mdfeSefaz/consultar',
 			dataType: 'json',
-			success: function(e){
-				console.log(e)
-				let js = JSON.parse(e)
+			success: function(js){
+
 				console.log(js)
+				console.log(js.xMotivo)
 				$('#motivo').html(js.xMotivo);
-				$('#chave').html(js.protCTe.infProt.chCTe);
-				$('#protocolo').html(js.protCTe.infProt.nProt);
+				$('#chave').html(js.protMDFe.infProt.chMDFe);
+				$('#protocolo').html(js.protMDFe.infProt.nProt);
 				$('#modal2').modal('open');
-				$('#preloader1').css('display', 'none');
+				$('#preloader').css('display', 'none');
 			}, error: function(e){
 				console.log(e)
 				Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
-				$('#preloader1').css('display', 'none');
+				$('#preloader').css('display', 'none');
 			}
 		});
 	}
@@ -145,7 +130,6 @@ function setarNumero(buscarCliente = false){
 			$('#numero_nf').html(nf)
 			$('#numero_cte').val(nf)
 
-			console.log(nf)
 
 			cont++;
 		}
@@ -214,25 +198,23 @@ function cancelar(){
 				justificativa: justificativa,
 				_token: token
 			},
-			url: path + 'cteSefaz/cancelar',
+			url: path + 'mdfeSefaz/cancelar',
 			dataType: 'json',
-			success: function(e){
-				let js = JSON.parse(e);
+			success: function(js){
 				console.log(js)
 				$('#preloader5').css('display', 'none');
 
-				if(js.infEvento.cStat == '101' || js.infEvento.cStat == '135' || js.infEvento.cStat == '155'){
-					$('#modal-alert-cancel').modal('open');
-					$('#evento-cancel').html(js.infEvento.xMotivo)
-				}else{
-					$('#modal-alert-cancel-erro').modal('open');
-					$('#evento-cancel').html(js.infEvento.xMotivo)
-				}
+
+				$('#modal-alert-cancel').modal('open');
+				$('#evento-cancel').html(js.infEvento.xMotivo)
+				
 
 			}, error: function(e){
-				console.log(e)
-				Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
 				$('#preloader5').css('display', 'none');
+				let js = e.responseJSON;
+				console.log(js)
+				$('#modal-alert-cancel-erro').modal('open');
+				$('#evento-erro-cancel').html(js.infEvento.xMotivo)
 			}
 		});
 	}
@@ -240,96 +222,6 @@ function cancelar(){
 
 function reload(){
 	location.reload();
-}
-
-function cartaCorrecao(){
-	$('#preloader4').css('display', 'block');
-
-	let id = 0;
-	let cont = 0;
-
-	$('#body tr').each(function(){
-		if($(this).find('#checkbox input').is(':checked')){
-			id = $(this).find('#id').html();
-			cont++;
-		}
-	})
-
-	if(cont > 1){
-		Materialize.toast('Selecione apenas um documento para continuar!', 5000)
-	}else{
-		let token = $('#_token').val();
-		$.ajax
-		({
-			type: 'POST',
-			data: {
-				id: id,
-				correcao: $('#correcao').val(),
-				grupo: $('#grupo').val(),
-				campo: $('#campo').val(),
-				_token: token
-			},
-			url: path + 'cteSefaz/cartaCorrecao',
-			dataType: 'json',
-			success: function(e){
-				console.log(e)
-				let js = JSON.parse(e);
-				console.log(js)
-				$('#preloader4').css('display', 'none');
-				alert(js.retEvento.infEvento.xMotivo)
-
-			}, error: function(e){
-				console.log(e)
-				Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
-				$('#preloader4').css('display', 'none');
-			}
-		});
-	}
-}
-
-function inutilizar(){
-
-	let justificativa = $('#justificativa-inut').val();
-	let nInicio = $('#nInicio').val();
-	let nFinal = $('#nFinal').val();
-	
-	$('#preloader3').css('display', 'block');
-
-	let token = $('#_token').val();
-	$.ajax
-	({
-		type: 'POST',
-		data: {
-			justificativa: justificativa,
-			nInicio: nInicio,
-			nFinal: nFinal,
-			_token: token
-		},
-		url: path + 'cteSefaz/inutilizar',
-		dataType: 'json',
-		success: function(js){
-			console.log(js)
-
-			$('#preloader3').css('display', 'none');
-			$('#modal3').modal('close');
-
-			console.log(js.infInut.cStat)
-			if(js.infInut.cStat == '102' || js.infInut.cStat == '135' || js.infInut.cStat == '155'){
-				$('#modal-alert-inut').modal('open');
-				$('#evento-inut').html(js.infInut.xMotivo)
-				
-			}else{
-				$('#modal-alert-inut-erro').modal('open');
-				$('#evento-inut-erro').html("[" + js.infInut.cStat + "] - " + js.infInut.xMotivo)
-			}
-
-		}, error: function(e){
-			console.log(e)
-			Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
-			$('#preloader1').css('display', 'none');
-		}
-	});
-	
 }
 
 $(function () {
@@ -426,12 +318,18 @@ function habilitaBotoes(){
 }
 
 function enviarEmailXMl(){
+	let id = 0
+	$('#body tr').each(function(){
+		if($(this).find('#checkbox input').is(':checked'))
+			id = $(this).find('#id').html();
+	})
+	console.log(id);
 	$('#preloader6').css('display', 'block');
 	
-	let id = $('#numero_cte').val();
+
 	let email = $('#email').val();
 
-	$.get(path+'cteSefaz/enviarXml', {id: id, email: email})
+	$.get(path+'mdfeSefaz/enviarXml', {id: id, email: email})
 	.done(function(data){
 		console.log(data)
 		$('#preloader6').css('display', 'none');

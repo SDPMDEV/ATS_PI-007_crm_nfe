@@ -12,6 +12,9 @@
 <div class="row" id="content" style="display: block">
 
 	<h1 class="center-align">XML</h1>
+	@if($compraFiscal)
+	<h5 class="red-text center-align">Atenção Este XML já foi incluido através da Compra Fiscal!</h5>
+	@endif
 	<div class="col s12">
 		<h4 class="center-align">Nota Fiscal <strong class="grey-text">{{$infos['nNf']}}</strong></h4>
 		<h4 class="center-align">Chave <strong class="grey-text">{{$infos['chave']}}</strong></h4>
@@ -103,7 +106,7 @@
 							style="display: block" @else style="display: none"
 							@endif>
 
-							<a onclick="cadProd('{{$i['codigo']}}','{{$i['xProd']}}','{{$i['codBarras']}}','{{$i['NCM']}}','{{$i['CFOP']}}','{{$i['uCom']}}','{{$i['vUnCom']}}','{{$i['qCom']}}')" class="btn" href="#">
+							<a onclick="cadProd('{{$i['codigo']}}','{{$i['xProd']}}','{{$i['codBarras']}}','{{$i['NCM']}}','{{$i['CFOP']}}','{{$i['uCom']}}','{{$i['vUnCom']}}','{{$i['qCom']}}', '{{$i['vUnCom']}}')" class="btn" href="#">
 								<i class="material-icons">add</i>
 							</a>
 
@@ -247,6 +250,7 @@
 			</div>
 		</div>
 		<input type="hidden" id="_token" name="_token" value="{{ csrf_token() }}">
+		<input type="" id="valor_compra" name="valor_compra">
 
 
 		<div class="row">
@@ -307,15 +311,15 @@
 						@foreach($listaCSTCSOSN as $key => $c)
 						<option value="{{$key}}"
 						@if($config != null)
-							@if(isset($produto))
-								@if($key == $produto->CST_CSOSN)
-									selected
-								@endif
-							@else
-								@if($key == $config->CST_CSOSN_padrao)
-									selected
-								@endif
-							@endif
+						@if(isset($produto))
+						@if($key == $produto->CST_CSOSN)
+						selected
+						@endif
+						@else
+						@if($key == $config->CST_CSOSN_padrao)
+						selected
+						@endif
+						@endif
 						@endif
 						>{{$key}} - {{$c}}</option>
 						@endforeach

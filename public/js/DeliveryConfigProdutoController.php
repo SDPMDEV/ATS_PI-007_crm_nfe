@@ -290,8 +290,8 @@ private function _validate(Request $request, $fileExist = true){
     }
     $rules = [
         'produto' => $request->id > 0 ? '' : 'required|min:5',
-        'ingredientes' => 'required|max:255',
-        'descricao' => 'required|max:255',
+        'ingredientes' => 'max:255',
+        'descricao' => 'max:255',
         'valor' => $catPizza ? 'required' : '',
         'limite_diario' => 'required'
     ];

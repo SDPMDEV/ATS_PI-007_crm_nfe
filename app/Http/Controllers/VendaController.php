@@ -191,7 +191,7 @@ class VendaController extends Controller
 			'chave' => '',
 			'sequencia_cce' => 0,
 			'observacao' => $this->sanitizeString($venda['observacao']) ?? '',
-			'estado' => 'DISPONIVEL'	
+			'estado' => 'DISPONIVEL',
 		]);
 
 		if($venda['formaPagamento'] == 'conta_crediario'){ 

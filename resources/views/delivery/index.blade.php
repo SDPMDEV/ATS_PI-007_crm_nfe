@@ -24,8 +24,15 @@
 
 						
 						@if(count($d->pizza) == 0)
+						@if($d->valor_anterior > 0)
 						<h4 style="text-decoration: line-through;">de R$ <span">{{$d->valor_anterior}}</span> </h4>
 						<h3>Por R$ <span style="color: orange">{{$d->valor}}</span> </h3>
+
+						@else
+
+						<h3>R$ <span style="color: orange">{{$d->valor}}</span> </h3>
+
+						@endif
 						@else
 
 						@foreach($d->pizza as $tp)

@@ -132,9 +132,10 @@
 			<div class="col-lg-4 col-md-6">
 				<div class="card border-0">
 					<div class="card-header p-0">
+
 						<a href="single.html">
-							@if(count($p->produto->galeria) > 0)
-							<img src="/imagens_produtos/{{$p->produto->galeria[0]->path}}" 
+							@if(count($s['galeria']) > 0)
+							<img src="/imagens_produtos/{{$s['galeria'][0]->path}}" 
 							alt="" style="height: 200px; width: 100%" class="img-fluid" />
 							@else
 							<img src="/imgs/no_image.png" class="img-fluid" >

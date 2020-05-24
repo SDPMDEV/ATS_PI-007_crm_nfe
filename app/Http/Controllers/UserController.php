@@ -31,6 +31,7 @@ class UserController extends Controller
     			'nome' => $usr->nome,
     			'adm' => $usr->adm,
                 'ambiente' => $ambiente,
+                'delivery' => getenv("DELIVERY") == 1 ? true : false,
                 'acesso_cliente' => $usr->acesso_cliente,
                 'acesso_fornecedor' => $usr->acesso_fornecedor,
                 'acesso_produto' => $usr->acesso_produto,

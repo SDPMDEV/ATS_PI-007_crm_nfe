@@ -27,6 +27,7 @@ $('#qtdVol').mask('000000', {reverse: true});
 $('#nInicio').mask('0000000', {reverse: true});
 $('#nFinal').mask('0000000', {reverse: true});
 $('#cep').mask('00000-000', {reverse: true});
+$('.cep').mask('00000-000', {reverse: true});
 $('#numero_sms').mask('00 00000-0000', {reverse: true});
 
 $('.date-input').mask('00/00/0000', {reverse: true});

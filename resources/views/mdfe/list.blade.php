@@ -8,7 +8,7 @@
 
 		<div class="row">
 			<br>
-			<form method="get" action="/cte/filtro">
+			<form method="get" action="/mdfe/filtro">
 				<div class="row">
 
 					<input type="hidden" id="_token" value="{{ csrf_token() }}">
@@ -39,6 +39,7 @@
 							<i class="material-icons">search</i>
 						</button>
 					</div>
+					
 				</div>
 			</form>
 
@@ -49,6 +50,11 @@
 				</div>
 			</div>
 			@endif
+			<div class="col s4">
+				<a href="/mdfeSefaz/naoEncerrados" class="btn-large red">
+					Ver Documentos Não Encerrados
+				</a>
+			</div>
 			<div class="col s12">
 				<label>Numero de registros: {{count($mdfes)}}</label>					
 			</div>
@@ -92,7 +98,7 @@
 						<td>{{$m->quantidade_carga}}</td>
 						<td>{{$m->valor_carga}}</td>
 						<td>
-							@if($m->estado == 'NOVO')
+							@if($m->estado == 'NOVO' || $m->estado == 'REJEITADO')
 							<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/mdfe/delete/{{ $m->id }}">
 								<i class="material-icons left red-text">delete</i>	
 							</a>
@@ -121,7 +127,7 @@
 		@endif
 
 
-		<div class="row" id="preloader1" style="display: none">
+		<div class="row" id="preloader" style="display: none">
 			<div class="col s12 center-align">
 				<div class="preloader-wrapper active">
 					<div class="spinner-layer spinner--only">
@@ -154,19 +160,7 @@
 			<div class="col s2">
 				<a id="btn-cancelar" onclick="setarNumero()" style="width: 100%" class="btn-large red modal-trigger" href="#modal1">Cancelar</a>
 			</div>
-
-			<div class="col s2">
-				<a id="btn-correcao" onclick="setarNumero()" style="width: 100%" class="btn-large teal accent-3 waves-light modal-trigger" href="#modal4">CC-e</a>
-			</div>
-
-			<div class="col s2">
-				<a id="btn-inutilizar" style="width: 100%" class="btn-large lime lighten-1 waves-light modal-trigger" href="#modal3">Inutilizar</a>
-			</div>
-
-		</div>
-
-
-		<div class="row">
+		
 			<div class="col s2">
 				<a id="btn-xml" onclick="setarNumero(true)" style="width: 100%" class="btn-large grey darken-1 waves-light modal-trigger" href="#modal5">Enviar XML</a>
 			</div>
@@ -250,6 +244,18 @@
 		<p class="center-align"><i class="large material-icons green-text">cancel</i></p>
 		<h4 class="center-align">MDF-e Cancelada</h4>
 		<p class="center-align" id="evento-cancel"></p>
+	</div>
+	<div class="modal-footer">
+		<a href="#!" onclick="reload()" class="modal-action modal-close waves-effect waves-green btn-flat">Fechar</a>
+	</div>
+</div>
+
+<div id="modal-alert-cancel-erro" class="modal">
+
+	<div class="modal-content">
+		<p class="center-align"><i class="large material-icons red-text">cancel</i></p>
+		<h4 class="center-align">Algo deu errado!</h4>
+		<p class="center-align" id="evento-erro-cancel"></p>
 	</div>
 	<div class="modal-footer">
 		<a href="#!" onclick="reload()" class="modal-action modal-close waves-effect waves-green btn-flat">Fechar</a>
@@ -396,7 +402,7 @@
 
 <div id="modal5" class="modal">
 	<div class="modal-content">
-		<h4>Enviar XML da MDF <strong class="orange-text" id="numero_nf"></strong></h4>
+		<h4>Enviar XML da MDF-e <strong class="orange-text" id="numero_nf"></strong></h4>
 
 		<div class="row">
 			<p class="blue-text" id="info-email"></p>

@@ -53,6 +53,8 @@ public function save(Request $request){
 
   $request->merge([ 'status' => $request->input('status') ? true : false ]);
   $request->merge([ 'destaque' => $request->input('destaque') ? true : false ]);
+  $request->merge([ 'ingredientes' => $request->input('ingredientes') ?? '']);
+  $request->merge([ 'descricao' => $request->input('descricao') ?? '']);
   $request->merge([ 'produto_id' => $produto]);
 
 
@@ -62,11 +64,10 @@ public function save(Request $request){
 
 }else{
     $request->merge([ 'valor' => str_replace(",", ".", $request->valor)]);
-    $request->merge([ 'valor_anterior' => str_replace(",", ".", $request->valor_anterior)]);
+    $request->merge([ 'valor_anterior' => str_replace(",", ".", $request->valor_anterior ?? 0)]);
 }
 
 
-$this->_validate($request);
 
 $result = ProdutoDelivery::create($request->all());
 
@@ -95,7 +96,6 @@ if($result){
 return redirect('/deliveryProduto');
 
 
-		// return redirect('/deliveryCategoria');
 }
 
 public function saveImagem(Request $request){
@@ -192,8 +192,8 @@ public function alterarDestaque($id){
         $this->_validate($request);
 
         $resp->categoria_id = $request->categoria_id;
-        $resp->ingredientes = $request->ingredientes;
-        $resp->descricao = $request->descricao;
+        $resp->ingredientes = $request->ingredientes ?? '';
+        $resp->descricao = $request->descricao ?? '';
         $resp->valor = str_replace(",", ".", $request->valor);
         $resp->valor_anterior = str_replace(",", ".", $request->valor_anterior);
         $resp->limite_diario = $request->limite_diario;
@@ -290,8 +290,8 @@ private function _validate(Request $request, $fileExist = true){
     }
     $rules = [
         'produto' => $request->id > 0 ? '' : 'required|min:5',
-        'ingredientes' => 'required|max:255',
-        'descricao' => 'required|max:255',
+        'ingredientes' => 'max:255',
+        'descricao' => 'max:255',
         'valor' => $catPizza ? 'required' : '',
         'limite_diario' => 'required'
     ];

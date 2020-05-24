@@ -29,6 +29,7 @@ class CreateVendaCaixasTable extends Migration
             $table->decimal('valor_total', 10,2);
             $table->decimal('dinheiro_recebido', 10,2);
             $table->decimal('troco', 10,2);
+            $table->decimal('desconto', 10,2);
 
             $table->string('forma_pagamento', 20);
             $table->string('tipo_pagamento', 2);
@@ -40,6 +41,7 @@ class CreateVendaCaixasTable extends Migration
 
             $table->string('nome', 38);
             $table->string('cpf', 18);
+            $table->string('observacao', 100);
 
             $table->timestamps();
         });

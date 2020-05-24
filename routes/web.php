@@ -169,7 +169,7 @@ Route::group(['prefix' => 'configNF'], function(){
 	Route::post('/save', 'ConfigNotaController@save');
 	Route::get('/certificado', 'ConfigNotaController@certificado');
 	Route::post('/certificado', 'ConfigNotaController@saveCertificado');
-
+	Route::get('/deleteCertificado', 'ConfigNotaController@deleteCertificado');
 
 });
 
@@ -333,6 +333,7 @@ Route::group(['prefix' => 'produtos'],function(){
 	Route::post('/update', 'ProductController@update');
 	Route::post('/getValue', 'ProductController@getValue');
 	Route::post('/salvarProdutoDaNota', 'ProductController@salvarProdutoDaNota');
+	Route::post('/salvarProdutoDaNotaComEstoque', 'ProductController@salvarProdutoDaNotaComEstoque');
 
 });
 
@@ -448,7 +449,9 @@ Route::group(['prefix' => 'mdfe'],function(){
 	Route::get('/lista', 'MdfeController@lista');
 	Route::get('/detalhar/{id}', 'MdfeController@detalhar');
 	Route::get('/delete/{id}', 'MdfeController@delete');
+	Route::get('/edit/{id}', 'MdfeController@edit');
 	Route::post('/salvar', 'MdfeController@salvar');
+	Route::post('/update', 'MdfeController@update');
 	Route::get('/filtro', 'MdfeController@filtro');
 	
 });
@@ -456,13 +459,12 @@ Route::group(['prefix' => 'mdfe'],function(){
 Route::group(['prefix' => 'mdfeSefaz'],function(){
 	Route::post('/enviar', 'EmiteMdfeController@enviar');
 	Route::get('/imprimir/{id}', 'EmiteMdfeController@imprimir');
-	Route::post('/cancelar', 'EmiteCteController@cancelar');
-	Route::post('/consultar', 'EmiteCteController@consultar');
-	Route::post('/inutilizar', 'EmiteCteController@inutilizar');
-	Route::post('/cartaCorrecao', 'EmiteCteController@cartaCorrecao');
-	Route::get('/teste/{id}', 'EmiteCteController@teste');
-	Route::get('/enviarXml', 'EmiteCteController@enviarXml');
+	Route::post('/cancelar', 'EmiteMdfeController@cancelar');
+	Route::post('/consultar', 'EmiteMdfeController@consultar');
 
+	Route::get('/naoEncerrados', 'EmiteMdfeController@naoEncerrados');
+	Route::post('/encerrar', 'EmiteMdfeController@encerrar');
+	Route::get('/enviarXml', 'EmiteMdfeController@enviarXml');
 });
 
 Route::group(['prefix' => 'nfce'],function(){

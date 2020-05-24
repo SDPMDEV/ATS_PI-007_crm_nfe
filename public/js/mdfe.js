@@ -12,8 +12,41 @@ var VEICULOREBOQUE = null;
 var INFODESCARGA = [];
 var LACRESTRANSP = [];
 var LACRESUNIDCARGA = [];
+var MDFEID = 0;
+
 
 $(function () {
+
+	// se editar
+	if($('#mdfe_id').val()) MDFEID = $('#mdfe_id').val()
+	if(MDFEID > 0){
+
+		
+		mostraVeiculoTracao();
+		mostraVeiculoReboque();
+		let municipios = $('#municipios_hidden').val()
+		MUNIPIOSCARREGAMENTO = JSON.parse(municipios);
+		montaTabelaMunicipioCarregamento();
+
+
+		let percurso = $('#percurso_hidden').val()
+		PERCURSO = JSON.parse(percurso);
+		montaTabelaPercuso();
+
+		let ciots = $('#ciots_hidden').val()
+		CIOT = JSON.parse(ciots);
+		montaTabelaCiot();
+
+		let vales = $('#vales_pedagio_hidden').val()
+		VALEPEDAGIO = JSON.parse(vales);
+		montaTabelaValePedagio();
+
+		let infos = $('#info_descarga_hidden').val()
+		INFODESCARGA = JSON.parse(infos);
+		montaTabelaInfosDescargaEdit();
+
+		habilitaBtnSalvar();
+	}
 
 	getCidades(function(data){
 		$('input.autocomplete-cidade-carregamento').autocomplete({
@@ -52,11 +85,13 @@ function getCidades(data){
 }
 
 $('#veiculo_tracao').change(() => {
+	mostraVeiculoTracao();
+})
+
+function mostraVeiculoTracao(){
 	let veiculo = $('#veiculo_tracao').val();
 	if(veiculo != 'null'){
 		veiculo = JSON.parse(veiculo);
-
-		console.log(veiculo)
 		VEICULOTRACAO = veiculo;
 		$('#tracao_marca').html(veiculo.marca);
 		$('#tracao_modelo').html(veiculo.modelo);
@@ -66,14 +101,17 @@ $('#veiculo_tracao').change(() => {
 		$('#display-tracao').css('display', 'block');
 		habilitaBtnSalvar()
 	}
-})
+}
 
 $('#veiculo_reboque').change(() => {
+	mostraVeiculoReboque();
+})
+
+function mostraVeiculoReboque(){
 	let veiculo = $('#veiculo_reboque').val();
-	console.log(veiculo)
+
 	if(veiculo != 'null'){
 		veiculo = JSON.parse(veiculo);
-		console.log(veiculo)
 		VEICULOREBOQUE = veiculo;
 
 		$('#reboque_marca').html(veiculo.marca);
@@ -84,7 +122,7 @@ $('#veiculo_reboque').change(() => {
 		$('#display-reboque').css('display', 'block');
 		habilitaBtnSalvar()
 	}
-})
+}
 
 
 //** INICIO FUNCOES DE MUNICIPIO
@@ -289,7 +327,6 @@ function montaTabelaValePedagio(){
 		"<i class='material-icons red-text'>delete</i></a></td>";
 		html += "</tr>";
 	})	
-	console.log(html)
 	$('#tbody-vale-pegadio').html(html);
 }
 
@@ -456,13 +493,34 @@ $('#btn-add-info-desc').click(() => {
 
 			INFODESCARGA.push(js);
 			montaTabelaInfosDescarga();
-			habilitaBtnSalvar()
+			habilitaBtnSalvar();
+			limparInfo();
 		}else{
 			alert(msg)
 		}
 	})
 
 })
+
+function limparInfo(){
+	LACRESTRANSP = [];
+	LACRESUNIDCARGA = [];
+	$('#tbody-lacre-unid').html("<tr><td>-</td><td>-</td><td>-</td></tr>");
+	$('#tbody-lacre-transp').html("<tr><td>-</td><td>-</td><td>-</td></tr>");
+	$('#tp_unid_transp').val("");
+	$('#id_unid_transp').val("");
+	$('#qtd_rateio_transp').val("");
+	$('#id_unid_carga').val("");
+	$('#qtd_rateio_unid_carga').val("");
+	$('#lacre_unidade').val("");
+	$('#lacre_transp').val("");
+
+	$('#chave_nfe').val("");
+	$('#seg_cod_nfe').val("");
+
+	$('#chave_cte').val("");
+	$('#seg_cod_cte').val("");
+}
 
 function validaInsertInfo(call){
 	let msg = "";
@@ -512,6 +570,37 @@ function montaTabelaInfosDescarga(){
 				html += "<td>"+v.qtdRateioUnidCarga+"</td>";
 				html += "<td>"+ (v.chaveNFe.length > 0 ? v.chaveNFe : v.segCodNFe) +"</td>";
 				html += "<td>"+ (v.chaveCTe.length > 0 ? v.chaveCTe : v.segCodCTe) +"</td>";
+				html += "<td>"+ v.municipio +"</td>";
+				html += "<td>[" + 
+				lacresTranp
+				+"]</td>";
+				html += "<td>[" + 
+				lacresUnid
+				+"]</td>";
+				html += "<td><a href='#!' onclick='deleteInfoDescarga("+v.id+")'>"+
+				"<i class='material-icons red-text'>delete</i></a></td>";
+				html += "</tr>";
+			})	
+		})
+	})
+
+	$('#tbody-info-descarga').html(html);
+}
+
+function montaTabelaInfosDescargaEdit(){
+	let html = "";
+	
+	INFODESCARGA.map((v) => {
+		montaLacres(v.lacresUnidTransp, (lacresTranp) => {
+			montaLacres(v.lacresUnidCarga, (lacresUnid) => {
+				console.log(v)
+				html += "<tr>";
+				html += "<td>"+v.tpTransp+"</td>";
+				html += "<td>"+v.idUnidTransp+"</td>";
+				html += "<td>"+v.qtdRateioUnidCarga+"</td>";
+				html += "<td>"+ (v.chaveNFe.length > 0 ? v.chaveNFe : v.segCodNFe) +"</td>";
+				html += "<td>"+ (v.chaveCTe.length > 0 ? v.chaveCTe : v.segCodCTe) +"</td>";
+				html += "<td>"+ v.municipio +"</td>";
 				html += "<td>[" + 
 				lacresTranp
 				+"]</td>";
@@ -529,7 +618,6 @@ function montaTabelaInfosDescarga(){
 }
 
 function montaLacres(array, call){
-	console.log(array)
 	let cont = 0;
 	let lacres = "";
 	array.map((v) => {
@@ -542,10 +630,11 @@ function montaLacres(array, call){
 function deleteInfoDescarga(l){
 	let temp = [];
 	INFODESCARGA.map((m) => {
-		if(m != l) temp.push(m);
+
+		if(m.id != l) temp.push(m);
 	})
-	LACRESUNIDCARGA = temp;
-	montaTabelaLacreUnidCarga()
+	INFODESCARGA = temp;
+	montaTabelaInfosDescarga()
 }
 
 //***** FIM FUNCOES DE MUNICIPIO
@@ -583,18 +672,21 @@ function habilitaBtnSalvar(){
 		camposValidos = false;
 	}
 
-	if(MUNIPIOSCARREGAMENTO.length > 0 && PERCURSO.length > 0 && INFODESCARGA.length > 0 && $('#cnpj_contratante').val().length > 10
+	if(MUNIPIOSCARREGAMENTO.length > 0 && INFODESCARGA.length > 0 && $('#cnpj_contratante').val().length > 10
 		&& VEICULOREBOQUE != null && VEICULOTRACAO != null && camposValidos){
 		$('#finalizar').removeClass('disabled')
+}else{
+	$('#finalizar').addClass('disabled')
 }
 }
 
-function salvarCTe(){
+function salvarMDFe(){
 	console.log('salvando');
 	validaMDFe((msgErro) => {
 
 		if(msgErro == ""){
 			let js = {
+				id: MDFEID,
 				infoDescarga: INFODESCARGA,
 				municipios_carregamento: MUNIPIOSCARREGAMENTO,
 				ciot: CIOT,
@@ -623,7 +715,13 @@ function salvarCTe(){
 			}
 
 			console.log(js)
-			$.post(path+'mdfe/salvar', {_token: $('#_token').val(), data: js})
+
+			let url = 'mdfe/salvar';
+			
+			if(MDFEID > 0){
+				url = 'mdfe/update'
+			}
+			$.post(path + url, {_token: $('#_token').val(), data: js})
 			.done((res) => {
 				console.log(res)
 				sucesso();

@@ -8,11 +8,11 @@ class Mdfe extends Model
 {
 
 	protected $fillable = [
-		'uf_inicio', 'uf_fim', 'data_inicio_viagem', 'carga_posterior', 'veiculo_tracao_id', 
+		'uf_inicio', 'uf_fim', 'encerrado', 'data_inicio_viagem', 'carga_posterior', 'veiculo_tracao_id', 
 		'veiculo_reboque_id', 'estado', 'seguradora_nome', 'seguradora_cnpj', 'numero_apolice',
 		'numero_averbacao', 'valor_carga', 'quantidade_carga', 'info_complementar', 
 		'info_adicional_fisco', 'cnpj_contratante', 'mdfe_numero', 'condutor_nome', 'condutor_cpf',
-		'tp_emit', 'tp_transp', 'lac_rodo'
+		'tp_emit', 'tp_transp', 'lac_rodo', 'chave', 'protocolo'
 	];
 
 	public function veiculoTracao(){
@@ -42,14 +42,29 @@ class Mdfe extends Model
         return $this->hasMany('App\InfoDescarga', 'mdfe_id', 'id');
     }
 
+    public static function filtroData($dataInicial, $dataFinal, $estado){
+        $c = Mdfe::
+        whereBetween('created_at', [$dataInicial, 
+            $dataFinal]);
+
+        if($estado != 'TODOS') $c->where('estado', $estado);
+        
+        return $c->get();
+    }
+
 	public static function lastMdfe(){
-		$last = Mdfe::
+		$mdfe = Mdfe::
 		where('mdfe_numero', '!=', 0)
 		->orderBy('mdfe_numero', 'desc')
 		->first();
 
-		if($last != null) return $last->mdfe_numero;
-		return 0;
+		if($mdfe == null) {
+			return ConfigNota::first()->ultimo_numero_mdfe;
+		}
+		else{ 
+			$configNum = ConfigNota::first()->ultimo_numero_mdfe;
+			return $configNum > $mdfe->mdfe_numero ? $configNum : $mdfe->mdfe_numero;
+		}
 	}
 
 	public function itens(){

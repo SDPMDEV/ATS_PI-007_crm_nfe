@@ -8,6 +8,8 @@ use App\Categoria;
 use App\ConfigNota;
 use App\Tributacao;
 use App\Rules\EAN13;
+use App\Helpers\StockMove;
+
 
 class ProductController extends Controller
 {
@@ -351,6 +353,39 @@ class ProductController extends Controller
             'CST_IPI' => $produto['CST_IPI'],
 
         ]);
+
+        echo json_encode($result);  
+    }
+
+    public function salvarProdutoDaNotaComEstoque(Request $request){
+        //echo json_encode($request->produto);
+        $produto = $request->produto;
+
+        $valorVenda = str_replace(",", ".", $produto['valorVenda']);
+
+        $valorCompra = str_replace(",", ".", $produto['valorCompra']);
+        $result = Produto::create([
+            'nome' => $produto['nome'],
+            'NCM' => $produto['ncm'],
+            // 'CFOP' => $produto['cfop'],
+            'valor_venda' => $valorVenda,
+            'valor_livre' => false,
+            'cor' => $produto['cor'],
+            'conversao_unitaria' => (int) $produto['conversao_unitaria'],
+            'categoria_id' => $produto['categoria_id'],
+            'unidade_compra' => $produto['unidadeCompra'],
+            'unidade_venda' => $produto['unidadeVenda'],
+            'codBarras' => $produto['codBarras'] ?? 'SEM GTIN',
+            'composto' => false,
+            'CST_CSOSN' => $produto['CST_CSOSN'],
+            'CST_PIS' => $produto['CST_PIS'],
+            'CST_COFINS' => $produto['CST_COFINS'],        
+            'CST_IPI' => $produto['CST_IPI'],
+
+        ]);
+
+        $stockMove = new StockMove();
+        $stockMove->pluStock($result->id, $produto['quantidade'], $valorCompra);
 
         echo json_encode($result);  
     }

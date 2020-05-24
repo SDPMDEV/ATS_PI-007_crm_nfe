@@ -1,12 +1,24 @@
 
 $(function () {
   let cidadeId = $('#cidadeId').val();
+  let cidadeCobrancaId = $('#cidadeCobrancaId').val();
+  console.log(cidadeCobrancaId)
   getCidades(function(data){
    $('input.autocomplete-cidade').autocomplete({
      data: data,
      limit: 20, 
      onAutocomplete: function(val) {
        var cliente = $('#autocomplete-cidade').val().split('|');
+
+     },
+     minLength: 1,
+   });
+
+   $('input.autocomplete-cidade-cobranca').autocomplete({
+     data: data,
+     limit: 20, 
+     onAutocomplete: function(val) {
+       var cliente = $('#autocomplete-cidade-cobranca').val().split('|');
 
      },
      minLength: 1,
@@ -22,6 +34,17 @@ $(function () {
       $('#autocomplete-cidade').val(data.id + ' - ' + data.nome)
     })
   }
+
+  if(cidadeCobrancaId > 0){
+
+    findCidade(cidadeCobrancaId, (data) => {
+
+      $('#autocomplete-cidade-cobranca').val(data.id + ' - ' + data.nome)
+      Materialize.updateTextFields();
+    })
+  }
+
+
 
 
 });
