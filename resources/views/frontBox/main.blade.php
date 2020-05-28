@@ -83,6 +83,7 @@ table tbody{
 						<label for="autocomplete-produto green-text">Produto</label>
 
 					</div>
+					
 				</div>
 
 				<div class="row">
@@ -101,9 +102,19 @@ table tbody{
 					</div>
 				</div>
 
-				<div class="">
-					<button id="adicionar-item" class="btn-large green accent-3" style="width: 100%;">Adicionar Item</button>
+
+				
+				<div style="margin-bottom: 75px;">
+					<div class="col s2 no-padding">
+						<button class="btn-large indigo accent-3 modal-trigger" style="width: 98%" href="#modal-obs-item">
+							<i class="material-icons">note</i>
+						</button>
+					</div>
+					<div class="col s10 no-padding">
+						<a id="adicionar-item" class="btn-large green accent-3" style="width: 100%;">Adicionar Item</a>
+					</div>
 				</div>
+				
 
 
 				<div class="row">
@@ -258,12 +269,29 @@ table tbody{
 	</div>
 </div>
 
-<div id="modal-obs" class="modal">
+
+
+<div id="modal-obs-item" class="modal">
 	<div class="modal-content">
-		<h4>Observação da Venda</h4>
+		<h4>Observação do Item (opcional)</h4>
 		<div class="row">
 			<div class="col s12 input-field">
-				<input type="text" id="obs" name="">
+				<input type="text" id="obs-item" name="" data-length="80">
+				<label>Observação</label>
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<a href="#!" onclick="setarObservacaoItem()" class="btn indigo accent-2">OK</a>
+	</div>
+</div>
+
+<div id="modal-obs" class="modal">
+	<div class="modal-content">
+		<h4>Observação da Venda (opcional)</h4>
+		<div class="row">
+			<div class="col s12 input-field">
+				<input type="text" id="obs" name="" data-length="100">
 				<label>Observação</label>
 			</div>
 		</div>

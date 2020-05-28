@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ItemVendaCaixa extends Model
 {
     protected $fillable = [
-		'produto_id', 'venda_caixa_id', 'quantidade', 'valor', 'item_pedido_id'
+		'produto_id', 'venda_caixa_id', 'quantidade', 'valor', 'item_pedido_id', 'observacao'
 	];
 
 	public function produto(){

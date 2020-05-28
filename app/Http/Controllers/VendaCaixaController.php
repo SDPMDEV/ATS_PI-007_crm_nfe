@@ -62,7 +62,8 @@ class VendaCaixaController extends Controller
       'produto_id' => (int) $i['id'],
       'quantidade' => (float) str_replace(",", ".", $i['quantidade']),
       'valor' => (float) str_replace(",", ".", $i['valor']),
-      'item_pedido_id' => isset($i['itemPedido']) ? $i['itemPedido'] : NULL
+      'item_pedido_id' => isset($i['itemPedido']) ? $i['itemPedido'] : NULL,
+      'observacao' => $i['obs'] ?? ''
     ]);
 
 

@@ -7,6 +7,7 @@ var CLIENTE = null;
 var TOTALEMABERTOCLIENTE = null;
 var COMANDA = 0;
 var OBSERVACAO = "";
+var OBSERVACAOITEM = "";
 
 $(function () {
 	novaHora();
@@ -165,6 +166,13 @@ function setarObservacao(){
 	$('#modal-obs').modal('close')
 }
 
+function setarObservacaoItem(){
+	let obs = $('#obs-item').val();
+	OBSERVACAOITEM = obs;
+
+	$('#modal-obs-item').modal('close')
+}
+
 $('#autocomplete-cliente').on('keyup', () => {
 	$('#cliente-nao').css('display', 'block');
 	CLIENTE = null;
@@ -273,6 +281,7 @@ function addItem(){
 			console.log(TOTAL)
 			let item = {
 				cont: (ITENS.length+1),
+				obs: OBSERVACAOITEM,
 				id: PRODUTO.id,
 				nome: PRODUTO.nome,
 				quantidade: $('#quantidade').val(),
@@ -297,6 +306,8 @@ function addItem(){
 			console.log(ITENS);
 			$('#body').html(t);
 			PRODUTO = null;
+			$('#obs-item').val('');
+			OBSERVACAOITEM = "";
 			// var audio = new Audio('/notificacao/beep.mp3');
 			// audio.play();
 		}
@@ -321,7 +332,9 @@ function montaTabela(){
 		t += "<tr>";
 		t += "<td>"+v.cont+"</td>";
 		t += "<td class='cod'>"+v.id+"</td>";
-		t += "<td>"+v.nome+"</td>";
+		t += "<td>"+v.nome + (v.obs ? " [OBS: "+v.obs+"]" : "")
+		+"</td>";
+
 		t += "<td>"+v.quantidade+"</td>";
 		t += "<td>"+formatReal(v.valor)+"</td>";
 		t += "<td>"+formatReal(v.valor*v.quantidade)+"</td>";

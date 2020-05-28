@@ -46,64 +46,15 @@
 	</div>
 
 
-	<section class="blog_w3ls py-5">
-		<div class="container pb-xl-5 pb-lg-3">
-			<div class="title-section text-center mb-md-5 mb-4">
-				<h3 class="w3ls-title mb-3">Forma de Pagamento</h3>
-
-			</div>
-			<div class="container">
-
-				<fieldset class="form-group">
-					<div class="row">
-						<div class="col-sm-12">
-							<div class="form-check">
-
-								<input class="form-check-input" type="radio" name="gridRadios" id="credito" value="credito">
-								<label class="form-check-label" for="credito">
-									Cartão de Crédito
-								</label>
-								<img width="40" src="/imgs/credit-card.png">
-
-							</div>
-							<div class="form-check">
-								<input class="form-check-input" type="radio" name="gridRadios" id="debito" value="debito">
-								<label class="form-check-label" for="debito">
-									Cartão de Débito
-								</label>
-								<img width="40" src="/imgs/debit-card.png">
-
-							</div>
-							<div class="form-check">
-								<input class="form-check-input" type="radio" name="gridRadios" id="dinheiro" value="dinheiro">
-								<label class="form-check-label" for="dinheiro">
-									Dinheiro
-								</label>
-								<img width="50" src="/imgs/100-real.png">
-
-								<div id="div_do_troco" style="display: none" class="form-group">
-									<label class="mb-2">Troco Para</label>
-									<div class="col-sm-3">
-										<input type="text" placeholder="Ex:  {{ $total%10 == 0 ? $total : ((int)($total/10) +1)*10}},00" class="form-control" id="troco_para">
-
-									</div>
-								</div>
-							</div>
-
-						</div>
-					</div>
-				</fieldset>
-
-			</div>
-
-		</div>
-	</section>
+	
 
 	<section class="blog_w3ls">
 		<div class="container">
 			<div class="title-section text-center mb-md-5 mb-4">
 				<h3 class="w3ls-title mb-3">Forma de Entrega</h3>
+				@if(count($enderecos) > 0)
 				<p>Seus Endereços Cadastrados</p>
+				@endif
 			</div>
 			<input type="hidden" id="lat_padrao" value="{{getenv('LATITUDE_PADRAO')}}">
 			<input type="hidden" id="lng_padrao" value="{{getenv('LONGITUDE_PADRAO')}}">
@@ -152,7 +103,7 @@
 		</div>
 	</section>
 
-	
+	<hr>
 
 	<div class="container">
 		<div id="acrescimo-entrega" style="display: none" class="form-group"><br>
@@ -191,6 +142,60 @@
 		</div>
 	</div>
 
+	<section class="blog_w3ls py-5">
+		<div class="container pb-xl-5 pb-lg-3">
+			<div class="title-section text-center mb-md-5 mb-4">
+				<h3 class="w3ls-title mb-3">Forma de Pagamento</h3>
+
+			</div>
+			<div class="container">
+
+				<fieldset class="form-group">
+					<div class="row">
+						<div class="col-sm-12">
+							<div class="form-check">
+
+								<input class="form-check-input" type="radio" name="gridRadios" id="maquineta" value="maquineta">
+								<label class="form-check-label" for="maquineta">
+									Maquineta Crédito/Débito
+								</label>
+								<img width="40" src="/imgs/credit-card.png">
+
+							</div>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="gridRadios" id="dinheiro" value="dinheiro">
+								<label class="form-check-label" for="dinheiro">
+									Dinheiro
+								</label>
+								<img width="50" src="/imgs/100-real.png">
+
+								<div id="div_do_troco" style="display: none" class="form-group">
+									<label class="mb-2">Troco Para</label>
+									<div class="col-sm-3">
+										<input type="text" placeholder="Ex:  {{ $total%10 == 0 ? $total : ((int)($total/10) +1)*10}},00" class="form-control" id="troco_para">
+
+									</div>
+								</div>
+							</div>
+
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="gridRadios" id="pagseguro" value="pagseguro">
+								<label class="form-check-label" for="debito">
+									Pagseguro
+								</label>
+								<img width="40" src="/imgs/debit-card.png">
+
+							</div>
+
+						</div>
+					</div>
+				</fieldset>
+
+			</div>
+
+		</div>
+	</section>
+
 	<input type="hidden" id="pedido_id" value="{{$pedido->id}}">
 	<input type="hidden" id="total-init" value="{{$total}}">
 
@@ -214,7 +219,7 @@
 			
 			<a style="color: #fff" id="abrir-mapa" class="btn btn-success btn-block mb-4">Abrir Mapa</a>
 
-			<form>
+
 
 				<input type="hidden" id="_token" value="{{ csrf_token() }}">
 				<input type="hidden" id="cliente_id" value="{{$cliente->id}}">
@@ -239,9 +244,43 @@
 				</div>
 				<a href="#!" id="salvar_endereco" class="btn btn-danger btn-block mb-4 disabled">Salvar</a>
 
-			</form>
+
 		</div>
 		<a class="close" href="#!">×</a>
+	</div>
+</div>
+
+<div id="modal-pagseguro" class="pop-overlay">
+	<div style="width: 100%;" class="popup">
+
+		<div class="card-wrapper"></div>
+		<form style="margin-top: 20px;">
+			<div class="row">
+
+				<div class="col-lg-12 col-md-12">
+					<label class="">Numero do Cartão</label>
+					<input type="tel" class="form-control" id="number" name="number">
+				</div>
+
+				<div class="col-lg-12 col-md-12">
+					<label class="">Nome do cliente</label>
+					<input type="text" class="form-control" id="nome" name="name">
+				</div>
+
+				<div class="col-lg-6 col-md-6">
+					<label class="">Validade</label>
+					<input type="text" class="form-control" id="validade" name="validade">
+				</div>
+
+				<div class="col-lg-6 col-md-6">
+					<label class="">CVC</label>
+					<input type="text" class="form-control" id="cvc" name="cvc">
+				</div>
+				
+
+			</div>
+		</form>
+
 	</div>
 </div>
 

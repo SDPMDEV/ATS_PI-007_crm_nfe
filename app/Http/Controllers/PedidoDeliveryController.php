@@ -332,13 +332,16 @@ class PedidoDeliveryController extends Controller
 		$pedido = PedidoDelivery::
 		where('id', $id)
 		->first();
-
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 		$ped = new PedidoPrint($pedido);
 		$ped->monta();
 		$pdf = $ped->render();
 
 		header('Content-Type: application/pdf');
-		echo $pdf;
+		file_get_contents(filename);
+		file_put_contents($public.'pdf/CUPOM.pdf',$pdf);
+		return redirect($public.'pdf/CUPOM.pdf');
+		// echo $pdf;
 	}
 
 	public function sendPush(Request $request){

@@ -27,6 +27,7 @@ class CreateItemVendaCaixasTable extends Migration
 
             $table->decimal('quantidade', 10,2);
             $table->decimal('valor', 10,2);
+            $table->string('observacao', 80);
             $table->timestamps();
         });
     }

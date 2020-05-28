@@ -87,11 +87,12 @@ function calculaCupom(cupom){
 	})
 }
 
-$('#credito').click(() => {
+$('#maquineta').click(() => {
 	$('#div_do_troco').css('display', 'none');
 })
-$('#debito').click(() => {
+$('#pagseguro').click(() => {
 	$('#div_do_troco').css('display', 'none');
+	$('#modal-pagseguro').html()
 })
 $('#dinheiro').click(() => {
 	$('#div_do_troco').css('display', 'block');

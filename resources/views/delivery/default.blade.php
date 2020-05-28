@@ -36,6 +36,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	<link href="/cssboot/font-awesome.min.css" rel="stylesheet">
 	@if(isset($carrinho) || isset($historico))
 	<link href="/css/delivery.css" rel="stylesheet">
+	<link href="/css/card.css" rel="stylesheet">
 
 	@endif
 
@@ -342,6 +343,29 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 
 			@if(isset($forma_pagamento))
 			<script src="/jsd/forma_pagamento.js" type="text/javascript"></script>
+			<script src="/jsd/card.js" type="text/javascript"></script>
+
+			<script type="text/javascript">
+
+				new Card({
+					form: document.querySelector('form'),
+					container: '.card-wrapper',
+					placeholders: {
+						number: '•••• •••• •••• ••••',
+						name: 'Nome Completo',
+						expiry: '••/••',
+						cvc: 'CVC'
+					},
+					debug: true,
+					formSelectors: {
+						numberInput: 'input#number', 
+						expiryInput: 'input#validade', 
+						cvcInput: 'input#cvc', 
+						nameInput: 'input#nome' 
+					},
+				});
+
+			</script>
 			@endif
 
 			<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
@@ -357,6 +381,8 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			<script src="/jsd/login_ative.js" type="text/javascript"></script>
 			@endif
 
+
+
 			@if(isset($mapaJs))
 			<script src="https://maps.googleapis.com/maps/api/js?key={{getenv('API_KEY_MAPS')}}"
 			async defer></script>
@@ -365,12 +391,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			@if(isset($tokenJs))
 			<script src="https://www.gstatic.com/firebasejs/7.9.1/firebase-app.js"></script>
 			<!-- <script src="https://www.gstatic.com/firebasejs/5.9.1/firebase-analytics.js"></script> -->
-			
+
 			<script src="https://www.gstatic.com/firebasejs/7.9.1/firebase-messaging.js"></script>
 			<script src="https://www.gstatic.com/firebasejs/7.9.1/firebase-analytics.js"></script>
 
 			<script src="/jsd/token.js" type="text/javascript"></script>
-			
+
 			@endif
 		</body>
 
