@@ -61,10 +61,12 @@ class AppUserController extends Controller
 			return response()->json($validator->errors(), 400);
 		}else{
 			$cod = rand(100000, 888888);
-			// $celular = $request->celular;
-			// $celular = str_replace(" ", "", $celular);
-			// $celular = str_replace("-", "", $celular);
-			// $this->sendSms($celular, $cod);
+			$celular = $request->celular;
+			$celular = str_replace(" ", "", $celular);
+			$celular = str_replace("-", "", $celular);
+			if(getenv("AUTENTICACAO_SMS") == 1) $this->sendSms($celular, $cod);
+			if(getenv("AUTENTICACAO_EMAIL") == 1) $this->sendEmailLink($request->email, $cod);
+			
 			$request->merge([ 'senha' => md5($request->senha)]);
 			$request->merge([ 'ativo' => false]);
 			$request->merge([ 'token' => $cod]);
@@ -82,6 +84,16 @@ class AppUserController extends Controller
 		$textMessageService = new TextMessageService(getenv('SMS_KEY'));
 		$res = $textMessageService->send("Sender", $content, [$phone]);
 		return $res;
+	}
+
+	private function sendEmailLink($email, $cod){
+		Mail::send('mail.link_verifica', ['link' => md5("$cod-$email")], function($m) use ($email){
+			$nomeEmail = getenv('MAIL_NAME');
+			$nomeEmail = str_replace("_", " ", $nomeEmail);
+			$m->from(getenv('MAIL_USERNAME'), $nomeEmail);
+			$m->subject('Autenticação');
+			$m->to($email);
+		});
 	}
 
 	public function login(Request $request){
@@ -117,6 +129,7 @@ class AppUserController extends Controller
 				return response()->json(['erro' => 'Credenciais inválidas'], 400);
 			}else{
 				if(!$cliente->ativo){
+					if(getenv("AUTENTICACAO_EMAIL") == 1) $this->sendEmailLink($cliente->email, $cliente->token);
 					return response()->json($cliente, 403);
 				}
 				$b64 = base64_encode("$cliente->nome;$cliente->id;$cliente->email");
@@ -290,32 +303,32 @@ class AppUserController extends Controller
 			$celular = str_replace("-", "", $celular);
 			$res = $this->sendSmsSenha($celular, $newPass);
 			$cliente->senha = md5($newPass);
-        	$cliente->save();
-        	if($res) return response()->json(
-        		['mensagem' => 'Nova senha enviada para email e celular cadastrado!'], 200);
-			else return response()->json("Erro", 403);
+			$cliente->save();
+			if($res) return response()->json(
+				['mensagem' => 'Nova senha enviada para email e celular cadastrado!'], 200);
+				else return response()->json("Erro", 403);
+			}
 		}
-	}
 
-	private function sendSmsSenha($phone, $senha){
-		$nomeEmpresa = getenv('SMS_NOME_EMPRESA');
-		$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
-		$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
-		$content = $nomeEmpresa. " Nova senha de acesso ". $senha;
-		$textMessageService = new TextMessageService(getenv('SMS_KEY'));
-		$res = $textMessageService->send("Sender", $content, [$phone]);
-		return $res;
-	}
-
-	private function randomPassword() {
-		$alphabet = 'abcdefghijklmnopqrstuvwxyz1234567890';
-		$pass = array(); 
-		$alphaLength = strlen($alphabet) - 1; 
-		for ($i = 0; $i < 4; $i++) {
-			$n = rand(0, $alphaLength);
-			$pass[] = $alphabet[$n];
+		private function sendSmsSenha($phone, $senha){
+			$nomeEmpresa = getenv('SMS_NOME_EMPRESA');
+			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+			$content = $nomeEmpresa. " Nova senha de acesso ". $senha;
+			$textMessageService = new TextMessageService(getenv('SMS_KEY'));
+			$res = $textMessageService->send("Sender", $content, [$phone]);
+			return $res;
 		}
-		return implode($pass); 
-	}
 
-}
+		private function randomPassword() {
+			$alphabet = 'abcdefghijklmnopqrstuvwxyz1234567890';
+			$pass = array(); 
+			$alphaLength = strlen($alphabet) - 1; 
+			for ($i = 0; $i < 4; $i++) {
+				$n = rand(0, $alphaLength);
+				$pass[] = $alphabet[$n];
+			}
+			return implode($pass); 
+		}
+
+	}

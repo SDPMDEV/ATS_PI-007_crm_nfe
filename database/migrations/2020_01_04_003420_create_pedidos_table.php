@@ -18,6 +18,17 @@ class CreatePedidosTable extends Migration
             $table->string('comanda', 12);
             $table->string('observacao', 200);
             $table->boolean('status');
+
+            $table->integer('bairro_id')->nullable()->unsigned();
+            $table->foreign('bairro_id')->references('id')->on('bairro_deliveries');
+
+            $table->string('nome', 50);
+            $table->string('rua', 50);
+            $table->string('numero', 10);
+
+            $table->string('referencia', 30);
+            $table->string('telefone', 15);
+
             $table->boolean('desativado');
             $table->timestamp('data_registro')->useCurrent();
             $table->timestamps();

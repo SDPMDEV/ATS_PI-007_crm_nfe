@@ -89,7 +89,7 @@ class MdfeController extends Controller
 
 
 		if($config == null || count($veiculos) == 0){
-			return view("cte/erro")
+			return view("mdfe/erro")
 			->with('veiculos', $veiculos)
 			->with('naturezas', true)
 			->with('config', $config)

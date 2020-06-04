@@ -70,6 +70,7 @@
 			</div>
 
 
+			<?php $controleEdit = []; ?>
 			
 			<div class="row" id="produto-pizza" style="display: none">
 
@@ -79,16 +80,19 @@
 					@if(isset($produto) && count($produto->pizza) > 0)
 
 					@foreach($produto->pizza as $pp)
-					@if($pp->tamanho_id == $t->id)
-					<input type="text" class="valor_pizza"  value="{{{ isset($pp->valor) ? $pp->valor : old('valor_{{$t->nome}}') }}}" name="valor_{{$t->nome}}">
-					@else
 
-					@if(!$pp->tamanhoNaoCadastrado($t->id, $pp->produto))
-					<input type="text" class="valor_pizza" 
-					value="" name="valor_{{$t->nome}}">
-					@else
-					@endif
-					@endif
+						@if($pp->tamanho_id == $t->id)
+						<input type="text" class="valor_pizza"  value="{{{ isset($pp->valor) ? $pp->valor : old('valor_{{$t->nome}}') }}}" name="valor_{{$t->nome}}">
+						@else
+
+							@if(!$pp->tamanhoNaoCadastrado($t->id, $pp->produto) && !in_array($t->id, $controleEdit))
+							<input type="text" class="valor_pizza" 
+							value="" name="valor_{{$t->nome}}">
+
+							<?php array_push($controleEdit, $t->id); ?>
+							
+							@endif
+						@endif
 					@endforeach
 					
 					@else

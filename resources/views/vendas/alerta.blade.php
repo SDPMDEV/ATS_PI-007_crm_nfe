@@ -3,7 +3,7 @@
 
 <div class="row">
 	<div class="col s12">
-		<h5>Para Emiter uma venda é necessario ter cadastrado:</h5>
+		<h5>Para gerar uma venda é necessario ter cadastrado:</h5>
 		<h4>* Emitente fiscal com certificado digital</h4>
 		<h4>* Natureza de operação cadastrado</h4>
 		<h4>* Categorias</h4>

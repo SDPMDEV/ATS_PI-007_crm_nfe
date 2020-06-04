@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Compra;
 use App\ItemPurchase;
 use App\Helpers\StockMove;
+use App\Services\NFeEntradaService;
+use App\ConfigNota;
+use App\NaturezaOperacao;
 
 class PurchaseController extends Controller
 {
@@ -195,10 +198,17 @@ class PurchaseController extends Controller
         ->first();
 
         $stockMove = new StockMove();
+        $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+        echo $public."xml_entrada/$compra->xml_path";
+        if(file_exists($public."xml_entrada/$compra->xml_path")){
+            unlink($public."xml_entrada/$compra->xml_path");
+        }
         foreach($compra->itens as $i){
         // baixa de estoque
             $stockMove->downStock($i->produto->id, $i->quantidade);
+            $i->delete();
         } 
+
         if($compra->delete()){
             session()->flash('color', 'blue');
             session()->flash('message', 'Registro removido!');
@@ -207,6 +217,45 @@ class PurchaseController extends Controller
             session()->flash('message', 'Erro!');
         }
         return redirect('/compras');
+    }
+
+    public function emitirEntrada($id){
+        $compra = Compra::find($id);
+        $naturezas = NaturezaOperacao::all();
+        return view('compraManual/emitirEntrada')
+        ->with('compra', $compra)
+        ->with('naturezas', $naturezas)
+        ->with('NFeEntradaJS', true)
+        ->with('title', 'Emitir NF-e Entrada');
+    }
+
+    public function gerarEntrada(Request $request){
+        $compra = Compra::find($id);
+        $config = ConfigNota::first();
+
+        $cnpj = str_replace(".", "", $config->cnpj);
+        $cnpj = str_replace("/", "", $cnpj);
+        $cnpj = str_replace("-", "", $cnpj);
+        $cnpj = str_replace(" ", "", $cnpj);
+
+        $nfe_service = new NFeEntradaService([
+            "atualizacao" => date('Y-m-d h:i:s'),
+            "tpAmb" => (int)$config->ambiente,
+            "razaosocial" => $config->razao_social,
+            "siglaUF" => $config->UF,
+            "cnpj" => $cnpj,
+            "schemes" => "PL_009_V4",
+            "versao" => "4.00",
+            "tokenIBPT" => "AAAAAAA",
+            "CSC" => getenv('CSC'),
+            "CSCid" => getenv('CSCid')
+        ], 55);
+
+        header('Content-type: text/html; charset=UTF-8');
+
+        $nfe = $nfe_service->gerarNFe($vendaId);
+
+
     }
 
 }

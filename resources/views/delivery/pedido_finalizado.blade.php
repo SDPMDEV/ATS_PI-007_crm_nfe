@@ -15,9 +15,17 @@
 			<div class="container">
 				<h2 class="text-success">Obrigado <strong>{{$pedido->cliente->nome}}</strong>, seu pedido foi realizado com sucesso! <i class="fa fa-check"></i></h2>
 				<h4 class="">Horario: <strong>{{ \Carbon\Carbon::parse($pedido->data_registro)->format('d/m/Y H:i')}}</strong></h4>
+
+				@if($pedido->forma_pagamento != 'pagseguro')
+				<h4 class="">Forma de Pagamento: <strong>{{ strtoupper($pedido->forma_pagamento)}}</strong></h4>
+				@else
+				<h4 class="">Forma de Pagamento: <strong>Compra on-line</strong> {{$pedido->pagseguro->parcelas}}x cartão</h4>
+				@endif
+
 				@if($config)
 				<h4 class="">Tempo médio de entrega: <strong>{{$config->tempo_medio_entrega}}</strong></h4><br>
 				@endif
+
 			</div>
 		</div>
 

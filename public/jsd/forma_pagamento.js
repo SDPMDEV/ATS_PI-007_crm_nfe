@@ -7,11 +7,17 @@ var DESCONTO = 0;
 var DESCONTOAPLICADO = false;
 var latPadrao = 0;
 var lngPadrao = 0;
+var BANDEIRA = "";
+var INSTALLMENTS = [];
 
 let lat = latPadrao;
 let lng = lngPadrao;
 
+var HASHCLIENTE = '';
+var TOKENCARTAO = '';
+
 $(function(){
+	MAXIMOPARCELAMENTO = $('#maximo_parcelamento').val();
 
 	lat = latPadrao = $('#lat_padrao').val()
 	lng = lngPadrao = $('#lng_padrao').val()
@@ -40,7 +46,100 @@ $(function(){
 		}
 	});
 
+	$.get(path + 'pagseguro/getSessao')
+	.done((success) => {
+		let token = success.id
+		console.log('token da compra', token)
+		let res = PagSeguroDirectPayment.setSessionId(token);
+
+	})
+	.fail((err) => {
+		console.log(err)
+	})
+
 })
+
+$("#cpf").focus(function(){ 
+
+	HASHCLIENTE = PagSeguroDirectPayment.getSenderHash();
+	console.log('HASHCLIENTE', HASHCLIENTE)
+});
+
+$("#cvc").keyup(function(){ 
+
+	if($("#cvc").val().length > 2){
+		let numCartao = $("#number").val().replace(" ", "").replace(" ", "").replace(" ", "");
+		let cvvCartao = $("#cvc").val();
+		let validade = $("#validade").val().split('/');
+		expiracaoMes = validade[0].replace(" ", "");
+		expiracaoAno = validade[1].replace(" ", "");
+		console.log(numCartao)
+		console.log(cvvCartao)
+		console.log(validade)
+		PagSeguroDirectPayment.createCardToken({
+			cardNumber: numCartao,
+			cvv: cvvCartao,
+			expirationMonth: expiracaoMes,
+			expirationYear: expiracaoAno,
+
+			success: function(response){ 
+				TOKENCARTAO = response['card']['token'];
+				console.log(TOKENCARTAO)
+			},
+			error: function(response){ 
+				console.log(response); 
+				// alert("Data de validade incorreta")
+			}
+		});
+	}
+
+});
+
+function getParcelas(){
+
+	PagSeguroDirectPayment.getInstallments({
+		amount: TOTAL,
+		brand: BANDEIRA,
+		maxInstallmentNoInterest: 1,
+		success: function(response) {
+			installments = response.installments
+
+			INSTALLMENTS = installments[BANDEIRA];
+			$('#fator').html('');
+			INSTALLMENTS.map((v) => {
+				// console.log(v)
+				$('#fator').append('<option value="'+v.quantity+'">'+v.quantity+'x R$ ' + 
+					parseFloat(v.installmentAmount).toFixed(2) + '</option>'); 
+			})
+		},
+		error: function(response) {
+			console.log(response);
+		}
+	})
+}
+
+$('#number').keyup(() => {
+	let numero = $('#number').val().replace(" ", "").replace(" ", "").replace(" ", "");
+	if(numero.length > 5){
+		getBrand(numero)
+	}else{
+	}
+})
+
+function getBrand(numero){
+
+	PagSeguroDirectPayment.getBrand( {
+		cardBin: numero,
+		success: function(response) {
+			BANDEIRA = response['brand']['name'];
+			getParcelas(BANDEIRA)
+			
+		},
+		error: function(response) {
+			console.log(response)
+		}
+	});
+}
 
 $('#cupom').on('keyup', () => {
 	let cupom = $('#cupom').val();
@@ -59,6 +158,7 @@ $('#cupom').on('keyup', () => {
 			$('#cupom-invalido').css('display', 'none');
 		}
 	}
+
 })
 
 function calculaCupom(cupom){
@@ -88,13 +188,41 @@ function calculaCupom(cupom){
 }
 
 $('#maquineta').click(() => {
+	verificaBotaoFinalizarSemCartao();
 	$('#div_do_troco').css('display', 'none');
 })
 $('#pagseguro').click(() => {
-	$('#div_do_troco').css('display', 'none');
-	$('#modal-pagseguro').html()
-})
+	verificaBotaoFinalizarSemCartao();
+
+	let formaPagamento = $('#maquineta').is(':checked') ? 'maquineta' :  
+	$('#dinheiro').is(':checked') ? 'dinheiro' : $('#pagseguro').is(':checked') ?
+	'pagseguro' : '';
+
+	let troco = $('#troco_para').val();
+	let telefone = $('#telefone').val();
+	let cupom = $('#cupom').val();
+
+	if(telefone.length > 12 && enderecoSelecionado != null){
+		$('#div_do_troco').css('display', 'none');
+		$('#total-cartao').html("R$ "+parseFloat(TOTAL).toFixed(2))
+		// $('#nome').val($('#nome-cliente').val())
+
+		location.href="#modal-pagseguro"
+		$('#abre-modal').modal('click');
+	}else{
+		
+		if(!enderecoSelecionado){
+			alert("Por favor selecione a forma de entrega")
+
+		}
+		else if(telefone.length < 12){
+			alert("Por favor informe um telefone de contato (11) 99999-9999")
+		}
+	}
+});
+
 $('#dinheiro').click(() => {
+	verificaBotaoFinalizarSemCartao();
 	$('#div_do_troco').css('display', 'block');
 })
 
@@ -157,6 +285,7 @@ $('#salvar_endereco').click(() => {
 function set_endereco(id){
 
 	$('#endereco_select_'+enderecoSelecionado).css('background', '#fff')
+
 	if(id == 'balcao'){
 		$('#endereco_select_balcao').css('background', '#81c784')
 		$('#acrescimo-entrega').css('display', 'none')
@@ -184,68 +313,68 @@ function set_endereco(id){
 		
 	}
 	enderecoSelecionado = id;
+	verificaBotaoFinalizarSemCartao();
 }
 
 
 $('#finalizar-venda').click(() => {
-	let formaPagamento = $('#debito').is(':checked') ? 'debito' :  
-	$('#credito').is(':checked') ? 'credito' : $('#dinheiro').is(':checked') ?
-	'dinheiro' : '';
-// formaPagamento = $('#credito').is(':checked') ? 'credito' : '';
-// formaPagamento = $('#dinheiro').is(':checked') ? 'dinheiro' : '';
-let troco = $('#troco_para').val();
-let telefone = $('#telefone').val();
-let cupom = $('#cupom').val();
-let js = {
-	forma_pagamento: formaPagamento,
-	troco: troco.replace(",", "."),
-	observacao: $('#observacao').val(),
-	endereco_id: enderecoSelecionado,
-	pedido_id: $('#pedido_id').val(),
-	telefone: telefone,
-	desconto: DESCONTO,
-	cupom: DESCONTO > 0 ? cupom : ''
-}
-console.log(js)
-if(!formaPagamento){
-	alert("Por favor selecione a forma de pagamento")
-}
-else if(!enderecoSelecionado){
-	alert("Por favor selecione a forma de entrega")
+	let formaPagamento = $('#maquineta').is(':checked') ? 'maquineta' :  
+	$('#dinheiro').is(':checked') ? 'dinheiro' : $('#pagseguro').is(':checked') ?
+	'pagseguro' : '';
 
-}
-else if(telefone.length == 0){
-	alert("Por favor informe um telefone de contato")
-}
+	let troco = $('#troco_para').val();
+	let telefone = $('#telefone').val();
+	let cupom = $('#cupom').val();
+	let js = {
+		forma_pagamento: formaPagamento,
+		troco: troco.replace(",", "."),
+		observacao: $('#observacao').val(),
+		endereco_id: enderecoSelecionado,
+		pedido_id: $('#pedido_id').val(),
+		telefone: telefone,
+		desconto: DESCONTO,
+		cupom: DESCONTO > 0 ? cupom : ''
+	}
+	console.log(js)
+	if(!formaPagamento){
+		alert("Por favor selecione a forma de pagamento")
+	}
+	else if(!enderecoSelecionado){
+		alert("Por favor selecione a forma de entrega")
 
-else if(formaPagamento == 'dinheiro' && troco.length == 0 || parseFloat(troco.replace(",", ".")) == 0){
-	alert("Por favor insira o valor de troco para")
-}
-
-else if(formaPagamento == 'dinheiro' && parseFloat(troco.replace(",", ".")) < TOTAL){
-	alert("Valor do troco deve ser maior que o valor total do pedido")
-	if(ENTREGA) alert('Total com entrega: R$' + TOTAL.toFixed(2))
-		else alert('Total: R$' + TOTAL.toFixed(2))
+	}
+	else if(telefone.length <= 12){
+		alert("Por favor informe um telefone de contato (11) 99999-9999")
 	}
 
-else{
-	console.log(js)
-	let tk = $('#_token').val()
+	else if(formaPagamento == 'dinheiro' && troco.length == 0 || parseFloat(troco.replace(",", ".")) == 0){
+		alert("Por favor insira o valor de troco para")
+	}
 
-	$.post(path+'carrinho/finalizarPedido', {_token : tk, data: js})
-	.done(function(data){
-		data = JSON.parse(data)
-		console.log(data)
+	else if(formaPagamento == 'dinheiro' && parseFloat(troco.replace(",", ".")) < TOTAL){
+		alert("Valor do troco deve ser maior que o valor total do pedido")
+		if(ENTREGA) alert('Total com entrega: R$' + TOTAL.toFixed(2))
+			else alert('Total: R$' + TOTAL.toFixed(2))
+		}
 
-		sucesso(data.id)
+	else{
+		console.log(js)
+		let tk = $('#_token').val()
 
-	})
-	.fail( function(err) {
-		console.log(err)
+		$.post(path+'carrinho/finalizarPedido', {_token : tk, data: js})
+		.done(function(data){
+			data = JSON.parse(data)
+			console.log(data)
 
-	});
+			sucesso(data.id)
 
-}
+		})
+		.fail( function(err) {
+			console.log(err)
+
+		});
+
+	}
 
 })
 
@@ -344,6 +473,19 @@ function initMap(lat, lng){
 
 }
 
+$('#telefone').keyup(() => {
+	verificaBotaoFinalizarSemCartao();
+})
+
+function verificaBotaoFinalizarSemCartao(){
+	let telefone = $('#telefone').val();
+	if(telefone.length > 12 && $('#pagseguro').is(':checked') == false && enderecoSelecionado != null){
+		$('#finalizar-venda').removeClass('disabled')
+	}else{
+		$('#finalizar-venda').addClass('disabled')
+	}
+}
+
 function getEnderecoByCoords(lat, lng, call){
 	geocoder = new google.maps.Geocoder();
 	var latlng = new google.maps.LatLng(lat, lng);
@@ -405,4 +547,133 @@ function validaCamposNovoEndereco(){
 $('#abrir-mapa').click(() => {
 	$('#info-mapa').css('display', 'block');
 	$('#form-endereco').css('display', 'none');
+})
+
+$('#finalizar-venda-cartao').click(() => {
+	$('#icon-spin').css('display', 'inline-block')
+
+	let formaPagamento = $('#maquineta').is(':checked') ? 'maquineta' :  
+	$('#dinheiro').is(':checked') ? 'dinheiro' : $('#pagseguro').is(':checked') ?
+	'pagseguro' : '';
+
+	let troco = $('#troco_para').val();
+	let telefone = $('#telefone').val();
+	let cupom = $('#cupom').val();
+	let cpf = $('#cpf').val().replace("-", "").replace(".", "").replace(".", "");
+	let nome_cartao = $('#nome').val();
+	let email = $('#email-cliente').val();
+	let numCartao = $("#number").val().replace(" ", "").replace(" ", "").replace(" ", "");
+
+	getInstallment((installment) => {
+		let js = {
+			forma_pagamento: formaPagamento,
+			troco: troco.replace(",", "."),
+			observacao: $('#observacao').val(),
+			endereco_id: enderecoSelecionado,
+			pedido_id: $('#pedido_id').val(),
+			telefone: telefone,
+			desconto: DESCONTO,
+			total: parseFloat(installment.totalAmount).toFixed(2),
+			cupom: DESCONTO > 0 ? cupom : '',
+
+			produto_nome: "Refeicao",
+			valor: parseFloat(installment.installmentAmount).toFixed(2),
+			telefone: telefone.replace(" ", "").replace("-", ""),
+			cpf: cpf,
+			email: email,
+			hashCliente: HASHCLIENTE,
+			creditCardToken: TOKENCARTAO,
+			nome_cartao: nome_cartao,
+			parcelas: installment.quantity,
+			numero_cartao: numCartao,
+			bandeira: BANDEIRA
+		}
+		console.log(js)
+
+		let tk = $('#_token').val()
+		$.post(path+'pagseguro/efetuaPagamento', {_token : tk, data: js})
+		.done(function(data){
+			console.log(data)
+			$('#icon-spin').css('display', 'none')
+			if(data.consulta.original.status == "3"){
+				alert("Pagamento Aprovado")
+				location.href = path + 'carrinho/finalizado/'+id;
+			}
+
+		})
+		.fail(function(err){
+			$('#icon-spin').css('display', 'none')
+			if(err.status == 403){
+				json = err.responseJSON;
+				console.log(json)
+				alert("403: Erro de pagamento!");
+
+			}else if(err.status == 404){
+				json = err.responseJSON;
+				console.log(json)
+				alert("404: Pagamento não autorizado!");
+			}
+			else if(err.status == 402){
+				json = err.responseJSON;
+				console.log(json)
+				alert("402: Pagamento ainda não aprovado pelo getway!");
+			}
+			console.log(err)
+		});
+
+	});
+
+
+
+	
+
+})
+
+function getInstallment(call){
+	let fator = $('#fator').val();
+	INSTALLMENTS.map((v) => {
+		if(v.quantity == fator){
+			console.log(v)
+			call(v)
+		}
+	})
+}
+
+$("input[name=escolha-cartao]").change(() => {
+	$('#div-cartao-antigo').css('display', 'none');
+	$('#div-pagar').css('display', 'block');
+
+
+	let escolha = JSON.parse($("input[name=escolha-cartao]:checked").val())
+	if(escolha != null){
+		$('#nome').val(escolha.nome_impresso)
+		$('#cpf').val(escolha.cpf)
+		$('#number').val(escolha.numero_cartao)
+		$('#number').focus()
+		$('#cpf').focus()
+		$('#number').focus()
+		
+		let numero = escolha.numero_cartao;
+		if(numero.length > 5){
+			getBrand(numero)
+			getParcelas();
+		}else{
+		}
+	}else{
+		console.log("nova cartao")
+
+	}
+	console.log(escolha)
+})
+
+$('#voltar').click(() => {
+	$('#nome').val("")
+	$('#cpf').val("")
+	$('#number').val("")
+	$('#cvc').val("")
+	$('#validade').val("")
+	$('#fator').html('');
+	$('#div-cartao-antigo').css('display', 'block');
+	$('#div-pagar').css('display', 'none');
+
 })

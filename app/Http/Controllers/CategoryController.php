@@ -7,51 +7,51 @@ use App\Categoria;
 
 class CategoryController extends Controller
 {
-   public function __construct(){
-    $this->middleware(function ($request, $next) {
-     $value = session('user_logged');
-     if(!$value){
-        return redirect("/login");
-    }else{
-        if($value['acesso_produto'] == 0){
-            return redirect("/sempermissao");
+    public function __construct(){
+        $this->middleware(function ($request, $next) {
+            $value = session('user_logged');
+            if(!$value){
+                return redirect("/login");
+            }else{
+                if($value['acesso_produto'] == 0){
+                    return redirect("/sempermissao");
+                }
+            }
+            return $next($request);
+        });
+    }
+
+    public function index(){
+        $categorias = Categoria::all();
+        return view('categorias/list')
+        ->with('categorias', $categorias)
+        ->with('title', 'Categorias');
+    }
+
+    public function new(){
+        return view('categorias/register')
+        ->with('title', 'Cadastrar Categoria');
+    }
+
+    public function save(Request $request){
+        $category = new Categoria();
+        $this->_validate($request);
+
+        $result = $category->create($request->all());
+
+        if($result){
+            session()->flash('color', 'blue');
+            session()->flash("message", "Categoria cadastrada com sucesso.");
+        }else{
+            session()->flash('color', 'red');
+            session()->flash('message', 'Erro ao cadastrar categoria.');
         }
-    }
-    return $next($request);
-});
-}
 
-public function index(){
-    $categorias = Categoria::all();
-    return view('categorias/list')
-    ->with('categorias', $categorias)
-    ->with('title', 'Categorias');
-}
-
-public function new(){
-    return view('categorias/register')
-    ->with('title', 'Cadastrar Categoria');
-}
-
-public function save(Request $request){
-    $category = new Categoria();
-    $this->_validate($request);
-
-    $result = $category->create($request->all());
-
-    if($result){
-        session()->flash('color', 'blue');
-        session()->flash("message", "Categoria cadastrada com sucesso.");
-    }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro ao cadastrar categoria.');
+        return redirect('/categorias');
     }
 
-    return redirect('/categorias');
-}
-
-public function edit($id){
-        $categoria = new Categoria(); //Model
+    public function edit($id){
+        $categoria = new Categoria(); 
 
         $resp = $categoria
         ->where('id', $id)->first();  
@@ -70,7 +70,7 @@ public function edit($id){
         ->where('id', $id)->first(); 
 
         $this->_validate($request);
-        
+
 
         $resp->nome = $request->input('nome');
 
@@ -82,7 +82,7 @@ public function edit($id){
             session()->flash('color', 'red');
             session()->flash('message', 'Erro ao editar categoria!');
         }
-        
+
         return redirect('/categorias'); 
     }
 

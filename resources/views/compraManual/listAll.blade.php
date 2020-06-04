@@ -52,7 +52,7 @@
 					</div>
 				</div>
 			</form>
-
+			<label><i class="material-icons left green-text">nfc</i>Emitir Entrada</label><br><br>
 			<div class="row">
 				<div class="col s12">
 					<label>Numero de registros: {{count($compras)}} 
@@ -106,6 +106,10 @@
 								</a>
 								<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/compras/delete/{{ $c->id }}">
 									<i class="material-icons left red-text">delete</i>					
+								</a>
+
+								<a title="Detalhes" href="/compras/emitirEntrada/{{ $c->id }}">
+									<i class="material-icons left green-text">nfc</i>					
 								</a>
 							</th>
 						</tr>

@@ -58,7 +58,7 @@ public function save(Request $request){
   $request->merge([ 'produto_id' => $produto]);
 
 
-  if(strpos($categoria->nome, 'izza') !== false){
+  if(strpos(strtolower($categoria->nome), 'izza') !== false){
     $request->merge([ 'valor' => 0]);
     $request->merge([ 'valor_anterior' => 0]);
 
@@ -71,7 +71,7 @@ public function save(Request $request){
 
 $result = ProdutoDelivery::create($request->all());
 
-if(strpos($categoria->nome, 'izza') !== false){
+if(strpos(strtolower($categoria->nome), 'izza') !== false){
     $tamanhosPizza = TamanhoPizza::all();
 
     foreach($tamanhosPizza as $t){
@@ -207,7 +207,7 @@ public function alterarDestaque($id){
             $p->save();
             array_push($controlUpdatePizza, $p->tamanho->id);
         }
-        if(strpos($resp->categoria->nome, 'izza') !== false){
+        if(strpos(strtolower($resp->categoria->nome), 'izza') !== false){
             $tamanhosPizza = TamanhoPizza::all();
             if(count($tamanhosPizza) > count($resp->pizza)){
             //precisa inserir tambem
@@ -285,7 +285,7 @@ private function _validate(Request $request, $fileExist = true){
     where('id', $request->categoria_id)
     ->first();
 
-    if(strpos($categoria->nome, 'izza') !== false){
+    if(strpos(strtolower($categoria->nome), 'izza') !== false){
         $catPizza = true;
     }
     $rules = [

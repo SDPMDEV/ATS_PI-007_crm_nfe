@@ -71,5 +71,17 @@ Route::group(['prefix' => 'pedidos'],function(){
 
 });
 
+//pagseguro
+
+Route::group(['prefix' => '/pagseguro'], function(){
+	Route::get('/getSessao', 'PagSeguroController@getSessao');
+	Route::get('/getFuncionamento', 'PagSeguroController@getFuncionamento');
+	
+	Route::post('/efetuaPagamento', 'PagSeguroController@efetuaPagamentoApp');
+	Route::get('/consultaJS', 'PagSeguroController@consultaJS');
+});
+
+//fim pagseguro
+
 
 

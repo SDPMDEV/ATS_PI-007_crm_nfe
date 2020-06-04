@@ -12,21 +12,20 @@ use App\ItemPedidoComplementoLocal;
 use App\ComplementoDelivery;
 use App\VendaCaixa;
 use App\ConfigNota;
+use App\BairroDelivery;
 use Comtele\Services\TextMessageService;
 use NFePHP\DA\NFe\CupomPedido;
 
-
-
 class PedidoController extends Controller{
 
-	public function __construct(){
+  public function __construct(){
     $this->middleware(function ($request, $next) {
-     $value = session('user_logged');
-     if(!$value){
-      return redirect("/login");
-    }
-    return $next($request);
-  });
+      $value = session('user_logged');
+      if(!$value){
+        return redirect("/login");
+      }
+      return $next($request);
+    });
   }
 
   public function index(){
@@ -50,6 +49,12 @@ class PedidoController extends Controller{
     'comanda' => $request->comanda,
     'observacao' => $request->observacao ?? '',
     'status' => false,
+    'nome' => '',
+    'rua' => '',
+    'numero' => '',
+    'bairro_id' => null,
+    'referencia' => '',
+    'telefone' => '',
     'desativado' => false
   ]);
    if($res) {
@@ -69,8 +74,11 @@ public function ver($id){
  where('id', $id)
  ->first();
 
+ $bairros = BairroDelivery::all();
+
  return view('pedido/ver')
  ->with('pedido', $pedido)
+ ->with('bairros', $bairros)
  ->with('pedidoJs', true)
  ->with('title', 'Comanda '.$id);
 }
@@ -146,7 +154,8 @@ public function saveItem(Request $request){
     'status' => false,
     'tamanho_pizza_id' => $request->tamanho_pizza_id ?? NULL,
     'observacao' => $request->observacao ?? '',
-    'valor' => str_replace(",", ".", $request->valor)
+    'valor' => str_replace(",", ".", $request->valor),
+    'impresso' => false
   ]);
 
   if($request->tamanho_pizza_id && $request->sabores_escolhidos){
@@ -226,7 +235,7 @@ private function _validateItem(Request $request){
     where('id', $produto)
     ->first();
 
-    if(strpos($p->categoria->nome, 'izza') !== false){
+    if(strpos(strtolower($p->categoria->nome), 'izza') !== false){
       $validaTamanho = true;
     }
   }
@@ -341,6 +350,8 @@ public function imprimirPedido($id){
   $cupom = new CupomPedido($pedido, $pathLogo);
   $cupom->monta();
   $pdf = $cupom->render();
+  // file_put_contents($public.'pdf/CUPOM_PEDIDO.pdf',$pdf);
+  // return redirect($public.'pdf/CUPOM_PEDIDO.pdf');
 
   header('Content-Type: application/pdf');
   echo $pdf;
@@ -359,6 +370,27 @@ public function itensParaFrenteCaixa(Request $request){
 
   $atributes = $this->addAtributes($pedido->itens);
   return response()->json($atributes, 200);
+}
+
+public function setarBairro(Request $request){
+  $pedido = Pedido::find($request->pedido_id);
+  $pedido->bairro_id = $request->bairro_id;
+  $res = $pedido->save();
+  return response()->json($res, 200);
+}
+
+public function setarEndereco(Request $request){
+  $pedido = Pedido::find($request->pedido_id);
+  $pedido->nome = $request->nome;
+  $pedido->rua = $request->rua;
+  $pedido->numero = $request->numero;
+  $pedido->telefone = $request->telefone;
+  $pedido->referencia = $request->referencia;
+  $res = $pedido->save();
+
+  session()->flash('color', 'green');
+  session()->flash('message', 'Endereço setado!');
+  return redirect('/pedidos/ver/'.$request->pedido_id);
 }
 
 }

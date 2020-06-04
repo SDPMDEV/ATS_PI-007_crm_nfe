@@ -455,10 +455,12 @@ class NFeService{
 		$std->fone = getenv('RESP_FONE'); //Telefone da pessoa jurídica/física a ser contatada
 		$nfe->taginfRespTec($std);
 		
-		// $std = new \stdClass();
-		// $std->CNPJ = '13937073000156'; 
-		// $std->CPF = null;
-		// $nfe->tagautXML($std);
+		if($config->cUf == '29'){
+			$std = new \stdClass();
+			$std->CNPJ = '13937073000156'; 
+			$std->CPF = null;
+			$nfe->tagautXML($std);
+		}
 
 		if($nfe->montaNFe()){
 			$arr = [

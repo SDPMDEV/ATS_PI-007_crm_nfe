@@ -109,9 +109,9 @@
 						@endif
 					</div>
 
-					<div class="input-field col s2">
+					<div class="input-field col s3">
 						<input value="{{{ isset($config->valor_entrega) ? $config->valor_entrega : old('valor_entrega') }}}" id="valor_entrega" name="valor_entrega" type="text" class="validate">
-						<label>Valor de Entrega</label>
+						<label>Valor de Entrega Padrão</label>
 
 						@if($errors->has('valor_entrega'))
 						<div class="center-align red lighten-2">
@@ -120,7 +120,7 @@
 						@endif
 					</div>
 
-					<div class="input-field col s2">
+					<div class="input-field col s3">
 						<input value="{{{ isset($config->tempo_maximo_cancelamento) ? $config->tempo_maximo_cancelamento : old('tempo_maximo_cancelamento') }}}" id="tempo_maximo_cancelamento" name="tempo_maximo_cancelamento" type="text" class="timepicker">
 						<label>Tempo para Cancelamento</label>
 

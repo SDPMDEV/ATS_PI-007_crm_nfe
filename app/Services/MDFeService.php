@@ -212,6 +212,8 @@ class MDFeService{
 		 * Grupo infDoc ( Documentos fiscais )
 		 */
 		$cont = 0;
+		$contNFe = 0; 
+		$contCTe = 0; 
 		foreach($mdfe->infoDescarga as $info) {
 			$infMunDescarga = new \stdClass();
 			$infMunDescarga->cMunDescarga = $info->cidade->codigo;
@@ -227,11 +229,23 @@ class MDFeService{
 			// $std->nItem = $cont;
 
 
-			$std = new \stdClass();
-			$std->chNFe = $info->nfe->chave;
-			$std->SegCodBarra = '';
-			$std->indReentrega = '1';
-			$std->nItem = $cont;
+			if($info->nfe->chave){
+				$std = new \stdClass();
+				$std->chNFe = $info->nfe->chave;
+				$std->SegCodBarra = '';
+				$std->indReentrega = '1';
+				$std->nItem = $cont;
+				$contNFe++;
+			}else{
+
+				/* infCTe */
+				$std = new \stdClass();
+				$std->chCTe = $info->cte->chave;
+				$std->SegCodBarra = '';
+				$std->indReentrega = '1';
+				$std->nItem = $cont;
+				$contCTe++;
+			}
 
 			/* Informações das Unidades de Transporte (Carreta/Reboque/Vagão) */
 			$stdinfUnidTransp = new \stdClass();
@@ -301,6 +315,8 @@ class MDFeService{
 		$std = new \stdClass();
 		$std->vCarga = $this->format($mdfe->valor_carga);
 		$std->cUnid = '01';
+		$std->qNFe = $contNFe;
+		$std->qCTe = $contCTe;
 		$std->qCarga = $mdfe->quantidade_carga;
 		$mdfex->tagtot($std);
 		/* fim grupo de totais */

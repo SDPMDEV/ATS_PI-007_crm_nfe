@@ -7,12 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Pedido extends Model
 {
 	protected $fillable = [
-		'comanda', 'status', 'desativado', 'observacao'
+		'comanda', 'status', 'desativado', 'observacao', 'rua', 'numero', 'bairro_id', 'referencia', 'telefone', 'nome'
 	];
 
 	public function itens(){
 		return $this->hasMany('App\ItemPedido', 'pedido_id', 'id');
 	}
+
+	public function bairro(){
+        return $this->belongsTo(BairroDelivery::class, 'bairro_id');
+    }
 
 	public function somaItems(){
 		if(count($this->itens) > 0){

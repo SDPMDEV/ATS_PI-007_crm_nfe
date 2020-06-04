@@ -314,6 +314,7 @@ class CompraFiscalController extends Controller
 			'valor' => str_replace(",", ".", $nf['valor_nf']),
 			'desconto' => str_replace(",", ".", $nf['desconto']),
 			'xml_path' => $nf['xml_path'],
+			'estado' => 'NOVO',
 		//'categoria_id' => 1,
 			'chave' => $nf['chave'] 
 		]);

@@ -20,7 +20,9 @@ class ProdutoPizza extends Model
 	}
 
 	public static function tamanhoNaoCadastrado($tamanho, $prod){
+
 		foreach($prod->pizza as $pp){
+
 			if($pp->tamanho->id == $tamanho){
 				return true;
 			}

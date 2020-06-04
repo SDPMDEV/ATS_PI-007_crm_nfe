@@ -5,7 +5,15 @@
 	<div class="container py-xl-5 py-3">
 		<div class="login-body">
 			<div class="login p-4 mx-auto">
-				<h4 class="text-center mb-4">Foi enviado um Email e um SMS para o numero <strong>{{$celular}}</strong></h4>
+				@if(getenv("AUTENTICACAO_EMAIL") == 1 && getenv("AUTENTICACAO_SMS") == 1)
+				<h4 class="text-center mb-4">Foi enviado um Email de ativação e um SMS para o numero <strong>{{$celular}}</strong></h4>
+				@elseif(getenv("AUTENTICACAO_EMAIL") == 1 && getenv("AUTENTICACAO_SMS") == 0)
+				<h4 class="text-center mb-4">Foi enviado um Email de ativação</h4>
+				@elseif(getenv("AUTENTICACAO_EMAIL") == 0 && getenv("AUTENTICACAO_SMS") == 1)
+				<h4 class="text-center mb-4">Foi enviado um SMS para o numero <strong>{{$celular}}</strong></h4>
+				@endif
+
+				@if(getenv("AUTENTICACAO_SMS") == 1)
 				<input type="hidden" id="celular" value="{{$celular}}">
 				<h5 class="text-center mb-4">Tempo restante <strong id="timer" style="color: orange">60</strong></h5>
 				<div class="form-group">
@@ -34,6 +42,7 @@
 					</div>
 					
 				</div>
+				@endif
 			</div>
 		</div>
 	</div>

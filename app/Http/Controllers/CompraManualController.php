@@ -44,6 +44,7 @@ class CompraManualController extends Controller
 			'desconto' => $compra['desconto'] != null ? 
 			str_replace(",", ".", $compra['desconto']) : 0,
 			'xml_path' => '',
+			'estado' => 'NOVO',
 			'chave' => '' 
 		]);
 		

@@ -36,7 +36,7 @@ class VendaCaixaController extends Controller
     'path_xml' => '',
     'nome' => $venda['nome'] ?? '',
     'cpf' => $venda['cpf'] ?? '',
-    'observacao' => $venda['observacao'],
+    'observacao' => $venda['observacao'] ?? '',
     'desconto' => $venda['desconto']
   ]);
 

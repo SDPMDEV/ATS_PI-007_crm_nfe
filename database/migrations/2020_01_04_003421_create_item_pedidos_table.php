@@ -30,6 +30,7 @@ class CreateItemPedidosTable extends Migration
             $table->boolean('status');
             $table->decimal('quantidade', 8,2);
             $table->decimal('valor', 10,2);
+            $table->boolean('impresso');
             $table->timestamps();
         });
     }

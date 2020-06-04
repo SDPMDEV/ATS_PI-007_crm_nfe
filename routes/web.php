@@ -20,6 +20,13 @@ Route::group(['prefix' => '/'], function(){
 	Route::get('/', 'DeliveryController@index');
 });
 
+Route::group(['prefix' => '/pagseguro'], function(){
+	Route::get('/getSessao', 'PagSeguroController@getSessao');
+	Route::post('/efetuaPagamento', 'PagSeguroController@efetuaPagamento');
+	Route::get('/consultaJS', 'PagSeguroController@consultaJS');
+	Route::get('/getFuncionamento', 'PagSeguroController@getFuncionamento');
+});
+
 Route::group(['prefix' => '/dfe'], function(){
 	Route::get('/', 'DFeController@index');
 	Route::get('/getDocumentos', 'DFeController@getDocumentos');
@@ -51,6 +58,7 @@ Route::group(['prefix' => '/autenticar'], function(){
 	Route::get('/ativar/{cliente_id}', 'DeliveryController@ativar');
 	Route::post('/refreshToken', 'DeliveryController@refreshToken');
 	Route::get('/saveTokenWeb', 'DeliveryController@saveTokenWeb');
+	Route::get('/cliente/{cod}', 'DeliveryController@autenticarClienteEmail');
 
 });
 
@@ -203,6 +211,8 @@ Route::group(['prefix' => 'pedidos'], function(){
 	Route::post('/sms', 'PedidoController@sms');
 	Route::get('/imprimirPedido/{id}', 'PedidoController@imprimirPedido');
 	Route::get('/itensParaFrenteCaixa', 'PedidoController@itensParaFrenteCaixa');
+	Route::get('/setarEndereco', 'PedidoController@setarEndereco');
+	Route::get('/setarBairro', 'PedidoController@setarBairro');
 
 });
 
@@ -677,6 +687,11 @@ Route::group(['prefix' => 'compras'],function(){
 	Route::get('/pesquisa', 'PurchaseController@pesquisa');
 	Route::get('/downloadXml/{id}', 'PurchaseController@downloadXml');
 	Route::post('/save', 'PurchaseController@save');
+
+	Route::get('/emitirEntrada/{id}', 'PurchaseController@emitirEntrada');
+	Route::post('/gerarEntrada', 'PurchaseController@gerarEntrada');
+
+
 });
 
 Route::group(['prefix' => 'estoque'],function(){
@@ -835,6 +850,17 @@ Route::group(['prefix' => 'graficos'],function(){
 	Route::get('/faturamentoDosUltimosSeteDias', 'HomeController@faturamentoDosUltimosSeteDias');
 	Route::get('/faturamentoFiltrado', 'HomeController@faturamentoFiltrado');
 
+});
+
+Route::group(['prefix' => 'bairrosDelivery'],function(){
+	Route::get('/', 'BairroDeliveryController@index');
+	Route::get('/delete/{id}', 'BairroDeliveryController@delete');
+	Route::get('/edit/{id}', 'BairroDeliveryController@edit');
+	Route::get('/new', 'BairroDeliveryController@new');
+
+	Route::post('/request', 'BairroDeliveryController@request');
+	Route::post('/save', 'BairroDeliveryController@save');
+	Route::post('/update', 'BairroDeliveryController@update');
 });
 
 

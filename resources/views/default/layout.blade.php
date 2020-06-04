@@ -140,6 +140,7 @@
 			</ul> 
 		</li>
 
+		@if(getenv("PEDIDO_LOCAL") == 1)
 		<li class="nav-item">
 			<div class="link"><a href="#" class="nav-link">
 				<i class="material-icons right black-text">devices</i>
@@ -151,7 +152,9 @@
 
 			</ul> 
 		</li>
+		@endif
 
+		@if(getenv("DELIVERY") == 1)
 		<li class="nav-item">
 			<div class="link"><a href="#" class="nav-link">
 				<i class="material-icons right black-text">local_shipping</i>
@@ -161,6 +164,7 @@
 				
 				<li><a href="/deliveryCategoria"><span class="left material-icons">radio_button_unchecked</span>Categorias</a></li>
 				<li><a href="/deliveryProduto"><span class="left material-icons">radio_button_unchecked</span>Produtos</a></li>
+				<li><a href="/bairrosDelivery"><span class="left material-icons">radio_button_unchecked</span>Bairros</a></li>
 				<li><a href="/deliveryComplemento"><span class="left material-icons">radio_button_unchecked</span>Adicionais</a></li>
 				<li><a href="/pedidosDelivery"><span class="left material-icons">radio_button_unchecked</span>Pedidos de Delivery</a></li>
 				<li><a href="/configDelivery"><span class="left material-icons">radio_button_unchecked</span>Configuração</a></li>
@@ -171,7 +175,7 @@
 				<li><a href="/codigoDesconto"><span class="left material-icons">radio_button_unchecked</span>Códigos Promocionais</a></li>
 			</ul> 
 		</li>
-
+		@endif
 
 		<li class="nav-item">
 			<div class="link"><a href="#" class="nav-link">
@@ -415,6 +419,10 @@ async defer></script>
 
 @if(isset($naoEncerradosMDFeJS))
 <script type="text/javascript" src="/js/naoEncerradosMDFe.js"></script>
+@endif
+
+@if(isset($NFeEntradaJS))
+<script type="text/javascript" src="/js/nfeEntrada.js"></script>
 @endif
 
 

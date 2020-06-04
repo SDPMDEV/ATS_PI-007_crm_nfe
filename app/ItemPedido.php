@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ItemPedido extends Model
 {
     protected $fillable = [
-		'pedido_id', 'produto_id', 'quantidade', 'status', 'tamanho_pizza_id', 'observacao', 'valor'
+		'pedido_id', 'produto_id', 'quantidade', 'status', 'tamanho_pizza_id', 'observacao', 'valor', 'impresso'
 	];
 
 	public function pedido(){
@@ -32,7 +32,19 @@ class ItemPedido extends Model
 
     public function nomeDoProduto(){
         if(count($this->sabores) == 0){
-            return $this->produto->nome;
+            $nome = $this->produto->nome;
+            if($this->observacao != ''){
+               $nome .= " | obs: " .$this->observacao;
+            }
+
+            if(sizeof($this->itensAdicionais) > 0){
+                $nome .= " | Adicional: ";
+                foreach($this->itensAdicionais as $a){
+                    $nome .= $a->adicional->nome;
+                }
+            }
+
+            return $nome;
         }else{
             $cont = 1;
             $nome = "";
@@ -40,6 +52,10 @@ class ItemPedido extends Model
                 $nome .= $cont."/".count($this->sabores) . " " . $s->produto->produto->nome;
             }
             $nome .= " | Tamanho: " . $this->tamanho->nome;
+
+            if($this->observacao != ''){
+               $nome .= " | " .$this->observacao;
+            }
             return $nome;
         }
     }

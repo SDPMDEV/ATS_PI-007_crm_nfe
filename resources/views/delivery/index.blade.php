@@ -1,6 +1,25 @@
 @extends('delivery.default')
 @section('content')
 
+<style type="text/css">
+@media only screen and (max-width: 400px) {
+	.img-home{
+		width: 100%; height: 250px;
+	}
+}
+@media only screen and (min-width: 401px) and (max-width: 1699px){
+	.img-home{
+		width: 100%; height: 400px;
+	}
+}
+
+@media only screen and (min-width: 1700px){
+	.img-home{
+		width: 100%; height: 500px;
+	}
+}
+</style>
+
 
 @if(session()->has('message_sucesso'))
 <div class="p-3 mb-2 bg-success text-white">{{ session()->get('message_sucesso') }}</div>
@@ -36,15 +55,15 @@
 						@else
 
 						@foreach($d->pizza as $tp)
-							<h4>{{$tp->tamanho->nome}}: 
-								<span style="color: orange">{{number_format($tp->valor, 2)}}</span></h4> 
-						@endforeach
+						<h4>{{$tp->tamanho->nome}}: 
+							<span style="color: orange">{{number_format($tp->valor, 2)}}</span></h4> 
+							@endforeach
 
-						@endif
+							@endif
 
-						<a href="/cardapio/acompanhamento/{{$d->id}}" class="button-w3ls active mt-5">Adicionar ao Carrinho
-							<span class="fa fa-caret-right ml-1" aria-hidden="true"></span>
-						</a>
+							<a href="/cardapio/acompanhamento/{{$d->id}}" class="button-w3ls active mt-5">Adicionar ao Carrinho
+								<span class="fa fa-caret-right ml-1" aria-hidden="true"></span>
+							</a>
 
 						</div>
 					</div>	
@@ -61,7 +80,7 @@
 					<ul class="banner_slide_bg">
 						@foreach($d->galeria as $key => $g)
 						<li>
-							<img style="width: 100%; height: 400px;" 
+							<img class="img-home" 
 							src="/imagens_produtos/{{$g->path}}">
 						</li>
 						@endforeach
@@ -119,13 +138,13 @@
 				</div>
 				@endforeach
 				
+			</div>
 		</div>
-	</div>
-</section>
+	</section>
 
-<section class="wthree-slider" id="masthead">
+	<section class="wthree-slider" id="masthead">
 
-</section>
+	</section>
 
 
-@endsection	
+	@endsection	

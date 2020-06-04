@@ -338,9 +338,9 @@ class PedidoDeliveryController extends Controller
 		$pdf = $ped->render();
 
 		header('Content-Type: application/pdf');
-		file_get_contents(filename);
-		file_put_contents($public.'pdf/CUPOM.pdf',$pdf);
-		return redirect($public.'pdf/CUPOM.pdf');
+
+		file_put_contents($public.'pdf/PEDIDODELIVERY.pdf',$pdf);
+		return redirect($public.'pdf/PEDIDODELIVERY.pdf');
 		// echo $pdf;
 	}
 

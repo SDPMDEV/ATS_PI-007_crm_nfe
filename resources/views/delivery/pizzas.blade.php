@@ -133,7 +133,7 @@
 				<div class="card border-0">
 					<div class="card-header p-0">
 
-						<a href="single.html">
+						<a href="#!">
 							@if(count($s['galeria']) > 0)
 							<img src="/imagens_produtos/{{$s['galeria'][0]->path}}" 
 							alt="" style="height: 200px; width: 100%" class="img-fluid" />

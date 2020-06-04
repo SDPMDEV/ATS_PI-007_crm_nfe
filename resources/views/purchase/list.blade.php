@@ -69,7 +69,11 @@
 								<a href="/compras/view/{{ $p->id }}">
 	      							<i class="material-icons left green-text">visibility</i>					
 								</a>
-								
+
+								<!-- <a href="/compras/view/{{ $p->id }}">
+	      							<i class="material-icons green green-text">nfc</i>					
+								</a>
+								 -->
 							</th>
 							<?php $total += $p->value ?>
 						</tr>

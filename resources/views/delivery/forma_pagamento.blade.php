@@ -25,6 +25,10 @@
 	background: #999;
 }
 
+.margin{
+	margin-top: 10px;
+}
+
 </style>
 
 
@@ -46,7 +50,9 @@
 	</div>
 
 
-	
+
+	<!-- <input id="nome-cliente" type="hidden" value="{{$pedido->cliente->nome}} {{$pedido->cliente->sobre_nome}}" name=""> -->
+	<input type="hidden" id="email-cliente" value="{{$cliente->email}}">
 
 	<section class="blog_w3ls">
 		<div class="container">
@@ -114,7 +120,7 @@
 		<div class="form-group">
 			<div class="col-lg-4 col-md-6 col-10">
 				<label class="mb-2">Telefone de contato</label>
-				<input type="text" class="form-control" id="telefone" required="">
+				<input type="text" value="{{$ultimoPedido != null ? $ultimoPedido->telefone : ''}}" class="form-control" id="telefone" required="">
 			</div>
 		</div>
 
@@ -178,14 +184,16 @@
 								</div>
 							</div>
 
+							@if($pagseguroAtivado == true)
 							<div class="form-check">
 								<input class="form-check-input" type="radio" name="gridRadios" id="pagseguro" value="pagseguro">
 								<label class="form-check-label" for="debito">
-									Pagseguro
+									Cartão de Crédito
 								</label>
 								<img width="40" src="/imgs/debit-card.png">
 
 							</div>
+							@endif
 
 						</div>
 					</div>
@@ -199,14 +207,14 @@
 	<input type="hidden" id="pedido_id" value="{{$pedido->id}}">
 	<input type="hidden" id="total-init" value="{{$total}}">
 
-	<a href="#!" type="button" id="finalizar-venda" class="btn btn-success btn-lg btn-block">
+	<a href="#!" type="button" id="finalizar-venda" class="btn btn-success btn-lg btn-block disabled">
 		<span class="fa fa-check mr-2"></span> FINALIZAR <strong id="total"></strong>
 	</a>
 	<br>
 </div>
 
 <div id="gal2" class="pop-overlay">
-	<div style="width: 100%" class="popup">
+	<div style="width: 100%; height: 100%" class="popup">
 
 		<div id="info-mapa">
 			<p>Deslize o pino até sua localização!</p>
@@ -221,28 +229,29 @@
 
 
 
-				<input type="hidden" id="_token" value="{{ csrf_token() }}">
-				<input type="hidden" id="cliente_id" value="{{$cliente->id}}">
-				<div class="form-group">
-					<label>Rua</label>
-					<input type="text" class="form-control fr" id="rua" placeholder="" required="">
-				</div>
+			<input type="hidden" id="_token" value="{{ csrf_token() }}">
+			<input type="hidden" id="cliente_id" value="{{$cliente->id}}">
+			
+			<div class="form-group">
+				<label>Rua</label>
+				<input type="text" class="form-control fr" id="rua" placeholder="" required="">
+			</div>
 
-				<div class="form-group">
-					<label class="mb-2">Numero</label>
-					<input type="text" class="form-control fr" id="numero" required="true">
-				</div>
+			<div class="form-group">
+				<label class="mb-2">Numero</label>
+				<input type="text" class="form-control fr" id="numero" required="true">
+			</div>
 
-				<div class="form-group">
-					<label class="mb-2">Bairro</label>
-					<input type="text" class="form-control fr" id="bairro" required="true">
-				</div>
+			<div class="form-group">
+				<label class="mb-2">Bairro</label>
+				<input type="text" class="form-control fr" id="bairro" required="true">
+			</div>
 
-				<div class="form-group">
-					<label class="mb-2">Referencia</label>
-					<input type="text" class="form-control fr" id="referencia" required="">
-				</div>
-				<a href="#!" id="salvar_endereco" class="btn btn-danger btn-block mb-4 disabled">Salvar</a>
+			<div class="form-group">
+				<label class="mb-2">Referencia</label>
+				<input type="text" class="form-control fr" id="referencia" required="">
+			</div>
+			<a href="#!" id="salvar_endereco" class="btn btn-danger btn-block mb-4 disabled">Salvar</a>
 
 
 		</div>
@@ -252,35 +261,104 @@
 
 <div id="modal-pagseguro" class="pop-overlay">
 	<div style="width: 100%;" class="popup">
+		<div class="row" id="div-cartao-antigo" @if(sizeof($cartoes) > 0) style="display: block" @else style="display: none" @endif>
+			<div class="col-sm-12">
+				<h6>Cartões utilizados em compras anteriores:</h6>
+			</div><br>
 
-		<div class="card-wrapper"></div>
-		<form style="margin-top: 20px;">
-			<div class="row">
+			@foreach($cartoes as $c)
+			<div class="col-sm-12">
+				<div class="row">
+					<div class="col-sm-4">
 
-				<div class="col-lg-12 col-md-12">
-					<label class="">Numero do Cartão</label>
-					<input type="tel" class="form-control" id="number" name="number">
+						<input class="form-check-input" type="radio" name="escolha-cartao" value="{{$c}}">
+						<img width="100" src="/images_band/{{$c['bandeira']}}.png">
+
+					</div>
+					<div class="col-sm-8" >
+
+						
+						<label class="form-check-label" style="color: #555; margin-top: 8px; ">
+							Número: {{$c['numero_cartao']}}
+						</label><br>
+						<label class="form-check-label" style="color: #555;">
+							CPF: {{$c['cpf']}}
+						</label>
+					</div>
+
 				</div>
-
-				<div class="col-lg-12 col-md-12">
-					<label class="">Nome do cliente</label>
-					<input type="text" class="form-control" id="nome" name="name">
-				</div>
-
-				<div class="col-lg-6 col-md-6">
-					<label class="">Validade</label>
-					<input type="text" class="form-control" id="validade" name="validade">
-				</div>
-
-				<div class="col-lg-6 col-md-6">
-					<label class="">CVC</label>
-					<input type="text" class="form-control" id="cvc" name="cvc">
-				</div>
-				
-
 			</div>
-		</form>
 
+			@endforeach
+			<hr>
+			<div class="col-sm-12">
+				<div class="row">
+					<div class="col-sm-4">
+
+						<input class="form-check-input" type="radio" name="escolha-cartao" value="null">
+						<img width="100" src="/imgs/credit-card.png">
+
+					</div>
+					<div class="col-sm-8">
+
+						<label class="form-check-label" style="font-size: 25px; margin-top: 10px; color: #555;">
+							Novo Cartão
+						</label><br>
+						
+					</div>
+
+				</div>
+			</div>
+
+		</div><br>
+		<div id="div-pagar" @if(sizeof($cartoes) > 0) style="display: none" @else style="display: block" @endif>
+			<div class="card-wrapper"></div>
+			
+			<form style="margin-top: 20px;">
+
+				<div class="row">
+
+					<div class="col-lg-12 col-md-12">
+						<label class="">Número do Cartão</label>
+						<input type="tel" class="form-control" id="number" name="number">
+					</div>
+
+					<div class="col-lg-12 col-md-12 margin">
+						<label class="">Nome Impresso no Cartão</label>
+						<input type="text" value="{{$pedido->cliente->nome}} {{$pedido->cliente->sobre_nome}}" class="form-control" id="nome" name="name">
+					</div>
+
+					<div class="col-lg-12 col-md-12 margin">
+						<label class="">CPF</label>
+						<input type="tel" class="form-control" id="cpf" name="cpf">
+					</div>
+
+					<div class="col-lg-6 col-md-6 margin">
+						<label class="">Validade</label>
+						<input type="tel" placeholder="**/****" class="form-control" id="validade" name="validade">
+					</div>
+
+					<div class="col-lg-6 col-md-6  margin">
+						<label class="">CVC</label>
+						<input type="tel" class="form-control" id="cvc" name="cvc">
+					</div>
+
+					<div class="col-lg-12 col-md-12 margin">
+						<label>Parcelamento</label>
+						<select id="fator" class="form-control">
+						</select>
+
+					</div>
+
+				</div><br>
+
+				<a style="color: #fff" type="button" id="finalizar-venda-cartao" class="btn btn-success btn-lg btn-block">
+					<span class="fa fa-check mr-2"></span> FINALIZAR  <strong id="total-cartao"></strong> <i id="icon-spin" style="display: none;" class="fa fa-spinner fa-spin"></i>
+				</a>
+			</form>
+		</div>
+		<a class="close" href="#!"><i id="icon-spin" class="fa fa-close"></i></a>
+		<a style="margin-right: 30px;" class="close" id="voltar"><i id="icon-spin" class="fa fa-arrow-circle-left"></i></a>
 	</div>
 </div>
 

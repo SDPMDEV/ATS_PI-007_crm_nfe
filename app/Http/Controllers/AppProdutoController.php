@@ -66,7 +66,7 @@ class AppProdutoController extends Controller
 				$p['color'] = '#e57373';
 				$p['icon'] = 'star-outline';
 				$p->categoria;
-				if(strpos($p->categoria->nome, 'izza') !== false){
+				if(strpos(strtolower($p->categoria->nome), 'izza') !== false){
 					foreach($p->pizza as $s) $s->tamanho;
 				}
 			}
@@ -98,7 +98,7 @@ class AppProdutoController extends Controller
 					$p['icon'] = 'star';
 				}
 			}
-			if(strpos($p->categoria->nome, 'izza') !== false){
+			if(strpos(strtolower($p->categoria->nome), 'izza') !== false){
 				foreach($p->pizza as $s) $s->tamanho;
 			}
 		}
@@ -262,7 +262,7 @@ class AppProdutoController extends Controller
 				$p['color'] = '#e57373';
 				$p['icon'] = 'star-outline';
 				$p->categoria;
-				if(strpos($p->categoria->nome, 'izza') !== false){
+				if(strpos(strtolower($p->categoria->nome), 'izza') !== false){
 					foreach($p->pizza as $s) $s->tamanho;
 				}
 			}

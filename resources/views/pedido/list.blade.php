@@ -71,7 +71,7 @@ h1{
 			<h4>Abrir Comanda</h4>
 			<div class="row">
 				<div class="input-field col s6">
-					<input type="text" name="comanda" id="comanda">
+					<input type="text" name="comanda" id="comanda" data-length="20">
 					<label>Código da Comanda</label>
 				</div>
 			</div>

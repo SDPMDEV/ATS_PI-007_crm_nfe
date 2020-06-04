@@ -7,6 +7,7 @@
 			<div class="login p-4 mx-auto">
 				<h4 class="text-center mb-4">Olá {{$cliente->nome}}, por favor ative seu cadastro! </h4>
 
+				@if(getenv("AUTENTICACAO_SMS") == 1)
 				<h5>Contato para ativação xx xxxxx-x{{substr($cliente->celular, 10,3)}}</h5>
 				<a  style="width: 100%;" id="enviar-sms" href="#!" class="btn btn-success"><span class="fa fa-paper-plane mr-2"></span>Enviar SMS</a>
 
@@ -43,6 +44,9 @@
 
 					</div>
 				</div>
+				@else
+				<h5 class="text-center mb-4">Verifique seu email</h5>
+				@endif
 			</div>
 		</div>
 	</div>

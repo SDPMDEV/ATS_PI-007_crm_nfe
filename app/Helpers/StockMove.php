@@ -35,6 +35,7 @@ class StockMove {
 		$stock = $this->existStock($productId);
 		if($stock){ // update
 			$stock->quantidade -= $quantity;
+			if($stock->quantidade < 0.010 ) $stock->quantidade = 0;
 			$stock->save();
 		}
 		

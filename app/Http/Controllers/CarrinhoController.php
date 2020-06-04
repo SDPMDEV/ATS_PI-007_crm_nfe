@@ -205,6 +205,15 @@ class CarrinhoController extends Controller
 
 		$funcionamento = $this->funcionamento();
 
+		$pagseguroAtivo = getenv("PAGSEGURO_ATIVO");
+		$pagseguroEmail = getenv("PAGSEGURO_EMAIL");
+		$pagseguroToken = getenv("PAGSEGURO_TOKEN");
+
+		$pagseguroAtivado = false;
+		if($pagseguroAtivo == 1 && strlen($pagseguroEmail) > 10 && strlen($pagseguroToken) > 10){
+			$pagseguroAtivado = true;
+		}
+
 		if($funcionamento['status']){
 			$clienteLog = session('cliente_log');
 			$pedido = PedidoDelivery::
@@ -242,14 +251,25 @@ class CarrinhoController extends Controller
 
 
 					if($clienteLog){
+
+						$ultimoPedido = PedidoDelivery::
+						where('cliente_id', $cliente->id)
+						->orderBy('id', 'desc')
+						->first();
+
+						$cartoes = $this->getPedidosPagSeguro($cliente->id);
+
 						return view('delivery/forma_pagamento')
 						->with('pedido', $pedido)
+						->with('ultimoPedido', $ultimoPedido)
+						->with('cartoes', $cartoes)
 						->with('cliente', $cliente)
 						->with('enderecos', $enderecos)
 						->with('forma_pagamento', true)
 						->with('total', $total)
 						->with('mapaJs', true)
 						->with('cupom', $cupom)
+						->with('pagseguroAtivado', $pagseguroAtivado)
 						->with('config', $this->config)
 						->with('title', 'FINALIZAR PEDIDO');
 					}else{
@@ -273,6 +293,19 @@ class CarrinhoController extends Controller
 			}
 			return redirect('/'); 
 		}
+	}
+
+	private function getPedidosPagSeguro($clienteId){
+		$pedidos = PedidoDelivery::where('cliente_id', $clienteId)
+		->get();
+		$arr = [];
+		foreach($pedidos as $p){
+			if($p->forma_pagamento == 'pagseguro'){
+				array_push($arr, $p->pagseguro);
+			}
+		}
+
+		return $arr;
 	}
 
 	public function finalizarPedido(Request $request){

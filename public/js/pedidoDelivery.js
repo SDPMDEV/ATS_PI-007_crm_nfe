@@ -24,3 +24,36 @@ $('#btn-enviar-push').click(() => {
 		alert('Erro ao enviar Push')
 	})
 })
+
+function consultar(codigo){
+	$('#preloader').css('display', 'block')
+	console.log(codigo)
+	$.get(path + "/pagseguro/consultaJS", {codigo: codigo})
+	.done((success) => {
+		$('#preloader').css('display', 'none')
+
+		console.log(success)
+		let status = success.status[0];
+		let referencia = success.referencia[0];
+		let total = success.total[0];
+		let taxa = success.taxa[0];
+
+		if(status == '3'){
+			status = 'Aprovada';
+		}else{
+			status = 'Reprovada ' + status;
+		}
+
+		$('#status').html(status)
+		$('#referencia').html(referencia)
+		$('#total').html(total)
+		$('#taxa').html(taxa)
+		$('#modal-consulta').modal('open');
+	})
+	.fail((err) => {
+		$('#preloader').css('display', 'none')
+		
+		console.log(err)
+		alert("Ocorreu um erro ao consultar o código: " + codigo)
+	})
+}

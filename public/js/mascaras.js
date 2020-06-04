@@ -35,7 +35,7 @@ $('.date-input').mask('00/00/0000', {reverse: true});
 
 $('#quantidade').mask('0000000000,000', {reverse: true});
 $('#quantidade_carga').mask('0000000000,0000', {reverse: true});
-$('#comanda').mask('000', {reverse: true});
+// $('#comanda').mask('000', {reverse: true});
 $('#limite_diario').mask('000', {reverse: true});
 $('#pesoL').mask('0000000000,000', {reverse: true});
 $('#pesoB').mask('0000000000,000', {reverse: true});

@@ -193,8 +193,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 
 			@yield('content')
 
-			
-
 			<footer>
 				<div class="container py-xl-4">
 					<div class="row footer-top">
@@ -322,6 +320,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				$('#cod4').mask('0', {reverse: true});
 				$('#cod5').mask('0', {reverse: true});
 				$('#cod6').mask('0', {reverse: true});
+				$('#cpf').mask('000.000.000-00', {reverse: true});
 
 				
 			</script>
@@ -342,6 +341,7 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			@endif
 
 			@if(isset($forma_pagamento))
+			<script type="text/javascript" src="https://stc.pagseguro.uol.com.br/pagseguro/api/v2/checkout/pagseguro.directpayment.js"></script>
 			<script src="/jsd/forma_pagamento.js" type="text/javascript"></script>
 			<script src="/jsd/card.js" type="text/javascript"></script>
 
@@ -350,10 +350,11 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 				new Card({
 					form: document.querySelector('form'),
 					container: '.card-wrapper',
+					width: 300,
 					placeholders: {
 						number: '•••• •••• •••• ••••',
 						name: 'Nome Completo',
-						expiry: '••/••',
+						expiry: '••/••••',
 						cvc: 'CVC'
 					},
 					debug: true,

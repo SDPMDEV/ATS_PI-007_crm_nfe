@@ -32,8 +32,6 @@ $(function () {
         onAutocomplete: function(val) {
           let v = val.split('-')
           getProduto(v[0], (data) => {
-
-            // $('#valor').val(data.valor_venda)
             
             console.log(data)
             if(data.delivery && data.delivery.pizza.length > 0){
@@ -411,10 +409,26 @@ function enviarWhatsApp(){
   window.open(api)
 }
 
-function imprimir(id){
-  console.log(id)
-}
 
+
+$('#bairro').change(() => {
+  let bairro = $('#bairro').val();
+  if(bairro != '0'){
+    let js = {
+      bairro_id: bairro,
+      pedido_id: $('#pedido_id').val()
+    }
+    console.log(js)
+    $.get(path + '/pedidos/setarBairro', js)
+    .done((success) => {
+      console.log(success)
+      location.reload()
+    })
+    .fail((err) => {
+      console.log(err)
+    })
+  }
+})
 
 
 

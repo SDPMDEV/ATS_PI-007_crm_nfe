@@ -32,7 +32,7 @@ class DeliveryConfigCategoriaController extends Controller
     private function existeCategoriaPizza($categorias){
         $tamanhoFirst = count(TamanhoPizza::all()) > 0 ? true : false;
         foreach($categorias as $c){
-            if(strpos($c->nome, 'izza') !== false){
+            if(strpos(strtolower($c->nome), 'izza') !== false){
                 if(!$tamanhoFirst) return true;
             }
         }

@@ -17,10 +17,11 @@ use App\Rules\CelularDup;
 class DeliveryController extends Controller
 {
     protected $config = null;
-    protected $API_KEY = "";
+
     public function __construct(){
         $this->config = DeliveryConfig::first();
-        $this->API_KEY = "11198df5-3c87-41c5-8e21-4494ae33f2c9";    
+        $delivery = getenv("DELIVERY");
+
     }
 
     public function index(){
@@ -33,7 +34,7 @@ class DeliveryController extends Controller
         ->where('status', true)
         ->get();
 
-        if($this->config == null) {
+        if($this->config == null || getenv("DELIVERY") == 0) {
             return redirect('/login');
         }
 
@@ -62,7 +63,7 @@ class DeliveryController extends Controller
 
         $categoria = CategoriaProdutoDelivery::where('id', $id)->first();
 
-        if(strpos($categoria->nome, 'izza') !== false){
+        if(strpos(strtolower($categoria->nome), 'izza') !== false){
 
             $tamanhos = TamanhoPizza::all();
             return view('delivery/tipoPizza')
@@ -304,7 +305,7 @@ public function acompanhamento($id){
         ->first();
 
 
-        if(strpos($produto->categoria->nome, 'izza') !== false){
+        if(strpos(strtolower($produto->categoria->nome), 'izza') !== false){
             $tamanhos = TamanhoPizza::all();
             return view('delivery/tipoPizza')
             ->with('tamanhos', $tamanhos)
@@ -392,8 +393,9 @@ public function refreshToken(Request $request){
     $celular = $cliente->celular;
     $celular = str_replace(" ", "", $celular);
     $celular = str_replace("-", "", $celular);
-    $this->sendSms($celular, $cod);
+    if(getenv("AUTENTICACAO_SMS") == 1) $this->sendSms($celular, $cod);
     // $this->sendEmailCod($cliente->email, $cod);
+    if(getenv("AUTENTICACAO_EMAIL") == 1 && getenv("SERVIDOR_WEB") == 1) $this->sendEmailLink($cliente->email, $cod);
     $cliente->token = $cod;
     if($cliente->save())
         return response()->json($cliente, 200);
@@ -438,8 +440,10 @@ public function salvarRegistro(Request $request){
         $celular = $request->celular;
         $celular = str_replace(" ", "", $celular);
         $celular = str_replace("-", "", $celular);
-        $this->sendSms($celular, $cod);
+        if(getenv("AUTENTICACAO_SMS") == 1) $this->sendSms($celular, $cod);
         // $this->sendEmailCod($request->email, $cod);
+        if(getenv("AUTENTICACAO_EMAIL") == 1 && getenv("SERVIDOR_WEB") == 1) 
+            $this->sendEmailLink($request->email, $cod);
 
         return view('delivery/autenticarCliente')
         ->with('config', $this->config)
@@ -472,6 +476,7 @@ private function sendEmailCod($email, $cod){
         $m->to($email);
     });
 }
+
 
 public function validaToken(Request $request){
     $token = $request->codToken;
@@ -614,6 +619,42 @@ public function saveTokenWeb(Request $request){
         }
         echo json_encode('update');
     }
+}
+
+private function sendEmailLink($email, $cod){
+    Mail::send('mail.link_verifica', ['link' => md5("$cod-$email")], function($m) use ($email){
+        $nomeEmail = getenv('MAIL_NAME');
+        $nomeEmail = str_replace("_", " ", $nomeEmail);
+        $m->from(getenv('MAIL_USERNAME'), $nomeEmail);
+        $m->subject('Autenticação');
+        $m->to($email);
+    });
+}
+
+public function autenticarClienteEmail($cod){
+
+    $clientes = ClienteDelivery::all();
+    $cliente = null;
+    foreach($clientes as $c){
+        if(md5("$c->token-$c->email") == $cod){
+            $c->ativo = true;
+            $c->save();
+            $cliente = $c;
+        }
+    }
+
+    if($cliente != null){
+        $session = [
+            'id' => $cliente->id,
+            'nome' => $cliente->nome,
+        ];
+        session(['cliente_log' => $session]);
+        session()->flash("message_sucesso", "Bem vindo ". $cliente->nome . ", habilitado para App e Webdelivery");
+        return redirect('/'); 
+    }else{
+        echo "Erro";
+    }
+
 }
 
 

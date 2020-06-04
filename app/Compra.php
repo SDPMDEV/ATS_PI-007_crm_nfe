@@ -8,7 +8,7 @@ class Compra extends Model
 {
 	protected $fillable = [
 		'fornecedor_id', 'usuario_id', 'nf', 'desconto', 'valor', 'observacao', 'xml_path',
-		'chave'
+		'chave', 'estado'
 	];
 
 	public function fornecedor(){

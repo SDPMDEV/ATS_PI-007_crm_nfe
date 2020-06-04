@@ -47,6 +47,12 @@ class ProductController extends Controller
         $listaCST_IPI = Produto::listaCST_IPI();
         $tributacao = Tributacao::first();
 
+        if($tributacao == null){
+            session()->flash('color', 'red');
+            session()->flash('message', 'Informe a tributação padrão!');
+            return redirect('tributos');
+        }
+
         $unidadesDeMedida = Produto::unidadesMedida();
         $config = ConfigNota::first();
         return view('produtos/register')
@@ -106,6 +112,12 @@ class ProductController extends Controller
         $tributacao = Tributacao::first();
         $resp = $produto
         ->where('id', $id)->first();  
+
+        if($tributacao == null){
+            session()->flash('color', 'red');
+            session()->flash('message', 'Informe a tributação padrão!');
+            return redirect('tributos');
+        }
 
         return view('produtos/register')
         ->with('produto', $resp)

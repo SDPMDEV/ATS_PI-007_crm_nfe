@@ -28,6 +28,10 @@ class PedidoDelivery extends Model
 		return $this->belongsTo(EnderecoDelivery::class, 'endereco_id');
 	}
 
+	public function pagseguro(){
+		return $this->hasOne('App\PedidoPagSeguro', 'pedido_delivery_id', 'id');
+	}
+
 	public function somaItens(){
 
 		$config = DeliveryConfig::first();

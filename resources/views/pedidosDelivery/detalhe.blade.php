@@ -58,10 +58,13 @@
 
 			</div>
 
-			<div class="col s6">
+			<div class="col s12">
 				<h4>Total do Pedido: <strong class="cyan-text">{{number_format($pedido->somaItens(),2 , ',', '.')}}</strong></h4>
 				<h4>Total de Itens: <strong class="cyan-text">{{count($pedido->itens)}}</strong></h4>
 				<h4>Forma de pagamento: <strong class="cyan-text">{{strtoupper($pedido->forma_pagamento)}}</strong></h4>
+
+				
+
 				@if($pedido->observacao != '')
 				<h4>Observação: <strong class="cyan-text">{{$pedido->observacao}}</strong></h4>
 				@endif
@@ -70,6 +73,42 @@
 				@endif
 			</div>
 		</div>
+
+		@if($pedido->forma_pagamento == 'pagseguro')
+		<div class="card">
+			<div class="row">
+				
+				<div class="card-content">
+					<h4 class="center-align">Dados do Pagamento PagSeguro</h4>
+					@if($pedido->pagseguro->status == '1' || $pedido->pagseguro->status == '2')
+					<h5 class="red-text">CUIDADO, CONSULTE A TRANSAÇÃO, VERIFIQUE SE AUTORIZADA!!</h5>
+					@endif
+					<h5>Parcelas: <strong class="red-text">{{strtoupper($pedido->pagseguro->parcelas)}}</strong></h5>
+					<h5>Referência: <strong class="red-text">{{strtoupper($pedido->pagseguro->referencia)}}</strong></h5>
+					<h5>Código da transação: <strong class="red-text">{{strtoupper($pedido->pagseguro->codigo_transacao)}}</strong></h5>
+					<h5>Número do Cartão: <strong class="red-text">{{strtoupper($pedido->pagseguro->numero_cartao)}}</strong></h5>
+					<h5>CPF: <strong class="red-text">{{strtoupper($pedido->pagseguro->cpf)}}</strong></h5>
+					<button onclick="consultar('{{$pedido->pagseguro->codigo_transacao}}')" class="btn">Consultar Transação</button>
+
+					<div class="row" id="preloader" style="display: none">
+						<div class="col s12 center-align">
+							<div class="preloader-wrapper active">
+								<div class="spinner-layer spinner--only">
+									<div class="circle-clipper left">
+										<div class="circle"></div>
+									</div><div class="gap-patch">
+										<div class="circle"></div>
+									</div><div class="circle-clipper right">
+										<div class="circle"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		@endif
 
 		@if(!empty($pedido->cupom))
 		<div class="card">
@@ -279,6 +318,20 @@
 	</div>
 	<div class="modal-footer">
 		<a href="#!" id="btn-enviar-push" class="modal-action btn blue">Enviar</a>
+		<a href="#!" class="modal-action modal-close btn grey">Fechar</a>
+	</div>
+</div>
+
+<div id="modal-consulta" class="modal">
+	<div class="modal-content">
+		<div class="col s12">
+			<h5>Referencia: <strong id="referencia"></strong></h5>
+			<h5>Status: <strong id="status"></strong></h5>
+			<h5>Total: <strong id="total"></strong></h5>
+			<h5>Taxa: <strong id="taxa"></strong></h5>
+		</div>
+	</div>
+	<div class="modal-footer">
 		<a href="#!" class="modal-action modal-close btn grey">Fechar</a>
 	</div>
 </div>

@@ -42,9 +42,10 @@ class CozinhaController extends Controller
 
     		$saboresPizza = "";
 
-    		foreach($i->sabores as $s){
-    			$saboresPizza .= $s->produto->produto->nome . ($key < count($i->sabores)-1 ? " | " : "");
-    		}
+    		foreach($i->sabores as $key => $s){
+                $saboresPizza .= $s->produto->produto->nome . ($key < count($i->sabores)-1 ? " | " : "");
+            }
+            
     		$i->tamanhoPizza = $i->tamanho != null ? $i->tamanho->nome : false;
 
 
