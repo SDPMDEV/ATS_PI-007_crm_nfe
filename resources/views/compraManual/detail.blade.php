@@ -75,9 +75,11 @@
 			</div>
 			<div class="col s3">
 				<br>
+				@if($compra->xml_path != '')
 				<a target="_blank" style="width: 100%" href="/compras/downloadXml/{{$compra->id}}" class="btn">
 					<i class="material-icons left">archive</i> Downlaod XML
 				</a>
+				@endif
 			</div>
 		</div>
 	</div>

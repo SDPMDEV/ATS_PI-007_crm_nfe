@@ -51,6 +51,7 @@ function somaTotal(){
 		console.log(v.valor)
 		valorProduto += parseFloat(v.valor);
 	})
+	alert(valorProduto)
 	$('#valor_total').html(convertMoney(valorProduto))
 }
 

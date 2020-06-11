@@ -40,6 +40,15 @@ class ProductController extends Controller
     }
 
     public function new(){
+        $anps = Produto::lista_ANP();
+        $natureza = Produto::firstNatureza();
+
+        if($natureza == null){
+            session()->flash('color', 'red');
+            session()->flash('message', 'Cadastre uma natureza de operação!');
+            return redirect('/naturezaOperacao');
+        }
+
         $categorias = Categoria::all();
 
         $listaCSTCSOSN = Produto::listaCSTCSOSN();
@@ -62,15 +71,24 @@ class ProductController extends Controller
         ->with('listaCSTCSOSN', $listaCSTCSOSN)
         ->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
         ->with('listaCST_IPI', $listaCST_IPI)
-
+        ->with('anps', $anps)
         ->with('config', $config)
         ->with('tributacao', $tributacao)
+        ->with('natureza', $natureza)
         ->with('produtoJs', true)
         ->with('title', 'Cadastrar Produto');
     }
 
     public function save(Request $request){
         $produto = new Produto();
+
+        $anps = Produto::lista_ANP();
+        $descAnp = '';
+        foreach($anps as $key => $a){
+            if($key == $request->anp){
+                $descAnp = $a;
+            }
+        }
         $request->merge([ 'composto' => $request->input('composto') ? true : false ]);
         $request->merge([ 'valor_livre' => $request->input('valor_livre') ? true : false ]);
         $request->merge([ 'valor_venda' =>str_replace(",", ".", $request->input('valor_venda'))]);
@@ -82,11 +100,11 @@ class ProductController extends Controller
         $request->merge([ 'CST_PIS' => $request->input('CST_PIS') ?? '0']);
         $request->merge([ 'CST_COFINS' => $request->input('CST_COFINS') ?? '0']);
         $request->merge([ 'CST_IPI' => $request->input('CST_IPI') ?? '0']);
+        $request->merge([ 'codigo_anp' => $request->anp != '' ? $request->anp : '']);
+        $request->merge([ 'descricao_anp' => $request->anp != '' ? $descAnp : '']);
         $this->_validate($request);
 
-
         $result = $produto->create($request->all());
-
 
         if($result){
             session()->flash('color', 'blue');
@@ -100,6 +118,15 @@ class ProductController extends Controller
     }
 
     public function edit($id){
+        $natureza = Produto::firstNatureza();
+        $anps = Produto::lista_ANP();
+
+        if($natureza == null){
+            session()->flash('color', 'red');
+            session()->flash('message', 'Cadastre uma natureza de operação!');
+            return redirect('/naturezaOperacao');
+        }
+
         $produto = new Produto(); 
 
         $listaCSTCSOSN = Produto::listaCSTCSOSN();
@@ -123,11 +150,11 @@ class ProductController extends Controller
         ->with('produto', $resp)
         ->with('config', $config)
         ->with('tributacao', $tributacao)
-
+        ->with('natureza', $natureza)
         ->with('listaCSTCSOSN', $listaCSTCSOSN)
         ->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
         ->with('listaCST_IPI', $listaCST_IPI)
-
+        ->with('anps', $anps)
         ->with('unidadesDeMedida', $unidadesDeMedida)
         ->with('categorias', $categorias)
         ->with('produtoJs', true)
@@ -182,6 +209,13 @@ class ProductController extends Controller
 
         $this->_validate($request);
         
+        $anps = Produto::lista_ANP();
+        $descAnp = '';
+        foreach($anps as $key => $a){
+            if($key == $request->anp){
+                $descAnp = $a;
+            }
+        }
 
         $resp->nome = $request->input('nome');
         $resp->categoria_id = $request->input('categoria_id');
@@ -204,6 +238,10 @@ class ProductController extends Controller
         $resp->perc_pis = $request->input('perc_pis');
         $resp->perc_cofins = $request->input('perc_cofins');
         $resp->perc_ipi = $request->input('perc_ipi');
+        $resp->CFOP_saida_estadual = $request->input('CFOP_saida_estadual');
+        $resp->CFOP_saida_inter_estadual = $request->input('CFOP_saida_inter_estadual');
+        $resp->codigo_anp = $request->input('anp');
+        $resp->descricao_anp = $descAnp;
 
         
         if($request->input('composto')) $resp->composto = 1;
@@ -251,8 +289,9 @@ class ProductController extends Controller
             'perc_pis' => 'required',
             'perc_cofins' => 'required',
             'perc_ipi' => 'required',
-            'codBarras' => [new EAN13]
-            // 'CFOP' => 'required',
+            'codBarras' => [new EAN13],
+            'CFOP_saida_estadual' => 'required',
+            'CFOP_saida_inter_estadual' => 'required',
             // 'CEST' => 'required'
         ];
 
@@ -267,6 +306,8 @@ class ProductController extends Controller
             'perc_pis.required' => 'O campo %PIS é obrigatório.',
             'perc_cofins.required' => 'O campo %COFINS é obrigatório.',
             'perc_ipi.required' => 'O campo %IPI é obrigatório.',
+            'CFOP_saida_estadual.required' => 'Campo obrigatório.',
+            'CFOP_saida_inter_estadual.required' => 'Campo obrigatório.',
 
         ];
         $this->validate($request, $rules, $messages);
@@ -276,7 +317,7 @@ class ProductController extends Controller
         $products = Produto::all();
         $arr = array();
         foreach($products as $p){
-            $arr[$p->id. ' - ' .$p->nome . ' | Cor: ' . $p->cor] = null;
+            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | Cor: ' . $p->cor : '')] = null;
                 //array_push($arr, $temp);
         }
         echo json_encode($arr);
@@ -294,7 +335,7 @@ class ProductController extends Controller
         ->get();
         $arr = array();
         foreach($products as $p){
-            $arr[$p->id. ' - ' .$p->nome . ' | Cor: ' . $p->cor] = null;
+            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | Cor: ' . $p->cor : '')] = null;
                 //array_push($arr, $temp);
         }
         echo json_encode($arr);
@@ -306,7 +347,7 @@ class ProductController extends Controller
         ->get();
         $arr = array();
         foreach($products as $p){
-            $arr[$p->id. ' - ' .$p->nome . ' | Cor: ' . $p->cor] = null;
+            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | Cor: ' . $p->cor : '')] = null;
                 //array_push($arr, $temp);
         }
         echo json_encode($arr);

@@ -8,6 +8,7 @@ use NFePHP\NFe\Common\Standardize;
 
 use App\ConfigNota;
 use App\Certificado;
+use App\Venda;
 use NFePHP\NFe\Complements;
 use NFePHP\DA\NFe\Danfe;
 use NFePHP\DA\Legacy\FilesFolders;
@@ -30,7 +31,7 @@ class NFeEntradaService {
 		
 	}
 
-	public function gerarNFe($compra){
+	public function gerarNFe($compra, $natureza, $tipoPagamento){
 		
 
 		$config = ConfigNota::first(); // iniciando os dados do emitente NF
@@ -45,19 +46,20 @@ class NFeEntradaService {
 		$infNFe = $nfe->taginfNFe($stdInNFe);
 
 		$vendaLast = Venda::lastNF();
-		$lastNumero = $vendaLast;
+		$compraLast = $vendaLast;
+
 		
 		$stdIde = new \stdClass();
 		$stdIde->cUF = $config->cUF;
 		$stdIde->cNF = rand(11111,99999);
 		// $stdIde->natOp = $venda->natureza->natureza;
-		$stdIde->natOp = $compra->natureza->natureza;
+		$stdIde->natOp = $natureza->natureza;
 
 		// $stdIde->indPag = 1; //NÃO EXISTE MAIS NA VERSÃO 4.00 // forma de pagamento
 
 		$stdIde->mod = 55;
 		$stdIde->serie = 1;
-		$stdIde->nNF = (int)$lastNumero+1;
+		$stdIde->nNF = (int)$compraLast+1;
 		$stdIde->dhEmi = date("Y-m-d\TH:i:sP");
 		$stdIde->dhSaiEnt = date("Y-m-d\TH:i:sP");
 		$stdIde->tpNF = 0; // 0 Entrada;
@@ -68,7 +70,7 @@ class NFeEntradaService {
 		$stdIde->cDV = 0;
 		$stdIde->tpAmb = $config->ambiente;
 		$stdIde->finNFe = 1;
-		$stdIde->indFinal = $venda->cliente->consumidor_final;
+		$stdIde->indFinal = 1;
 		$stdIde->indPres = 1;
 		$stdIde->procEmi = '0';
 		$stdIde->verProc = '2.0';
@@ -116,27 +118,25 @@ class NFeEntradaService {
 
 		// DESTINATARIO
 		$stdDest = new \stdClass();
-		$stdDest->xNome = $venda->cliente->razao_social;
+		$stdDest->xNome = $compra->fornecedor->razao_social;
 
-		if($venda->cliente->contribuinte){
-			if($venda->cliente->ie_rg == 'ISENTO'){
-				$stdDest->indIEDest = "2";
-			}else{
-				$stdDest->indIEDest = "1";
-			}
-			
+
+		if($compra->fornecedor->ie_rg == 'ISENTO'){
+			$stdDest->indIEDest = "2";
 		}else{
-			$stdDest->indIEDest = "9";
+			$stdDest->indIEDest = "1";
 		}
 
+		
 
-		$cnpj_cpf = str_replace(".", "", $venda->cliente->cpf_cnpj);
+
+		$cnpj_cpf = str_replace(".", "", $compra->fornecedor->cpf_cnpj);
 		$cnpj_cpf = str_replace("/", "", $cnpj_cpf);
 		$cnpj_cpf = str_replace("-", "", $cnpj_cpf);
 
 		if(strlen($cnpj_cpf) == 14){
 			$stdDest->CNPJ = $cnpj_cpf;
-			$ie = str_replace(".", "", $venda->cliente->ie_rg);
+			$ie = str_replace(".", "", $compra->fornecedor->ie_rg);
 			$ie = str_replace("/", "", $ie);
 			$ie = str_replace("-", "", $ie);
 			$stdDest->IE = $ie;
@@ -148,15 +148,15 @@ class NFeEntradaService {
 		$dest = $nfe->tagdest($stdDest);
 
 		$stdEnderDest = new \stdClass();
-		$stdEnderDest->xLgr = $venda->cliente->rua;
-		$stdEnderDest->nro = $venda->cliente->numero;
+		$stdEnderDest->xLgr = $compra->fornecedor->rua;
+		$stdEnderDest->nro = $compra->fornecedor->numero;
 		$stdEnderDest->xCpl = "";
-		$stdEnderDest->xBairro = $venda->cliente->bairro;
-		$stdEnderDest->cMun = $venda->cliente->cidade->codigo;
-		$stdEnderDest->xMun = strtoupper($venda->cliente->cidade->nome);
-		$stdEnderDest->UF = $venda->cliente->cidade->uf;
+		$stdEnderDest->xBairro = $compra->fornecedor->bairro;
+		$stdEnderDest->cMun = $compra->fornecedor->cidade->codigo;
+		$stdEnderDest->xMun = strtoupper($compra->fornecedor->cidade->nome);
+		$stdEnderDest->UF = $compra->fornecedor->cidade->uf;
 
-		$cep = str_replace("-", "", $venda->cliente->cep);
+		$cep = str_replace("-", "", $compra->fornecedor->cep);
 		$cep = str_replace(".", "", $cep);
 		$stdEnderDest->CEP = $cep;
 		$stdEnderDest->cPais = "1058";
@@ -169,10 +169,10 @@ class NFeEntradaService {
 		//PRODUTOS
 		$itemCont = 0;
 
-		$totalItens = count($venda->itens);
+		$totalItens = count($compra->itens);
 		$somaFrete = 0;
 
-		foreach($venda->itens as $i){
+		foreach($compra->itens as $i){
 			$itemCont++;
 
 			$stdProd = new \stdClass();
@@ -184,28 +184,28 @@ class NFeEntradaService {
 			$ncm = $i->produto->NCM;
 			$ncm = str_replace(".", "", $ncm);
 			$stdProd->NCM = $ncm;
-			$stdProd->CFOP = $config->UF != $venda->cliente->cidade->uf ?
-			$venda->natureza->CFOP_saida_inter_estadual : $venda->natureza->CFOP_saida_estadual;
-			$stdProd->uCom = $i->produto->unidade_venda;
+			$stdProd->CFOP = $config->UF != $compra->fornecedor->cidade->uf ?
+			$natureza->CFOP_entrada_inter_estadual : $natureza->CFOP_entrada_estadual;
+			$stdProd->uCom = $i->produto->unidade_compra;
 			$stdProd->qCom = $i->quantidade;
 			$stdProd->vUnCom = $this->format($i->valor);
 			$stdProd->vProd = $this->format(($i->quantidade * $i->valor));
-			$stdProd->uTrib = $i->produto->unidade_venda;
+			$stdProd->uTrib = $i->produto->unidade_compra;
 			$stdProd->qTrib = $i->quantidade;
 			$stdProd->vUnTrib = $this->format($i->valor);
 			$stdProd->indTot = 1;
 			$somaProdutos += ($i->quantidade * $i->valor);
 
-			if($venda->desconto > 0){
-				$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
-			}
+			// if($venda->desconto > 0){
+			// 	$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
+			// }
 
-			if($venda->frete){
-				if($venda->frete->valor > 0){
-					$somaFrete += $vFt = $venda->frete->valor/$totalItens;
-					$stdProd->vFrete = $this->format($vFt);
-				}
-			}
+			// if($venda->frete){
+			// 	if($venda->frete->valor > 0){
+			// 		$somaFrete += $vFt = $venda->frete->valor/$totalItens;
+			// 		$stdProd->vFrete = $this->format($vFt);
+			// 	}
+			// }
 
 			$prod = $nfe->tagprod($stdProd);
 
@@ -300,77 +300,76 @@ class NFeEntradaService {
 		$stdICMSTot->vST = 0.00;
 		$stdICMSTot->vProd = $this->format($somaProdutos);
 
-		if($venda->frete) $stdICMSTot->vFrete = $this->format($venda->frete->valor);
-		else $stdICMSTot->vFrete = 0.00;
+		$stdICMSTot->vFrete = 0.00;
 
 		$stdICMSTot->vSeg = 0.00;
-		$stdICMSTot->vDesc = $this->format($venda->desconto);
+		$stdICMSTot->vDesc = $this->format(0.00);
 		$stdICMSTot->vII = 0.00;
 		$stdICMSTot->vIPI = 0.00;
 		$stdICMSTot->vPIS = 0.00;
 		$stdICMSTot->vCOFINS = 0.00;
 		$stdICMSTot->vOutro = 0.00;
 
-		if($venda->frete){
-			$stdICMSTot->vNF = 
-			$this->format(($somaProdutos+$venda->frete->valor)-$venda->desconto);
-		} 
-		else $stdICMSTot->vNF = $this->format($somaProdutos-$venda->desconto);
+		// if($venda->frete){
+		// 	$stdICMSTot->vNF = 
+		// 	$this->format(($somaProdutos+$venda->frete->valor)-$venda->desconto);
+		// } 
+		$stdICMSTot->vNF = $this->format($somaProdutos);
 
 		$stdICMSTot->vTotTrib = 0.00;
 		$ICMSTot = $nfe->tagICMSTot($stdICMSTot);
 
 
 		$stdTransp = new \stdClass();
-		$stdTransp->modFrete = $venda->frete->tipo ?? '9';
+		$stdTransp->modFrete = '9';
 
 		$transp = $nfe->tagtransp($stdTransp);
 
 
-		if($venda->frete != null){
-			$std = new \stdClass();
-			if($venda->transportadora){
-				$std->xNome = $venda->transportadora->razao_social;
+		// if($venda->frete != null){
+		// 	$std = new \stdClass();
+		// 	if($venda->transportadora){
+		// 		$std->xNome = $venda->transportadora->razao_social;
 
-				$std->xEnder = $venda->transportadora->logradouro;
-				$std->xMun = $venda->transportadora->cidade->nome;
-				$std->UF = $venda->transportadora->cidade->uf;
-
-
-				$cnpj_cpf = $venda->transportadora->cnpj_cpf;
-				$cnpj_cpf = str_replace(".", "", $venda->transportadora->cnpj_cpf);
-				$cnpj_cpf = str_replace("/", "", $cnpj_cpf);
-				$cnpj_cpf = str_replace("-", "", $cnpj_cpf);
-
-				if(strlen($cnpj_cpf) == 14) $std->CNPJ = $cnpj_cpf;
-				else $std->CPF = $cnpj_cpf;
-
-				$nfe->tagtransporta($std);
-			}
-
-			$std = new \stdClass();
+		// 		$std->xEnder = $venda->transportadora->logradouro;
+		// 		$std->xMun = $venda->transportadora->cidade->nome;
+		// 		$std->UF = $venda->transportadora->cidade->uf;
 
 
-			$placa = str_replace("-", "", $venda->frete->placa);
-			$std->placa = strtoupper($placa);
-			$std->UF = $venda->frete->uf;
+		// 		$cnpj_cpf = $venda->transportadora->cnpj_cpf;
+		// 		$cnpj_cpf = str_replace(".", "", $venda->transportadora->cnpj_cpf);
+		// 		$cnpj_cpf = str_replace("/", "", $cnpj_cpf);
+		// 		$cnpj_cpf = str_replace("-", "", $cnpj_cpf);
 
-			$nfe->tagveicTransp($std);
+		// 		if(strlen($cnpj_cpf) == 14) $std->CNPJ = $cnpj_cpf;
+		// 		else $std->CPF = $cnpj_cpf;
+
+		// 		$nfe->tagtransporta($std);
+		// 	}
+
+		// 	$std = new \stdClass();
 
 
-			if($venda->frete->qtdVolumes > 0 && $venda->frete->peso_liquido > 0
-				&& $venda->frete->peso_bruto > 0){
-				$stdVol = new \stdClass();
-				$stdVol->item = 1;
-				$stdVol->qVol = $venda->frete->qtdVolumes;
-				$stdVol->esp = $venda->frete->especie;
+		// 	$placa = str_replace("-", "", $venda->frete->placa);
+		// 	$std->placa = strtoupper($placa);
+		// 	$std->UF = $venda->frete->uf;
 
-				$stdVol->nVol = $venda->frete->numeracaoVolumes;
-				$stdVol->pesoL = $venda->frete->peso_liquido;
-				$stdVol->pesoB = $venda->frete->peso_bruto;
-				$vol = $nfe->tagvol($stdVol);
-			}
-		}
+		// 	$nfe->tagveicTransp($std);
+
+
+		// 	if($venda->frete->qtdVolumes > 0 && $venda->frete->peso_liquido > 0
+		// 		&& $venda->frete->peso_bruto > 0){
+		// 		$stdVol = new \stdClass();
+		// 		$stdVol->item = 1;
+		// 		$stdVol->qVol = $venda->frete->qtdVolumes;
+		// 		$stdVol->esp = $venda->frete->especie;
+
+		// 		$stdVol->nVol = $venda->frete->numeracaoVolumes;
+		// 		$stdVol->pesoL = $venda->frete->peso_liquido;
+		// 		$stdVol->pesoB = $venda->frete->peso_bruto;
+		// 		$vol = $nfe->tagvol($stdVol);
+		// 	}
+		// }
 
 
 
@@ -386,19 +385,19 @@ class NFeEntradaService {
 	//Fatura
 
 		$stdFat = new \stdClass();
-		$stdFat->nFat = (int)$lastNumero+1;
-		$stdFat->vOrig = $this->format($somaProdutos);
-		$stdFat->vDesc = $this->format($venda->desconto);
-		$stdFat->vLiq = $this->format($somaProdutos-$venda->desconto);
+		$stdFat->nFat = $stdIde->nNF;
+		$stdFat->vOrig = $this->format($compra->valor);
+		$stdFat->vDesc = $this->format(0.00);
+		$stdFat->vLiq = $this->format($compra->valor);
 
 		$fatura = $nfe->tagfat($stdFat);
 
 
 	//Duplicata
 
-		if(count($venda->duplicatas) > 0){
+		if(sizeof($compra->fatura) > 0){
 			$contFatura = 1;
-			foreach($venda->duplicatas as $ft){
+			foreach($compra->fatura as $ft){
 				$stdDup = new \stdClass();
 				$stdDup->nDup = "00".$contFatura;
 				$stdDup->dVenc = substr($ft->data_vencimento, 0, 10);
@@ -411,7 +410,7 @@ class NFeEntradaService {
 			$stdDup = new \stdClass();
 			$stdDup->nDup = '001';
 			$stdDup->dVenc = Date('Y-m-d');
-			$stdDup->vDup =  $this->format($somaProdutos-$venda->desconto);
+			$stdDup->vDup =  $this->format($compra->valor);
 
 			$nfe->tagdup($stdDup);
 		}
@@ -424,22 +423,17 @@ class NFeEntradaService {
 		$stdDetPag = new \stdClass();
 
 
-		$stdDetPag->tPag = $venda->tipo_pagamento;
-		$stdDetPag->vPag = $this->format($stdProd->vProd-$venda->desconto); 
+		$stdDetPag->tPag = $tipoPagamento;
+		$stdDetPag->vPag = $this->format($stdProd->vProd); 
 
-		if($venda->tipo_pagamento == '03' || $venda->tipo_pagamento == '04'){
-			$stdDetPag->CNPJ = '12345678901234';
-			$stdDetPag->tBand = '01';
-			$stdDetPag->cAut = '3333333';
-			$stdDetPag->tpIntegra = 1;
-		}
-		$stdDetPag->indPag = $venda->forma_pagamento == 'a_vista' ?  0 : 1; 
+		
+		$stdDetPag->indPag = '0'; 
 
 		$detPag = $nfe->tagdetPag($stdDetPag);
 
 
 		$stdInfoAdic = new \stdClass();
-		$stdInfoAdic->infCpl = $venda->observacao;
+		$stdInfoAdic->infCpl = '';
 
 		$infoAdic = $nfe->taginfAdic($stdInfoAdic);
 
@@ -452,9 +446,9 @@ class NFeEntradaService {
 		$std->fone = getenv('RESP_FONE'); //Telefone da pessoa jurídica/física a ser contatada
 		$nfe->taginfRespTec($std);
 		
-		if($config->cUf == '29'){
+		if(getenv("AUTXML")){
 			$std = new \stdClass();
-			$std->CNPJ = '13937073000156'; 
+			$std->CNPJ = getenv("AUTXML"); 
 			$std->CPF = null;
 			$nfe->tagautXML($std);
 		}
@@ -504,7 +498,7 @@ class NFeEntradaService {
 			try {
 				$xml = Complements::toAuthorize($signXml, $protocolo);
 				header('Content-type: text/xml; charset=UTF-8');
-				file_put_contents($public.'xml_nfe/'.$chave.'.xml',$xml);
+				file_put_contents($public.'xml_entrada_emitida/'.$chave.'.xml',$xml);
 				return $recibo;
 				// $this->printDanfe($xml);
 			} catch (\Exception $e) {

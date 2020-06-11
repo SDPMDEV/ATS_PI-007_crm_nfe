@@ -105,7 +105,7 @@
 
 								<th>{{ $v->NFcNumero > 0 ? $v->NFcNumero : '--' }}</th>
 								<th>{{ $v->usuario->nome }}</th>
-								<th>{{ number_format($v->valor_total, 2, ',', '.') }}</th>
+								<th>{{ number_format($v->valor_total + $v->acrescimo - $v->desconto, 2, ',', '.') }}</th>
 								<th>
 									@if($v->NFcNumero)
 									<a href="#!" onclick="modalCancelar({{$v->id}})" class="waves-light">
@@ -120,7 +120,7 @@
 							</tr>
 
 							<?php
-							$total += $v->valor_total;
+							$total += $v->valor_total + $v->acrescimo - $v->desconto;
 							?>
 							@endforeach
 							<tr class="red lighten-3">

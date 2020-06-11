@@ -95,6 +95,33 @@ $("#cvc").keyup(function(){
 
 });
 
+function getTokenCartao(){
+	if($("#cvc").val().length > 2){
+		let numCartao = $("#number").val().replace(" ", "").replace(" ", "").replace(" ", "");
+		let cvvCartao = $("#cvc").val();
+		let validade = $("#validade").val().split('/');
+		expiracaoMes = validade[0].replace(" ", "");
+		expiracaoAno = validade[1].replace(" ", "");
+		console.log(numCartao)
+		console.log(cvvCartao)
+		console.log(validade)
+		PagSeguroDirectPayment.createCardToken({
+			cardNumber: numCartao,
+			cvv: cvvCartao,
+			expirationMonth: expiracaoMes,
+			expirationYear: expiracaoAno,
+
+			success: function(response){ 
+				TOKENCARTAO = response['card']['token'];
+				console.log(TOKENCARTAO)
+			},
+			error: function(response){ 
+				console.log(response); 
+				// alert("Data de validade incorreta")
+			}
+		});
+	}
+}
 function getParcelas(){
 
 	PagSeguroDirectPayment.getInstallments({
@@ -550,6 +577,7 @@ $('#abrir-mapa').click(() => {
 })
 
 $('#finalizar-venda-cartao').click(() => {
+	getTokenCartao();
 	$('#icon-spin').css('display', 'inline-block')
 
 	let formaPagamento = $('#maquineta').is(':checked') ? 'maquineta' :  
@@ -597,7 +625,7 @@ $('#finalizar-venda-cartao').click(() => {
 			$('#icon-spin').css('display', 'none')
 			if(data.consulta.original.status == "3"){
 				alert("Pagamento Aprovado")
-				location.href = path + 'carrinho/finalizado/'+id;
+				location.href = path + 'carrinho/finalizado/'+data.pedido_id;
 			}
 
 		})

@@ -30,6 +30,7 @@ class CreateVendaCaixasTable extends Migration
             $table->decimal('dinheiro_recebido', 10,2);
             $table->decimal('troco', 10,2);
             $table->decimal('desconto', 10,2);
+            $table->decimal('acrescimo', 10,2);
 
             $table->string('forma_pagamento', 20);
             $table->string('tipo_pagamento', 2);

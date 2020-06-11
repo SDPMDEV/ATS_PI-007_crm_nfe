@@ -28,3 +28,5 @@ function desmarcarTodos(){
 	$('#acesso_compra').removeAttr('checked');
 	$('#acesso_fiscal').removeAttr('checked');
 }
+
+

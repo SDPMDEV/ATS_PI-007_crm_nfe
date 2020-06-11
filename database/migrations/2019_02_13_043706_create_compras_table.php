@@ -26,11 +26,12 @@ class CreateComprasTable extends Migration
             $table->string('xml_path', 48);
             $table->string('chave', 44);
             $table->string('nf', 20);
+            $table->integer('numero_emissao');
             $table->string('estado', 10);
             
             $table->decimal('valor', 10,2);
-            $table->decimal('desconto', 10,2)->default(0);
-            $table->timestamp('date_register')->useCurrent();
+            $table->decimal('desconto', 10,2);
+
             $table->timestamps();
         });
     }

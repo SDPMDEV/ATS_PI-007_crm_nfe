@@ -40,7 +40,7 @@ class ConfigNotaController extends Controller
 		$listaCSTIPI = ConfigNota::listaCST_IPI();
 		$config = ConfigNota::first();
 		$certificado = Certificado::first();
-		$cUF = ConfigNota::cUF();
+		$cUF = ConfigNota::estados();
 		return view('configNota/index')
 		->with('config', $config)
 		->with('naturezas', $naturezas)
@@ -88,7 +88,9 @@ class ConfigNotaController extends Controller
 				'ultimo_numero_nfe' => $request->ultimo_numero_nfe, 
 				'ultimo_numero_nfce' => $request->ultimo_numero_nfce, 
 				'ultimo_numero_cte' => $request->ultimo_numero_cte, 
-				'ultimo_numero_mdfe' => $request->ultimo_numero_mdfe
+				'ultimo_numero_mdfe' => $request->ultimo_numero_mdfe,
+				'numero_serie_nfe' => $request->numero_serie_nfe,
+				'numero_serie_nfce' => $request->numero_serie_nfce,
 			]);
 		}else{
 			$config = ConfigNota::
@@ -123,12 +125,14 @@ class ConfigNotaController extends Controller
 			$config->ultimo_numero_nfce = $request->ultimo_numero_nfce; 
 			$config->ultimo_numero_cte = $request->ultimo_numero_cte;
 			$config->ultimo_numero_mdfe = $request->ultimo_numero_mdfe;
+			$config->numero_serie_nfe = $request->numero_serie_nfe;
+			$config->numero_serie_nfce = $request->numero_serie_nfce;
 
 			$result = $config->save();
 		}
 
 		if($result){
-			session()->flash('color', 'blue');
+			session()->flash('color', 'green');
 			session()->flash("message", "Configurado com sucesso!");
 		}else{
 			session()->flash('color', 'red');
@@ -160,7 +164,9 @@ class ConfigNotaController extends Controller
 			'ultimo_numero_nfe' => 'required',
 			'ultimo_numero_nfce' => 'required',
 			'ultimo_numero_cte' => 'required',
-			'ultimo_numero_mdfe' => 'required'
+			'ultimo_numero_mdfe' => 'required',
+			'numero_serie_nfe' => 'required|max:3',
+			'numero_serie_nfce' => 'required|max:3',
 		];
 
 		$messages = [
@@ -191,7 +197,11 @@ class ConfigNotaController extends Controller
 			'ultimo_numero_nfe.required' => 'Campo obrigatório.',
 			'ultimo_numero_nfce.required' => 'Campo obrigatório.',
 			'ultimo_numero_cte.required' => 'Campo obrigatório.',
-			'ultimo_numero_mdfe.required' => 'Campo obrigatório.'
+			'ultimo_numero_mdfe.required' => 'Campo obrigatório.',
+			'numero_serie_nfe.required' => 'Campo obrigatório.',
+			'numero_serie_nfe.max' => 'Maximo de 3 Digitos.',
+			'numero_serie_nfce.required' => 'Campo obrigatório.',
+			'numero_serie_nfce.max' => 'Maximo de 3 Digitos.',
 
 
 

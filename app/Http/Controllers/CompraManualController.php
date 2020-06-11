@@ -45,7 +45,8 @@ class CompraManualController extends Controller
 			str_replace(",", ".", $compra['desconto']) : 0,
 			'xml_path' => '',
 			'estado' => 'NOVO',
-			'chave' => '' 
+			'chave' => '',
+			'numero_emissao' => 0
 		]);
 		
 		$this->salvarItens($result->id, $compra['itens']);

@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\Devolucao;
 use App\ConfigNota;
+use App\Compra;
 
 class Venda extends Model
 {
@@ -52,22 +53,32 @@ class Venda extends Model
         ->orderBy('nNf', 'desc')
         ->first();
 
-        if($venda != null || $devolucao != null){
+        $compra = Compra::
+        where('numero_emissao', '!=', 0)
+        ->orderBy('numero_emissao', 'desc')
+        ->first();
+
+        $numeroDevolucao = $devolucao != null ? $devolucao->nNf : 0;
+        $numeroCompra = $compra != null ? $compra->numero_emissao : 0;
+        $numeroVenda = $venda != null ? $venda->NfNumero : 0;
+
+        if($venda != null || $devolucao != null || $compra != null){
             $numeroConfig = ConfigNota::first()->ultimo_numero_nfe ?? 0;
-            if($devolucao != null){
-                if($numeroConfig > $venda->NfNumero && $numeroConfig > $devolucao->nNf){
-                    return $numeroConfig;
-                }
-                if($venda->NfNumero > $devolucao->nNf) return $venda->NfNumero;
-                else return $devolucao->nNf;
-            }else{
-                if($numeroConfig > $venda->NfNumero){
-                    return $numeroConfig;
-                }
-                else return $venda->NfNumero;
+            if($numeroDevolucao > $numeroVenda && $numeroDevolucao > $numeroCompra && $numeroDevolucao > $numeroConfig){
+                return $numeroDevolucao;
             }
+            else if($numeroVenda > $numeroDevolucao && $numeroVenda > $numeroCompra && $numeroVenda > $numeroConfig){
+                return $numeroVenda;
+            }
+            else if($numeroCompra > $numeroDevolucao && $numeroCompra > $numeroVenda && $numeroCompra > $numeroConfig){
+                return $numeroCompra;
+            }else{
+                return $numeroConfig+1;
+            }
+
+
         }else{
-            return ConfigNota::first()->ultimo_numero_nfe;
+            return ConfigNota::first()->ultimo_numero_nfe+1;
         }
 
     }

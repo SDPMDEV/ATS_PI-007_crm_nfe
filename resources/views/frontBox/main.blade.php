@@ -19,31 +19,7 @@ table tbody{
 }
 
 </style>
-<!-- <nav>
-	<div style="margin-top: -20px;" class="nav-wrapper black">
-		<ul class="right hide-on-med-and-down">
-			<li><a><i class="material-icons left yellow-text">update</i> <strong id="horas">00:00</strong></a></li>
-			<li><a><i class="material-icons left yellow-text">date_range</i> <strong id="data"></strong></a></li>
 
-		</ul>
-	
-		<ul class="left hide-on-med-and-down">
-			<li><a><i class="material-icons left yellow-text">person</i> {{ session('user_logged')['nome']}}</a></li>
-
-		</ul>
-		<ul class="left hide-on-med-and-down">
-			<li><a><i class="material-icons left yellow-text">layers</i> 
-				Ambiente: 
-				@if($config->ambiente == 2)
-				<strong class="blue-text">Homologação</strong>
-				@else
-				<strong class="green-text">Produção</strong>
-				@endif
-			</a></li>
-
-		</ul>
-	</div>
-</nav> -->
 
 <div class="row">
 	<input type="hidden" id="_token" value="{{ csrf_token() }}">
@@ -53,6 +29,7 @@ table tbody{
 	@if(isset($itens))
 	<input type="hidden" id="itens_pedido" value="{{json_encode($itens)}}">
 	<input type="hidden" id="delivery_id" @if(isset($delivery_id)) value="{{$delivery_id}}" @else value='0' @endif>
+	<input type="hidden" id="bairro" @if(isset($bairro)) value="{{$bairro}}" @else value='0' @endif>
 	<input type="hidden" id="codigo_comanda_hidden" @if(isset($cod_comanda)) value="{{$cod_comanda}}" @else value='0' @endif name="">
 	@endif
 	<div class="col s5">
@@ -77,7 +54,7 @@ table tbody{
 			<div class="row">
 				
 				<div class="row">
-					<div class="input-field col s12">
+					<div class="input-field col s12" style="margin-top: 55px;">
 						<i class="material-icons prefix">inbox</i>
 						<input autofocus="true" autocomplete="off" type="text" name="produto" id="autocomplete-produto" class="autocomplete-produto">
 						<label for="autocomplete-produto green-text">Produto</label>
@@ -120,12 +97,12 @@ table tbody{
 				<div class="row">
 					<br>
 					<h5 class="center-align">ATALHOS</h5>
-					<div>
+					<div class="row">
 						<div class="col s12" style="margin-top: 10px;">
 							<button style="width: 100%;" href="#modal-comanda" class="btn modal-trigger teal lighten-1">Apontar Comanda</button>
 						</div>
 					</div>
-					<div>
+					<div >
 						<div class="col s6" style="margin-top: 10px;">
 							<button style="width: 100%;" href="#modal2" class="btn modal-trigger grey lighten-1">Sangria</button>
 						</div>
@@ -147,7 +124,7 @@ table tbody{
 		</div>
 		
 	</div>
-	<div class="col s7" style="margin-top: -5px;">
+	<div class="col s7" style="margin-top: 0px;">
 		<div class="card">
 			<div class="row">
 				<div class="row">
@@ -189,9 +166,6 @@ table tbody{
 						<div class="col s5 offset-s1">
 							<button style="width: 100%" onclick="verItens()" href="" class="btn black">Ver todos os itens</button>
 						</div>
-						<div class="col s12">
-							<h5>Total: <strong id="total-venda" class="green-text">R$ 0,00</strong></h5>
-						</div>
 
 					</div>
 
@@ -202,9 +176,18 @@ table tbody{
 						</div>
 						<div class="col s3 input-field">
 							<input type="text" id="desconto" name="" value="0">
-							<label>Desconto</label>
+							<label>Desconto R$</label>
 						</div>
-						<div class="input-field col s5">
+						<div class="input-field col s3">
+							<input type="text" id="acrescimo" name="" value="0">
+							<label>Acrescimo</label>
+						</div>
+						
+
+					</div>
+
+					<div class="row">
+						<div class="input-field col s6">
 							<select id="tipo-pagamento">
 								<option value="--">Selecione o Tipo de pagamento</option>
 								@foreach($tiposPagamento as $key => $t)
@@ -228,7 +211,7 @@ table tbody{
 						</div>
 
 						<div class="col s10 no-padding">
-							<button id="finalizar-venda" style="width: 100%;" class="btn-large green accent-3 modal-trigger disabled" href="#modal-venda">Finalizar Venda</button>
+							<button id="finalizar-venda" style="width: 100%; font-size: 28px;" class="btn-large green accent-3 modal-trigger disabled" href="#modal-venda">Finalizar <strong id="total-venda" class="indigo-text" >R$ 0,00</strong></button>
 						</div>
 					</div>
 				</div>

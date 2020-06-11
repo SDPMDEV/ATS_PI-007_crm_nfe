@@ -111,7 +111,7 @@ class FluxoCaixaController extends Controller
 
 	private function getVendaCaixa($data){
 		$venda = VendaCaixa::
-		selectRaw('DATE_FORMAT(data_registro, "%Y-%m-%d") as data, sum(valor_total) as valor')
+		selectRaw('DATE_FORMAT(data_registro, "%Y-%m-%d") as data, sum(valor_total + acrescimo - desconto) as valor')
 		->whereRaw("DATE_FORMAT(data_registro, '%Y-%m-%d') = '$data'")
 		->groupBy('data')
 		->first();

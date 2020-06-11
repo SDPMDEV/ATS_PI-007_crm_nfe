@@ -18,7 +18,7 @@ class Usuario extends Authenticatable
     protected $fillable = [
         'nome', 'email', 'senha', 'login', 'adm', 'acesso_cliente', 'acesso_fornecedor',
         'acesso_produto', 'acesso_financeiro', 'acesso_caixa', 'acesso_estoque',
-        'acesso_compra', 'acesso_fiscal'
+        'acesso_compra', 'acesso_fiscal', 'ativo'
     ];
 
     /**
@@ -27,6 +27,6 @@ class Usuario extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'senha'
     ];
 }

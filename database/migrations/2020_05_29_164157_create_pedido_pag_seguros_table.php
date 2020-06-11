@@ -23,7 +23,7 @@ class CreatePedidoPagSegurosTable extends Migration
             $table->string('numero_cartao', 20);
             $table->string('cpf', 15);
             $table->string('nome_impresso', 25);
-            $table->string('codigo_transacao', 35);
+            $table->string('codigo_transacao', 45);
             $table->string('referencia', 35);
             $table->string('bandeira', 10);
             $table->integer('parcelas');

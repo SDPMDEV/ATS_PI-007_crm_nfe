@@ -59,7 +59,7 @@ class NFeService{
 		// $stdIde->indPag = 1; //NÃO EXISTE MAIS NA VERSÃO 4.00 // forma de pagamento
 
 		$stdIde->mod = 55;
-		$stdIde->serie = 1;
+		$stdIde->serie = $config->numero_serie_nfe;
 		$stdIde->nNF = (int)$lastNumero+1;
 		$stdIde->dhEmi = date("Y-m-d\TH:i:sP");
 		$stdIde->dhSaiEnt = date("Y-m-d\TH:i:sP");
@@ -188,7 +188,7 @@ class NFeService{
 			$ncm = str_replace(".", "", $ncm);
 			$stdProd->NCM = $ncm;
 			$stdProd->CFOP = $config->UF != $venda->cliente->cidade->uf ?
-			$venda->natureza->CFOP_saida_inter_estadual : $venda->natureza->CFOP_saida_estadual;
+			$i->produto->CFOP_saida_inter_estadual : $i->produto->CFOP_saida_estadual;
 			$stdProd->uCom = $i->produto->unidade_venda;
 			$stdProd->qCom = $i->quantidade;
 			$stdProd->vUnCom = $this->format($i->valor);
@@ -231,8 +231,7 @@ class NFeService{
 				$stdICMS->modBC = 0;
 				$stdICMS->vBC = $this->format($i->valor * $i->quantidade);
 				$stdICMS->pICMS = $this->format($i->produto->perc_icms);
-				$stdICMS->vICMS = $this->format(($i->valor * $i->quantidade) 
-					* ($stdICMS->pICMS/100));
+				$stdICMS->vICMS = $stdICMS->vBC * ($stdICMS->pICMS/100);
 
 				$somaICMS += (($i->valor * $i->quantidade) 
 					* ($stdICMS->pICMS/100));
@@ -291,12 +290,20 @@ class NFeService{
 			$std->vUnid = null;
 
 			$nfe->tagIPI($std);
+
+			//TAG ANP
+			$stdComb = new \stdClass();
+			$stdComb->item = 1; 
+			$stdComb->cProdANP = $i->produto->codigo_anp;
+			$stdComb->descANP = $i->produto->descricao_anp; 
+			$stdComb->UFCons = $venda->cliente->cidade->uf;
+
+			$nfe->tagcomb($stdComb);
 		}
 
 
-
 		$stdICMSTot = new \stdClass();
-		$stdICMSTot->vBC = 0.00;
+		$stdICMSTot->vBC = $tributacao->regime == 1 ? $this->format($somaProdutos) : 0.00;;
 		$stdICMSTot->vICMS = $this->format($somaICMS);
 		$stdICMSTot->vICMSDeson = 0.00;
 		$stdICMSTot->vBCST = 0.00;
@@ -330,27 +337,29 @@ class NFeService{
 		$transp = $nfe->tagtransp($stdTransp);
 
 
-		if($venda->frete != null){
+		if($venda->transportadora){
 			$std = new \stdClass();
-			if($venda->transportadora){
-				$std->xNome = $venda->transportadora->razao_social;
+			$std->xNome = $venda->transportadora->razao_social;
 
-				$std->xEnder = $venda->transportadora->logradouro;
-				$std->xMun = $venda->transportadora->cidade->nome;
-				$std->UF = $venda->transportadora->cidade->uf;
+			$std->xEnder = $venda->transportadora->logradouro;
+			$std->xMun = strtoupper($venda->transportadora->cidade->nome);
+			$std->UF = $venda->transportadora->cidade->uf;
 
 
-				$cnpj_cpf = $venda->transportadora->cnpj_cpf;
-				$cnpj_cpf = str_replace(".", "", $venda->transportadora->cnpj_cpf);
-				$cnpj_cpf = str_replace("/", "", $cnpj_cpf);
-				$cnpj_cpf = str_replace("-", "", $cnpj_cpf);
+			$cnpj_cpf = $venda->transportadora->cnpj_cpf;
+			$cnpj_cpf = str_replace(".", "", $venda->transportadora->cnpj_cpf);
+			$cnpj_cpf = str_replace("/", "", $cnpj_cpf);
+			$cnpj_cpf = str_replace("-", "", $cnpj_cpf);
 
-				if(strlen($cnpj_cpf) == 14) $std->CNPJ = $cnpj_cpf;
-				else $std->CPF = $cnpj_cpf;
+			if(strlen($cnpj_cpf) == 14) $std->CNPJ = $cnpj_cpf;
+			else $std->CPF = $cnpj_cpf;
 
-				$nfe->tagtransporta($std);
-			}
+			$nfe->tagtransporta($std);
+		}
 
+
+		if($venda->frete != null){
+			
 			$std = new \stdClass();
 
 
@@ -428,7 +437,7 @@ class NFeService{
 
 
 		$stdDetPag->tPag = $venda->tipo_pagamento;
-		$stdDetPag->vPag = $this->format($stdProd->vProd-$venda->desconto); 
+		$stdDetPag->vPag = $this->format($stdProd->vProd - $venda->desconto); 
 
 		if($venda->tipo_pagamento == '03' || $venda->tipo_pagamento == '04'){
 			$stdDetPag->CNPJ = '12345678901234';
@@ -455,9 +464,9 @@ class NFeService{
 		$std->fone = getenv('RESP_FONE'); //Telefone da pessoa jurídica/física a ser contatada
 		$nfe->taginfRespTec($std);
 		
-		if($config->cUf == '29'){
+		if(getenv("AUTXML")){
 			$std = new \stdClass();
-			$std->CNPJ = '13937073000156'; 
+			$std->CNPJ = getenv("AUTXML"); 
 			$std->CPF = null;
 			$nfe->tagautXML($std);
 		}
@@ -506,12 +515,7 @@ class NFeService{
 		$response = $this->tools->sefazConsultaChave($chave);
 
 		$stdCl = new Standardize($response);
-  //   //nesse caso $std irá conter uma representação em stdClass do XML
-		// $std = $stdCl->toStd();
-  //   //nesse caso o $arr irá conter uma representação em array do XML
 		$arr = $stdCl->toArray();
-  //   //nesse caso o $json irá conter uma representação em JSON do XML
-		// $json = $stdCl->toJson();
 		return $arr;
 	}
 
@@ -539,7 +543,7 @@ class NFeService{
 	public function inutilizar($nInicio, $nFinal, $justificativa){
 		try{
 
-			$nSerie = '1';
+			$nSerie = $config->numero_serie_nfe;
 			$nIni = $nInicio;
 			$nFin = $nFinal;
 			$xJust = $justificativa;
@@ -651,12 +655,7 @@ class NFeService{
 		}
 	}
 
-
-
-///*8**************** NFCE**********
-
-
-
+///***************** NFCE**********
 
 	public function gerarNFCe($idVenda){
 		$venda = VendaCaixa::
@@ -678,7 +677,7 @@ class NFeService{
 		$stdIde = new \stdClass();
 		$stdIde->cUF = $config->cUF;
 		$stdIde->cNF = rand(11111111, 99999999);
-		$stdIde->natOp = 'VENDAS DE PRODUCAO PROPIA OU DE TERCEIROS';
+		$stdIde->natOp = $config->natureza->natureza;
 
 		// $stdIde->indPag = 1; //NÃO EXISTE MAIS NA VERSÃO 4.00 // forma de pagamento
 
@@ -686,7 +685,7 @@ class NFeService{
 		$lastNumero = $vendaLast;
 
 		$stdIde->mod = 65;
-		$stdIde->serie = 1;
+		$stdIde->serie = $config->numero_serie_nfce;
 		$stdIde->nNF = (int)$lastNumero+1; //******=========p=p=p=p=p
 		$stdIde->dhEmi = date("Y-m-d\TH:i:sP");
 		$stdIde->dhSaiEnt = date("Y-m-d\TH:i:sP");
@@ -752,11 +751,6 @@ class NFeService{
 				$stdDest->xNome = $venda->cliente->razao_social;
 				$stdDest->indIEDest = "1";
 
-				// $ie = str_replace(".", "", $venda->cliente->ie_rg);
-				// $ie = str_replace("/", "", $ie);
-				// $ie = str_replace("-", "", $ie);
-				// $stdDest->IE = $ie;
-
 				$cnpj_cpf = str_replace(".", "", $venda->cliente->cpf_cnpj);
 				$cnpj_cpf = str_replace("/", "", $cnpj_cpf);
 				$cnpj_cpf = str_replace("-", "", $cnpj_cpf);
@@ -795,11 +789,7 @@ class NFeService{
 				$dest = $nfe->tagdest($stdDest);
 			}
 
-			
-
 		}
-
-
 
 
 		$somaProdutos = 0;
@@ -807,6 +797,7 @@ class NFeService{
 		//PRODUTOS
 		$itemCont = 0;
 		$totalItens = count($venda->itens);
+		$somaAcrescimo = 0;
 		foreach($venda->itens as $i){
 			$itemCont++;
 
@@ -821,7 +812,7 @@ class NFeService{
 			$ncm = str_replace(".", "", $ncm);
 			$stdProd->NCM = $ncm;
 			// $stdProd->CFOP = '5102';
-			$stdProd->CFOP = $config->natureza->CFOP_saida_estadual;
+			$stdProd->CFOP = $i->produto->CFOP_saida_estadual;
 
 			$stdProd->uCom = $i->produto->unidade_venda;
 			$stdProd->qCom = $i->quantidade;
@@ -832,6 +823,27 @@ class NFeService{
 			$stdProd->vUnTrib = $this->format($i->valor);
 			$stdProd->indTot = 1;
 
+
+			//calculo media prod
+
+			if($venda->acrescimo > 0){
+				if($itemCont < sizeof($venda->itens)){
+					$totalVenda = $venda->valor_total;
+
+					$media = (((($stdProd->vProd-$totalVenda)/$totalVenda))*100);
+					$media = 100 - ($media * -1);
+
+					$tempAcrescimo = ($venda->acrescimo*$media)/100;
+					$somaAcrescimo+=$tempAcrescimo;
+
+					$stdProd->vOutro = $this->format($tempAcrescimo);
+				}else{
+					$stdProd->vOutro = $this->format($venda->acrescimo - $somaAcrescimo);
+				}
+			}
+			// fim calculo
+			
+
 			if($venda->desconto > 0){
 				$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
 			}
@@ -841,8 +853,6 @@ class NFeService{
 
 			$prod = $nfe->tagprod($stdProd);
 
-		//TAG IMPOSTO
-
 			$tributacao = Tributacao::first();
 
 			$stdImposto = new \stdClass();
@@ -850,29 +860,21 @@ class NFeService{
 
 			$imposto = $nfe->tagimposto($stdImposto);
 
-
-
-
 			if($tributacao->regime == 1){ // regime normal
 
-				//$venda->produto->CST  CST
-				
 				$stdICMS = new \stdClass();
 				$stdICMS->item = $itemCont; 
 				$stdICMS->orig = 0;
 				$stdICMS->CST = $i->produto->CST_CSOSN;
 				$stdICMS->modBC = 0;
-				$stdICMS->vBC = $this->format($i->produto->perc_icms);
-				$stdICMS->pICMS = $this->format($i->valor * $i->quantidade);
-				$stdICMS->vICMS = $this->format(($i->valor * $i->quantidade) 	* ($stdICMS->pICMS/100));
+				$stdICMS->vBC = $this->format($i->valor * $i->quantidade);
+				$stdICMS->pICMS = $this->format($i->produto->perc_icms);
+				$stdICMS->vICMS = $stdICMS->vBC * ($stdICMS->pICMS/100);
 
-				$somaICMS += (($i->valor * $i->quantidade) 
-					* ($stdICMS->pICMS/100));
+				$somaICMS += $stdICMS->vICMS;
 				$ICMS = $nfe->tagICMS($stdICMS);
 
 			}else{ // regime simples
-
-				//$venda->produto->CST CSOSN
 				
 				$stdICMS = new \stdClass();
 				
@@ -906,76 +908,10 @@ class NFeService{
 				($i->produto->perc_cofins/100));
 			$COFINS = $nfe->tagCOFINS($stdCOFINS);
 		}
-		
-
-		//PRODUTOS
-		// $itemCont = 0;
-		// $itemCont++;
-
-		// $stdProd = new \stdClass();
-		// $stdProd->item = $itemCont; //item da NFe
-		// $stdProd->cEAN = '7891191003672';
-		// $stdProd->cEANTrib = '7891191003672';
-		// $stdProd->cProd = 2;
-		// $stdProd->xProd = 'Papel a4';
-		// $ncm = '44071100';
-		// $stdProd->NCM = $ncm;
-		// $stdProd->CFOP = '5101';
-		// $stdProd->uCom = 'UN';
-		// $stdProd->qCom = '1.000';
-		// $stdProd->vUnCom = '2.00';
-		// $stdProd->vProd = '2.00';
-		// $stdProd->uTrib = 'UN';
-		// $stdProd->qTrib = '1.000';
-		// $stdProd->vUnTrib = '2.00';
-		// $stdProd->indTot = 1;
-
-		// $prod = $nfe->tagprod($stdProd);
-
-
-		// $stdImposto = new \stdClass();
-		// $stdImposto->item = $itemCont; 
-
-		// $imposto = $nfe->tagimposto($stdImposto);
-
-		//ICMS
-
-		// $stdICMS = new \stdClass();
-		// $stdICMS->item = $itemCont; 
-		// $stdICMS->orig = 0;
-		// $stdICMS->CST = '00';
-		// $stdICMS->modBC = 0;
-		// $stdICMS->vBC = '2.00';
-		// $stdICMS->pICMS = 12.00;
-		// $stdICMS->vICMS = 0.24;
-
-		// $ICMS = $nfe->tagICMS($stdICMS);
-
-
-		// $stdPIS = new \stdClass();
-		// $stdPIS->item = $itemCont; //item da NFe
-		// $stdPIS->CST = '99';
-		// $stdPIS->vBC = 0;
-		// $stdPIS->pPIS = 0;
-		// $stdPIS->vPIS = 0;
-
-		// $PIS = $nfe->tagPIS($stdPIS);
-
-		// //COFINS
-		// $stdCOFINS = new \stdClass();
-		// $stdCOFINS->item = $itemCont; //item da NFe
-		// $stdCOFINS->CST = '99';
-		// $stdCOFINS->vBC = 0;
-		// $stdCOFINS->pCOFINS = 0;
-		// $stdCOFINS->vCOFINS = 0;
-		// //$stdCOFINS->qBCProd = 0;
-		// //$stdCOFINS->vAliqProd = 0;
-		// $COFINS = $nfe->tagCOFINS($stdCOFINS);
-
 
 		//ICMS TOTAL
 		$stdICMSTot = new \stdClass();
-		$stdICMSTot->vBC = $this->format($somaICMS);
+		$stdICMSTot->vBC = $tributacao->regime == 1 ? $this->format($somaProdutos) : 0.00;
 		$stdICMSTot->vICMS = $this->format($somaICMS);
 		$stdICMSTot->vICMSDeson = 0.00;
 		$stdICMSTot->vBCST = 0.00;
@@ -991,7 +927,7 @@ class NFeService{
 		$stdICMSTot->vPIS = 0.00;
 		$stdICMSTot->vCOFINS = 0.00;
 		$stdICMSTot->vOutro = 0.00;
-		$stdICMSTot->vNF = $this->format($somaProdutos-$venda->desconto);
+		$stdICMSTot->vNF = $this->format($venda->valor_total + $venda->acrescimo - $venda->desconto);
 		$stdICMSTot->vTotTrib = 0.00;
 		$ICMSTot = $nfe->tagICMSTot($stdICMSTot);
 
@@ -1154,13 +1090,11 @@ class NFeService{
 
 	}	
 
-
 	public function cancelarNFCe($vendaId, $justificativa){
 		try {
 			$venda = VendaCaixa::
 			where('id', $vendaId)
 			->first();
-				// $this->tools->model('55');
 
 			$chave = $venda->chave;
 			$response = $this->tools->sefazConsultaChave($chave);
@@ -1177,14 +1111,11 @@ class NFeService{
 			$response = $this->tools->sefazCancela($chave, $xJust, $nProt);
 
 			$stdCl = new Standardize($response);
-    //nesse caso $std irá conter uma representação em stdClass do XML retornado
 			$std = $stdCl->toStd();
-    //nesse caso o $arr irá conter uma representação em array do XML retornado
 			$arr = $stdCl->toArray();
-    //nesse caso o $json irá conter uma representação em JSON do XML retornado
 			$json = $stdCl->toJson();
 
-    //verifique se o evento foi processado
+			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 			if ($std->cStat != 128) {
 
 			} else {
@@ -1192,14 +1123,19 @@ class NFeService{
 				if ($cStat == '101' || $cStat == '135' || $cStat == '155' ) {
             //SUCESSO PROTOCOLAR A SOLICITAÇÂO ANTES DE GUARDAR
 					$xml = Complements::toAuthorize($this->tools->lastRequest, $response);
-					sleep(1);
-					return $json;
+					file_put_contents($public.'xml_nfce_cancelada/'.$chave.'.xml',$xml);
+
+					return $arr;
 				} else {
-					return $json;	
+					return $arr;	
 				}
 			}    
 		} catch (\Exception $e) {
-			return "Erro: " . $e->getMessage();
+			return 
+			[
+				'mensagem' => $e->getMessage(),
+				'erro' => true
+			];
     //TRATAR
 		}
 	}

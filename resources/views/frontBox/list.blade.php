@@ -76,10 +76,13 @@
 					@if($v->estado == 'APROVADO')
 
 					<tr class="green lighten-3">
+
 						@elseif($v->estado == 'REJEITADO')
 						<tr class="red lighten-4">
 							@else
 							<tr class="blue lighten-3">
+
+
 								@endif
 								<th>{{ $v->id }}</th>
 								<th>{{ $v->cliente->razao_social ?? 'NAO IDENTIFCADO' }}</th>
@@ -89,8 +92,9 @@
 
 								<th>{{ $v->NFcNumero > 0 ? $v->NFcNumero : '--' }}</th>
 								<th>{{ $v->usuario->nome }}</th>
-								<th>{{ number_format($v->valor_total, 2, ',', '.') }}</th>
+								<th>{{ number_format($v->valor_total + $v->acrescimo - $v->desconto, 2, ',', '.') }}</th>
 								<th>
+
 									@if($v->NFcNumero && $v->estado == 'APROVADO')
 									<a target="_blank" title="CUPOM FISCAL" href="/nfce/imprimir/{{$v->id}}">
 										<i class="material-icons green-text">print</i>
@@ -105,10 +109,28 @@
 									</a>
 
 									@if(!$v->NFcNumero)
-									<a href="#!" onclick = "if (! confirm('Deseja enviar esta venda para Sefaz?')) { return false; }else{emitirNFCe({{$v->id}})}" title="ENVIAR SEFAZ" >
+									<a data-position="top" data-delay="50" data-tooltip="Enviar para Sefaz" class="tooltipped" href="#!" onclick = "if (! confirm('Deseja enviar esta venda para Sefaz?')) { return false; }else{emitirNFCe({{$v->id}})}" >
 										<i class="material-icons green-text">nfc</i>
 									</a>
 									@endif
+
+
+									<div id="preloader_{{$v->id}}" style="display: none" class="preloader-wrapper small active">
+										<div class="spinner-layer spinner-red-only">
+											<div class="circle-clipper left">
+												<div class="circle"></div>
+											</div><div class="gap-patch">
+												<div class="circle"></div>
+											</div><div class="circle-clipper right">
+												<div class="circle"></div>
+											</div>
+										</div>
+									</div>
+
+
+
+
+								</div>
 
 
 									<!-- <a href="/frenteCaixa/cancelarNFCe/{{$v->id}}" onclick = "if (! confirm('Deseja  esta venda?')) { return false; }else{emitirNFCe({{$v->id}})}" title="CANCELAR" >
@@ -119,7 +141,7 @@
 							</tr>
 
 							<?php
-							$total += $v->valor_total;
+							$total += $v->valor_total + $v->acrescimo - $v->desconto;
 							?>
 							@endforeach
 							<tr class="red lighten-3">
@@ -155,7 +177,7 @@
 			</div>
 			<div class="modal-footer">
 				<a href="#!" onclick="enviarWhatsApp()" class="btn modal-action waves-effect waves-green green">Enviar</a>
-				<a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Fechar</a>
+				<a href="#!" class="modal-action red white-text modal-close waves-effect waves-green btn-flat">Fechar</a>
 			</div>
 		</div>
 

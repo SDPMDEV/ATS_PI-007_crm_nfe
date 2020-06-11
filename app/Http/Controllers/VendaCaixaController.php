@@ -26,6 +26,7 @@ class VendaCaixaController extends Controller
     'usuario_id' => get_id_user(),
     'natureza_id' => $config->nat_op_padrao,
     'valor_total' => str_replace(",", ".", $venda['valor_total']),
+    'acrescimo' => str_replace(",", ".", $venda['acrescimo']),
     'troco' => str_replace(",", ".", $venda['troco']),
     'dinheiro_recebido' => str_replace(",", ".", $venda['dinheiro_recebido']),
     'forma_pagamento' => $venda['acao'] == 'credito' ? 'credito' : " ",

@@ -19,6 +19,7 @@ class CreateUsuarioTable extends Migration
             $table->string('login');
             $table->boolean('adm');
             $table->string('senha');
+            $table->string('ativo');
 
             $table->boolean('acesso_cliente');
             $table->boolean('acesso_fornecedor');

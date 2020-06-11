@@ -10,6 +10,15 @@
 		</div>
 		
 		@endif
+
+		@if(sizeof($errors) > 0)
+		<div class="row">
+			<div style="border-radius: 10px;" class="col s12 red">
+				<h5 class="center-align white-text">Erro no Formulário</h5>
+			</div>
+		</div>
+		@endif
+
 		<div class="row">
 			<div class="col s6">
 				<h4>{{{ isset($config) ? "Editar": "Cadastrar" }}} Emitente Fiscal</h4>
@@ -372,6 +381,29 @@
 								<option @if(isset($config)) @if($config->ambiente == 1) selected @endif @endif value="1">1 - Produção</option>
 							</select>
 							<label>Ambiente</label>
+						</div>
+						<div class="input-field col s2">
+
+							<input value="{{{ isset($config->numero_serie_nfe) ? $config->numero_serie_nfe : old('numero_serie_nfe') }}}" id="numero_serie_nfe" name="numero_serie_nfe" type="text" class="validate numero_serie">
+							<label for="numero_serie_nfe">Nº Serie NF-e</label>
+
+							@if($errors->has('numero_serie_nfe'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('numero_serie_nfe') }}</span>
+							</div>
+							@endif
+						</div>
+
+						<div class="input-field col s2">
+
+							<input value="{{{ isset($config->numero_serie_nfce) ? $config->numero_serie_nfce : old('numero_serie_nfce') }}}" id="numero_serie_nfce" name="numero_serie_nfce" type="text" class="validate numero_serie">
+							<label for="numero_serie_nfce">Nº Serie NFC-e</label>
+
+							@if($errors->has('numero_serie_nfce'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('numero_serie_nfce') }}</span>
+							</div>
+							@endif
 						</div>
 					</div>
 

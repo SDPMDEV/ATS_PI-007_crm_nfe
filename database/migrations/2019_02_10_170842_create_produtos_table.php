@@ -29,7 +29,7 @@ class CreateProdutosTable extends Migration
             $table->string('CST_PIS', 3)->default("");
             $table->string('CST_COFINS', 3)->default("");
             $table->string('CST_IPI', 3)->default("");
-           
+
             $table->string('unidade_compra', 10);
             $table->string('conversao_unitaria')->default(1);
             $table->string('unidade_venda', 10);
@@ -40,6 +40,13 @@ class CreateProdutosTable extends Migration
             $table->decimal('perc_pis', 10,2)->default(0);
             $table->decimal('perc_cofins', 10,2)->default(0);
             $table->decimal('perc_ipi', 10,2)->default(0);
+
+            $table->string('CFOP_saida_estadual', 5);
+            $table->string('CFOP_saida_inter_estadual', 5);
+
+            $table->string('codigo_anp', 10);
+            $table->string('descricao_anp', 95);
+
 
             $table->timestamps();
         });

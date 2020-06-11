@@ -174,7 +174,7 @@ function alterarStatus(id){
 
 function verificaCategoria(){
   let cat = $('#categoria-select option:selected').html();
-  if(cat && cat.includes('izza')){
+  if(cat && cat.toLowerCase().includes('izza')){
       $('#produto-pizza').css('display', 'block');
       $('#produto-comum').css('display', 'none');
 

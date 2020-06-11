@@ -129,6 +129,11 @@
 				</tbody>
 			</table>
 		</div>
+		@if(isset($links))
+		<ul class="pagination center-align">
+			<li class="waves-effect">{{$produtos->links()}}</li>
+		</ul>
+		@endif
 	</div>
 
 </div>

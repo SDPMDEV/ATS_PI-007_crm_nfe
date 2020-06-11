@@ -9,6 +9,8 @@ use App\Helpers\StockMove;
 use App\Services\NFeEntradaService;
 use App\ConfigNota;
 use App\NaturezaOperacao;
+use NFePHP\DA\NFe\Danfe;
+
 
 class PurchaseController extends Controller
 {
@@ -84,6 +86,7 @@ class PurchaseController extends Controller
         $mesAnterior = null;
         $anoAnterior = null;
 
+
         foreach($compras as $c){
             $date = $c->date_register;
             $mes = substr($date, 5, 2);
@@ -135,6 +138,12 @@ class PurchaseController extends Controller
         $fornecedor = $request->fornecedor;
         $compras = null;
         $diferencaDatas = null;
+
+        if($dataInicial == null || $dataFinal == null || $fornecedor == null){
+            session()->flash('color', 'red');
+            session()->flash('message', 'Informe o fornecedor, data inicial e data final!');
+            return redirect('/compras');
+        }
         if(isset($fornecedor) && isset($dataInicial) && isset($dataFinal)){
             $compras = Compra::filtroDataFornecedor($fornecedor, $this->parseDate($dataInicial), $this->parseDate($dataFinal, true));
             $diferencaDatas = $this->diferencaEntreDatas($this->parseDate($dataInicial), $this->parseDate($dataFinal));
@@ -148,7 +157,8 @@ class PurchaseController extends Controller
         }
 
 
-        if($diferencaDatas > 31 || $diferencaDatas == null){$somaCompraMensal = $this->somaCompraMensalFiltro($compras);
+        if($diferencaDatas > 31 || $diferencaDatas == null){
+            $somaCompraMensal = $this->somaCompraMensalFiltro($compras);
         }else{
             $somaCompraMensal = $this->somaCompraDiarioFiltro($compras);
         }
@@ -178,7 +188,8 @@ class PurchaseController extends Controller
         where('id', $id)
         ->first();
         $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-        return response()->download($public.'xml_entrada/'.$compra->xml_path);
+        if($compra->nf > 0) return response()->download($public.'xml_entrada/'.$compra->chave. '.xml');
+        else return response()->download($public.'xml_entrada_emitida/'.$compra->chave. '.xml');
     }
 
 
@@ -222,15 +233,17 @@ class PurchaseController extends Controller
     public function emitirEntrada($id){
         $compra = Compra::find($id);
         $naturezas = NaturezaOperacao::all();
+        $tiposPagamento = Compra::tiposPagamento();
         return view('compraManual/emitirEntrada')
         ->with('compra', $compra)
         ->with('naturezas', $naturezas)
+        ->with('tiposPagamento', $tiposPagamento)
         ->with('NFeEntradaJS', true)
         ->with('title', 'Emitir NF-e Entrada');
     }
 
     public function gerarEntrada(Request $request){
-        $compra = Compra::find($id);
+        $compra = Compra::find($request->compra_id);
         $config = ConfigNota::first();
 
         $cnpj = str_replace(".", "", $config->cnpj);
@@ -252,10 +265,47 @@ class PurchaseController extends Controller
         ], 55);
 
         header('Content-type: text/html; charset=UTF-8');
+        $natureza = NaturezaOperacao::find($request->natureza);
 
-        $nfe = $nfe_service->gerarNFe($vendaId);
+        $nfe = $nfe_service->gerarNFe($compra, $natureza, $request->tipo_pagamento);
 
+        $signed = $nfe_service->sign($nfe['xml']);
+        $resultado = $nfe_service->transmitir($signed, $nfe['chave']);
+        if(substr($resultado, 0, 4) != 'Erro'){
+            $compra->chave = $nfe['chave'];
+            // $venda->path_xml = $nfe['chave'] . '.xml';
+            $compra->estado = 'APROVADO';
+            $compra->numero_emissao = $nfe['nNf'];
 
+            $compra->save();
+            return response()->json($resultado, 200);
+
+        }else{
+            $compra->estado = 'REJEITADO';
+            $compra->save();
+            return response()->json($resultado, 401);
+
+        }
+    }
+
+    public function imprimir($id){
+        $compra = Compra::find($id);
+
+        $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+
+        $xml = file_get_contents($public.'xml_entrada_emitida/'.$compra->chave.'.xml');
+        $logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
+        // $docxml = FilesFolders::readFile($xml);
+
+        try {
+            $danfe = new Danfe($xml);
+            $id = $danfe->monta($logo);
+            $pdf = $danfe->render();
+            header('Content-Type: application/pdf');
+            echo $pdf;
+        } catch (InvalidArgumentException $e) {
+            echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+        }  
     }
 
 }

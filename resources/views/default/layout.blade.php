@@ -183,7 +183,7 @@
 				<span style="margin-left: 50px;">CT-e</span>
 			</a></div>
 			<ul class="submenu"> 
-				<li><a href="/ordemServico"><span class="left material-icons">radio_button_unchecked</span>Ordem de Serviço</a></li>
+
 				<li><a href="/categoriaDespesa"><span class="left material-icons">radio_button_unchecked</span>Categorias</a></li>
 				<li><a href="/cte"><span class="left material-icons">radio_button_unchecked</span>Lista</a></li>
 				<li><a href="/cte/nova"><span class="left material-icons">radio_button_unchecked</span>Nova</a></li>
@@ -209,7 +209,7 @@
 	</ul>
 </nav>
 
-	
+
 <div class="row space black" style="margin-top: 0">
 
 	@if(session('user_logged')['delivery'] == true)
@@ -230,13 +230,17 @@
 			<strong class="blue-text">{{session('user_logged')['ambiente']}}</strong>
 		</h6>
 
-
-
 	</div>
 
-	<div class="col s2 @if(!session('user_logged')['delivery']) offset-s7 @endif" style="margin-top: 5px;">
+
+
+	<div class="col s2 @if(!session('user_logged')['delivery']) offset-s6 @endif" style="margin-top: 5px;">
 		<i style="margin-top: 5px;" class="material-icons white-text left">timer</i>
 		<h6 class="white-text"<strong id="timer">00:00:00</strong></h6>
+	</div>
+	<div class="col s1">
+		<a href="/frenteCaixa" style="margin-top: 0px;" class="btn green accent-3" href="">
+		PDV</a>
 	</div>
 </div>
 <!-- FIM MENU -->

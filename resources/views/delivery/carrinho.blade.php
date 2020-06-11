@@ -71,6 +71,7 @@
 												@endforeach
 											</span><br>
 											<span>Total de sabores: <strong>{{count($i->sabores)}}</strong></span>
+											<span>| Tamanho <strong>{{$i->tamanho->nome}}</strong></span>
 											@endif
 											<br>
 

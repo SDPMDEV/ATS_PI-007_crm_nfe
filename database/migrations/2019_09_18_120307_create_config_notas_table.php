@@ -40,6 +40,8 @@ class CreateConfigNotasTable extends Migration
             $table->integer('nat_op_padrao');
             $table->integer('ambiente');
             $table->string('cUF', 2);
+            $table->string('numero_serie_nfe', 3);
+            $table->string('numero_serie_nfce', 3);
 
             $table->integer('ultimo_numero_nfe');
             $table->integer('ultimo_numero_nfce');

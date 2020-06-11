@@ -136,9 +136,9 @@
 			<a href="/pedidos/imprimirPedido/{{$pedido->id}}" target="_blank" class="btn brown" style="width: 100%">Imprimir pedido</a>
 		</div>
 
-		<!-- <div class="col s3">
-			<a href="/pedidos/imprimirItens/{{$pedido->id}}" target="_blank" class="btn red" style="width: 100%">Imprimir itens</a>
-		</div> -->
+		<div class="col s3">
+			<a onclick="imprimirItens()" target="_blank" class="btn red" style="width: 100%">Imprimir itens</a>
+		</div>
 
 		@endif
 
@@ -148,6 +148,7 @@
 			<thead>
 				<tr>
 					<th>#</th>
+
 					<th>Produto</th>
 					<th>Tamanho de Pizza</th>
 					<th>Sabores</th>
@@ -162,12 +163,20 @@
 			</thead>
 
 			<?php $finalizado = 0; $pendente = 0; ?>
-			<tbody>
+			<tbody id="body">
 				@foreach($pedido->itens as $i)
 				<tr>
 					<?php $temp = $i; ?>
-					<td>{{$i->produto_id}}</td>
 
+					<td id="checkbox">
+						
+						<p>
+							<input type="checkbox" class="check" @if($i->impresso == 0) checked @endif id="item_{{$i->id}}" />
+							<label for="item_{{$i->id}}"></label>
+						</p>
+
+					</td>
+					<td style="display: none" id="item_id">{{$i->id}}</td>
 					<td>{{$i->produto->nome}}</td>
 
 

@@ -54,7 +54,14 @@ class PedidoRestController extends Controller
 				'comanda' => $request->cod,
 				'status' => false,
 				'observacao' => '',
-				'desativado' => false
+				'desativado' => false,
+				'rua' => '',
+				'numero' => '',
+				'bairro_id' => null,
+				'referencia' => '',
+				'telefone' => '', 
+				'nome' => ''
+
 			]);
 			// echo json_encode($result);
 			return response()->json($result, 200);
@@ -95,7 +102,13 @@ class PedidoRestController extends Controller
 					'comanda' => $request->nova_comanda,
 					'status' => false,
 					'observacao' => '',
-					'desativado' => false
+					'desativado' => false,
+					'rua' => '',
+					'numero' => '',
+					'bairro_id' => '',
+					'referencia' => '',
+					'telefone' => '', 
+					'nome' => ''
 				]);
 			}else{
 				$result = Pedido::where('comanda', $request->comanda)
@@ -111,7 +124,8 @@ class PedidoRestController extends Controller
 				'status' => false,
 				'observacao' => $request->obs ?? '',
 				'tamanho_pizza_id' => $request->tamanho == 'null' ? NULL : $request->tamanho,
-				'valor' => str_replace(",", ".", $request->valorFlex)
+				'valor' => str_replace(",", ".", $request->valorFlex),
+				'impresso' => false
 			]);
 
 			if($request->tamanho != 'null'){

@@ -32,7 +32,7 @@ $(function () {
         onAutocomplete: function(val) {
           let v = val.split('-')
           getProduto(v[0], (data) => {
-            
+
             console.log(data)
             if(data.delivery && data.delivery.pizza.length > 0){
               setaTamanhosPizza(data.delivery)
@@ -429,6 +429,31 @@ $('#bairro').change(() => {
     })
   }
 })
+
+
+function imprimirItens(){
+  let ids = "";
+  $('#body tr').each(function(){
+    if($(this).find('#checkbox input').is(':checked')){
+      id = $(this).find('#item_id').html();
+      ids += id + ",";
+    }
+  })
+
+  window.open(path + 'pedidos/imprimirItens?ids='+ids);
+  location.href = window.location.href;
+
+
+
+  // $.get(path + 'pedidos/imprimirItens', {ids: ids})
+  // .done((res) => {
+  //   console.log(res)
+  // })
+  // .fail((err) => {
+  //   console.log(err)
+  // })
+
+}
 
 
 

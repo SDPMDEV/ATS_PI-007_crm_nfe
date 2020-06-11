@@ -5,12 +5,12 @@ $(document).ready(function(){
 	$(".dropdown-button").dropdown({
 		'hover': true
 	});
+	$('.tooltipped').tooltip({delay: 50});
 	$('.modal').modal();
 	$('.collapsible').collapsible();
 
 	$('.datepicker').pickadate({
 		monthsFull: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
-		
 		weekdaysFull: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sabádo'],
 		weekdaysShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'],
 		today: 'Hoje',

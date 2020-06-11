@@ -13,4 +13,6 @@ class ItemVenda extends Model
 	public function produto(){
         return $this->belongsTo(Produto::class, 'produto_id');
     }
+
+    
 }

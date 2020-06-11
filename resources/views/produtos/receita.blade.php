@@ -163,7 +163,7 @@
 										<select name="medida">
 											<option value="Kilo">Kilo</option>
 											<option value="Unidade">Unidade</option>
-											<option value="Metro">Metro</option>
+											<option value="Litro">Litro</option>
 										</select>
 										<label>Unidade de Quantidade</label>
 									</div>

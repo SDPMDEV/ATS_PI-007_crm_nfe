@@ -34,17 +34,17 @@
 					</div>
 
 					<div class="col s2">
-							<label>Valor Livre</label>
+						<label>Valor Livre</label>
 
-							<div class="switch">
-								<label class="">
-									Não
-									<input @if(isset($produto->valor_livre) && $produto->valor_livre) checked @endisset value="true" name="valor_livre" class="red-text" type="checkbox">
-									<span class="lever"></span>
-									Sim
-								</label>
-							</div>
+						<div class="switch">
+							<label class="">
+								Não
+								<input @if(isset($produto->valor_livre) && $produto->valor_livre) checked @endisset value="true" name="valor_livre" class="red-text" type="checkbox">
+								<span class="lever"></span>
+								Sim
+							</label>
 						</div>
+					</div>
 
 					<div class="input-field col s3">
 
@@ -151,7 +151,7 @@
 
 						<div class="input-field col s2">
 							<input value="{{{ isset($produto->CEST) ? $produto->CEST : old('CEST') }}}" id="cest" name="CEST" type="text" class="validate">
-							<label for="CEST">CEST</label>
+							<label for="CEST">CEST (Opcional)</label>
 
 							@if($errors->has('CEST'))
 							<div class="center-align red lighten-2">
@@ -283,11 +283,37 @@
 							@endif
 
 						</div> 
+
+						<div class="input-field col s2">
+							<input value="{{{ isset($produto->CFOP_saida_estadual) ? $produto->CFOP_saida_estadual : $natureza->CFOP_saida_estadual}}}" id="CFOP_saida_estadual" name="CFOP_saida_estadual" type="text" class="validate">
+							<label for="CFOP_saida_estadual">CFOP saida interno</label>
+
+							@if($errors->has('CFOP_saida_estadual'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('CFOP_saida_estadual') }}</span>
+							</div>
+							@endif
+
+						</div> 
+
+						<div class="input-field col s2">
+							<input value="{{{ isset($produto->CFOP_saida_inter_estadual) ? $produto->CFOP_saida_inter_estadual : $natureza->CFOP_saida_inter_estadual}}}" id="CFOP_saida_inter_estadual" name="CFOP_saida_inter_estadual" type="text" class="validate">
+							<label for="CFOP_saida_inter_estadual">CFOP saida externo</label>
+
+							@if($errors->has('CFOP_saida_inter_estadual'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('CFOP_saida_inter_estadual') }}</span>
+							</div>
+							@endif
+
+						</div> 
+
+
 					</div>
 
 					<div class="row">
 						<div class="input-field col s2">
-							<input value="{{{ isset($produto->perc_icms) ? $produto->perc_icms : $tributacao->icms}}}" id="perc_icms" name="perc_icms" type="text" class="validate">
+							<input value="{{{ isset($produto->perc_icms) ? $produto->perc_icms : $tributacao->icms}}}" id="perc_icms" name="perc_icms" type="text" class="validate imposto">
 							<label for="perc_icms">%ICMS</label>
 
 							@if($errors->has('perc_icms'))
@@ -298,7 +324,7 @@
 
 						</div> 
 						<div class="input-field col s2">
-							<input value="{{{ isset($produto->perc_pis) ? $produto->perc_pis : $tributacao->pis }}}" id="perc_pis" name="perc_pis" type="text" class="validate">
+							<input value="{{{ isset($produto->perc_pis) ? $produto->perc_pis : $tributacao->pis }}}" id="perc_pis" name="perc_pis" type="text" class="validate imposto">
 							<label for="perc_pis">%PIS</label>
 
 							@if($errors->has('perc_pis'))
@@ -309,7 +335,7 @@
 
 						</div> 
 						<div class="input-field col s2">
-							<input value="{{{ isset($produto->perc_cofins) ? $produto->perc_cofins : $tributacao->cofins }}}" id="perc_cofins" name="perc_cofins" type="text" class="validate">
+							<input value="{{{ isset($produto->perc_cofins) ? $produto->perc_cofins : $tributacao->cofins }}}" id="perc_cofins" name="perc_cofins" type="text" class="validate imposto">
 							<label for="perc_cofins">%COFINS</label>
 
 							@if($errors->has('perc_cofins'))
@@ -320,7 +346,7 @@
 
 						</div> 
 						<div class="input-field col s2">
-							<input value="{{{ isset($produto->perc_ipi) ? $produto->perc_ipi : $tributacao->ipi }}}" id="perc_ipi" name="perc_ipi" type="text" class="validate">
+							<input value="{{{ isset($produto->perc_ipi) ? $produto->perc_ipi : $tributacao->ipi }}}" id="perc_ipi" name="perc_ipi" type="text" class="validate imposto">
 							<label for="perc_ipi">%IPI</label>
 
 							@if($errors->has('perc_ipi'))
@@ -334,34 +360,54 @@
 					
 
 					<div class="row">
-						<div class="col s2">
-							<label>Composto</label>
 
-							<div class="switch">
-								<label class="">
-									Não
-									<input @if(isset($produto->composto) && $produto->composto) checked @endisset value="true" name="composto" class="red-text" type="checkbox">
-									<span class="lever"></span>
-									Sim
-								</label>
+						<div class="input-field col s6">
+							<select name="anp">
+								<option value="">--</option>
+								@foreach($anps as $key => $a)
+								<option value="{{$key}}"
+									@isset($produto->codigo_anp)
+									@if($key == $produto->codigo_anp)
+									selected=""
+									@endif
+									@endisset >[{{$key}}] - {{$a}}</option>
+
+									@endforeach
+								</select>
+								<label>Identificaçao ANP (Opcional)</label>
+
+							</div> 
+						</div>
+
+						<div class="row">
+							<div class="col s2">
+								<label>Composto</label>
+
+								<div class="switch">
+									<label class="">
+										Não
+										<input @if(isset($produto->composto) && $produto->composto) checked @endisset value="true" name="composto" class="red-text" type="checkbox">
+										<span class="lever"></span>
+										Sim
+									</label>
+								</div>
+							</div>
+
+							<div class="col s10">
+								<p class="red-text">*Produzido no estabelecimento composto de outros produtos já cadastrados, deverá ser criado uma receita para redução de estoque. </p>
 							</div>
 						</div>
 
-						<div class="col s10">
-							<p class="red-text">*Produzido no estabelecimento composto de outros produtos já cadastrados, deverá ser criado uma receita para redução de estoque. </p>
-						</div>
+
+
+					</section>
+
+					<br>
+					<div class="row">
+						<a class="btn-large red" href="/produtos">Cancelar</a>
+						<input type="submit" value="Salvar" class="btn-large green accent-3">
 					</div>
-
-
-
-				</section>
-				
-				<br>
-				<div class="row">
-					<a class="btn-large red" href="/produtos">Cancelar</a>
-					<input type="submit" value="Salvar" class="btn-large green accent-3">
-				</div>
-			</form>
+				</form>
+			</div>
 		</div>
-	</div>
-	@endsection
+		@endsection

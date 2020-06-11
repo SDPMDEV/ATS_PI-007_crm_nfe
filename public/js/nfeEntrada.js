@@ -1,61 +1,45 @@
 
 function enviar(id){
-	alert(id)
 	var r = confirm("Deseja gerar Entrada fiscal desta Compra?");
 	if (r == true) {
 		
-
+		$('#preloader').css('display', 'block')
 		let token = $('#_token').val();
 		$.ajax
 		({
 			type: 'POST',
 			data: {
 				compra_id: id,
+				natureza: $('#natureza').val(),
+				tipo_pagamento: $('#tipo_pagamento').val(),
 				_token: token
 			},
 			url: path + 'compras/gerarEntrada',
 			dataType: 'json',
 			success: function(e){
+				$('#preloader').css('display', 'none')
+
 				console.log(e)
-				// let recibo = e;
-				// let retorno = recibo.substring(0,4);
-				// let mensagem = recibo.substring(5,recibo.length);
-				// if(retorno == 'Erro'){
-				// 	let m = JSON.parse(mensagem);
 
-				// 	$('#modal-alert-erro').modal('open');
-				// 	$('#evento-erro').html("[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo)
+				$('#modal-alert').modal('open');
+				$('#evento').html("NF-e de Entrada emitida com sucesso RECIBO: "+e)
+				window.open(path+"compras/imprimir/"+id, "_blank");
 
-				// }
-				// else if(e == 'Apro'){
-				// 	alert("Esta NF já esta aprovada, não é possível enviar novamente!");
-				// }
-				// else{
-				// 	$('#modal-alert').modal('open');
-				// 	$('#evento').html("NF-e gerada com sucesso RECIBO: "+recibo)
-				// 	window.open(path+"/nf/imprimir/"+id, "_blank");
-				// }
 
-				// $('#preloader1').css('display', 'none');
 			}, error: function(e){
+				$('#preloader').css('display', 'none')
 
+				console.log(e)
 				let js = e.responseJSON;
 				console.log(js)
-				// if(js.message){
-				// 	Materialize.toast(js.message, 5000)
-				// }else{
-				// 	let err = "";
-				// 	js.map((v) => {
-				// 		err += v + "\n";
-				// 	});
-				// 	alert(err);
-				// }
-
-				// $('#preloader1').css('display', 'none');
 			}
 		});
 	}else{
 
 	}
 
+}
+
+function redireciona(){
+	location.reload();
 }

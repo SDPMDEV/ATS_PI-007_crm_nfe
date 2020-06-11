@@ -69,6 +69,7 @@ class DeliveryController extends Controller
             $tamanhos = TamanhoPizza::all();
             return view('delivery/tipoPizza')
             ->with('tamanhos', $tamanhos)
+            ->with('categoria', $categoria->id)
             ->with('config', $this->config)
             ->with('title', 'TIPO DA PIZZA'); 
 
@@ -92,7 +93,6 @@ class DeliveryController extends Controller
         'sabores' => $sabores
     ];
     session(['tamanho_pizza' => $session]);
-
 
     $t = TamanhoPizza::
     where('nome', $tamanho)
@@ -532,7 +532,7 @@ public function recuperarSenha(){
     ->with('title', 'Recuperar Senha');
 }
 
-public function enviarSenhaEmail(Request $request){
+public function enviarSenha(Request $request){
     $mailPhone = $request->mail_phone;
     $mailPhone = str_replace(" ", "", $mailPhone);
     $cliente = null;

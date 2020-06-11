@@ -15,6 +15,7 @@ use App\ConfigNota;
 use App\BairroDelivery;
 use Comtele\Services\TextMessageService;
 use NFePHP\DA\NFe\CupomPedido;
+use NFePHP\DA\NFe\Itens;
 
 class PedidoController extends Controller{
 
@@ -256,25 +257,23 @@ private function _validateItem(Request $request){
 }
 
 public function finalizar($id){
- $pedido = Pedido::
- where('id', $id)
- ->first();
+  $pedido = Pedido::
+  where('id', $id)
+  ->first();
 
- $atributes = $this->addAtributes($pedido->itens);
+  $atributes = $this->addAtributes($pedido->itens);
 
- // $pedido->status = 1;
- // $pedido->desativado = 1;
- // $pedido->save();
 
- $tiposPagamento = VendaCaixa::tiposPagamento();
- $config = ConfigNota::first();
- return view('frontBox/main')
- ->with('itens', $atributes)
- ->with('cod_comanda', $pedido->comanda)
- ->with('frenteCaixa', true)
- ->with('tiposPagamento', $tiposPagamento)
- ->with('config', $config)
- ->with('title', 'Finalizar Comanda '.$id);
+  $tiposPagamento = VendaCaixa::tiposPagamento();
+  $config = ConfigNota::first();
+  return view('frontBox/main')
+  ->with('itens', $atributes)
+  ->with('cod_comanda', $pedido->comanda)
+  ->with('frenteCaixa', true)
+  ->with('tiposPagamento', $tiposPagamento)
+  ->with('config', $config)
+  ->with('bairro', $pedido->bairro)
+  ->with('title', 'Finalizar Comanda '.$id);
 }
 
 
@@ -391,6 +390,33 @@ public function setarEndereco(Request $request){
   session()->flash('color', 'green');
   session()->flash('message', 'Endereço setado!');
   return redirect('/pedidos/ver/'.$request->pedido_id);
+}
+
+public function imprimirItens(Request $request){
+  $ids = $request->ids;
+  $ids = explode(",", $ids);
+  $itens = [];
+  foreach($ids as $i){
+    if($i != null){
+      $item = ItemPedido::find($i);
+      $item->impresso = true;
+      $item->save();
+      array_push($itens, $item);
+    }
+  }
+
+  $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+  $pathLogo = $public.'imgs/logo.jpg';
+  $cupom = new Itens($itens, $pathLogo);
+
+  $pdf = $cupom->render();
+  // file_put_contents($public.'pdf/CUPOM_PEDIDO.pdf',$pdf);
+  // return redirect($public.'pdf/CUPOM_PEDIDO.pdf');
+
+  header('Content-Type: application/pdf');
+  echo $pdf;
+  
+
 }
 
 }

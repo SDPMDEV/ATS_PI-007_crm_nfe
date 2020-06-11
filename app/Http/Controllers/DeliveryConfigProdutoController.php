@@ -26,6 +26,7 @@ class DeliveryConfigProdutoController extends Controller
       return view('produtoDelivery/list')
       ->with('produtos', $produtos)
       ->with('produtoJs', true)
+      ->with('links', true)
       ->with('title', 'Produtos de Delivery');
   }
 

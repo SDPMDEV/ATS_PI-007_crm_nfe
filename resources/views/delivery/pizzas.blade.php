@@ -7,6 +7,7 @@
 <div class="main-banner-2">
 
 </div>
+<?php $maiorValor = 0; ?>
 
 <section class="portfolio py-5">
 	<div class="container py-xl-5 py-lg-3">
@@ -41,6 +42,7 @@
 		<div class="row mt-4">
 
 			@foreach($pizzas as $p)
+			@if(isset($pesquisa) || $p->produto->categoria->id == $categoria)
 			@if($p->produto->status)
 			<div class="col-md-4" 
 			onclick="select_pizza({{$p->produto}}, {{$p->produto->galeria}}, {{$p->produto->produto}})">
@@ -56,7 +58,7 @@
 						<img src="/imagens_produtos/{{$p->produto->galeria[0]->path}}" 
 						alt="" style="height: 200px; width: 100%" class="img-fluid" />
 						@else
-						<img src="https://www.strokejoinville.com.br/wp-content/uploads/sites/804/2017/05/produto-sem-imagem-Copia-1.gif" class="img-fluid" >
+						<img style="height: 200px; width: 100%" src="/imagens/sem-imagem.png" class="img-fluid" >
 						@endif
 
 						<h4 class="p-mask">{{$p->produto->produto->nome}} - 
@@ -69,6 +71,7 @@
 				</a>
 			</div>
 			<?php $ativo = true; ?>
+			@endif
 			@endif
 			@endforeach
 
@@ -128,17 +131,21 @@
 
 		<div class="row">
 
+			
 			@foreach($saboresIncluidos as $s)
 			<div class="col-lg-4 col-md-6">
 				<div class="card border-0">
 					<div class="card-header p-0">
 
+						<?php 
+						if($s['valorPizza'] > $maiorValor) $maiorValor = $s['valorPizza'];
+						?>
 						<a href="#!">
 							@if(count($s['galeria']) > 0)
 							<img src="/imagens_produtos/{{$s['galeria'][0]->path}}" 
 							alt="" style="height: 200px; width: 100%" class="img-fluid" />
 							@else
-							<img src="/imgs/no_image.png" class="img-fluid" >
+							<img style="height: 200px; width: 100%" src="/imagens/sem-imagem.png" class="img-fluid" >
 							@endif
 
 
@@ -171,7 +178,7 @@
 <a href="/pizza/adicionais" type="button" id="finalizar-venda" class="btn btn-success btn-lg btn-block @if(count($saboresIncluidos) < session('tamanho_pizza')['sabores'] )
 disabled
 @endif">
-<span class="fa fa-check mr-2"></span> ADICIONAR<strong id="total"></strong>
+<span class="fa fa-check mr-2"></span> ADICIONAR <strong id="total">R$ {{number_format($maiorValor, 2)}}</strong>
 </a>
 <br>
 

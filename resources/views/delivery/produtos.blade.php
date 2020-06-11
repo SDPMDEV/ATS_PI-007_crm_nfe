@@ -31,7 +31,7 @@
 						<img src="/imagens_produtos/{{$p->galeria[0]->path}}" 
 						alt="" style="height: 300px; width: 100%;" class="img-fluid" />
 						@else
-						<img style="height: 300px; width: 100%;" src="https://www.strokejoinville.com.br/wp-content/uploads/sites/804/2017/05/produto-sem-imagem-Copia-1.gif" class="img-fluid" >
+						<img style="height: 300px; width: 100%" src="/imagens/sem-imagem.png"  class="img-fluid" >
 						@endif
 
 						<?php $ativo = true; ?>

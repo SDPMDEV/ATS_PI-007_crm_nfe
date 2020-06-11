@@ -6,8 +6,11 @@ var PRODUTO = null;
 var CLIENTE = null;
 var TOTALEMABERTOCLIENTE = null;
 var COMANDA = 0;
+var VALORBAIRRO = 0;
+var VALORACRESCIMO = 0;
 var OBSERVACAO = "";
 var OBSERVACAOITEM = "";
+var DESCONTO = 0;
 
 $(function () {
 	novaHora();
@@ -22,7 +25,6 @@ $(function () {
 				getCliente(cliente[0], (d) => {
 					if(d){
 						CLIENTE = d;
-						console.log(CLIENTE)
 						$('#cliente-nao').css('display', 'none');
 						$('#edit-cliente').css('display', 'block');
 						$('#autocomplete-cliente').attr('disabled', 'true');
@@ -48,7 +50,6 @@ $(function () {
 			data: data,
 			limit: 20, 
 			onAutocomplete: function(val) {
-				console.log("sdasds")
 				if(caixaAberto){
 					$('#preloader1').css('display', 'block');
 					var prod = $('#autocomplete-produto').val().split('-');
@@ -80,10 +81,16 @@ $(function () {
 	//Controller Pedido
 	if(itensPedido){
 		itensPedido = JSON.parse(itensPedido);
-		console.log("esta vindo de pedidos ou delivery")
+
+		if($('#bairro').val() != 0){
+			console.log($('#bairro').val())
+			let bairro = JSON.parse($('#bairro').val());
+
+			VALORBAIRRO = parseFloat(bairro.valor_entrega);
+		}
 		let cont = 1;
 		itensPedido.map((v) => {
-			console.log(v)
+
 			let nome = '';
 			let valorUnit = 0;
 			if(v.sabores.length > 0){
@@ -111,14 +118,14 @@ $(function () {
 				pizza: v.maiorValor ? true : false,
 				itemPedido: v.item_pedido
 			}
-			console.log(item)
+
 
 			ITENS.push(item)
-			// console.log(item)
-			TOTAL += parseFloat(item.valor)*(item.quantidade);
+			TOTAL += parseFloat((item.valor * item.quantidade));
 		});
 		let t = montaTabela();
-		// console.log(ITENS);
+
+
 		atualizaTotal();
 		$('#body').html(t);
 		let codigo_comanda = $('#codigo_comanda_hidden').val();
@@ -127,14 +134,20 @@ $(function () {
 
 });
 
-$('#desconto').on('blur', () => {
+$('#desconto').keyup( () => {
+	$('#acrescimo').val('0')
 	let desconto = $('#desconto').val();
 	desconto = parseFloat(desconto.replace(",", "."))
-
-	if(desconto > TOTAL){
+	DESCONTO = 0;
+	if(desconto > TOTAL && $('#desconto').val().length > 2){
 		Materialize.toast('ERRO, Valor desconto maior que o valor total', 4000)
 		$('#desconto').val("");
+	}else{
+		DESCONTO = desconto;
+
+		atualizaTotal();
 	}
+
 
 })
 
@@ -146,21 +159,18 @@ function novaHora() {
 
 	var date = new Date();
 	let v = [date.getHours(), date.getMinutes()].map(pad).join(':');
-	console.log(v)
 	$('#horas').html(v);
 }
 
 function novaData() {
 	var date = new Date();
 	let v = [date.getDate(), date.getMonth()+1, date.getFullYear()].map(pad).join('/');
-	console.log(v)
 	$('#data').html(v);
 }
 
 function setarObservacao(){
 	let obs = $('#obs').val();
 	OBSERVACAO = obs;
-	console.log(obs)
 	if(obs != "") $('#btn-obs').css('border-left', '5px solid #1de9b6');
 	else $('#btn-obs').css('border-left', 'none');
 	$('#modal-obs').modal('close')
@@ -252,7 +262,6 @@ function getVendasEmAbertoContaCredito(id, data){
 }
 
 function getProduto(id, data){
-	console.log(id)
 	$.ajax
 	({
 		type: 'GET',
@@ -273,12 +282,12 @@ function addItem(){
 			let quantidade = $('#quantidade').val();
 			quantidade = quantidade.replace(",", ".");
 			let valor = $('#valor_item').val();
-			console.log(parseFloat(quantidade.replace(",", ".")));
+
 			if(quantidade.length > 0 && parseFloat(quantidade.replace(",", ".")) > 0 && valor.length > 0 && 
 				parseFloat(valor.replace(",", ".")) > 0
 				&& PRODUTO != null){
 				TOTAL += parseFloat(valor.replace(',','.'))*(quantidade.replace(',','.'));
-			console.log(TOTAL)
+
 			let item = {
 				cont: (ITENS.length+1),
 				obs: OBSERVACAOITEM,
@@ -303,7 +312,7 @@ function addItem(){
 			}
 
 			let t = montaTabela();
-			console.log(ITENS);
+
 			$('#body').html(t);
 			PRODUTO = null;
 			$('#obs-item').val('');
@@ -322,7 +331,21 @@ $('#adicionar-item').click(() => {
 })
 
 function atualizaTotal(){
-	$('#total-venda').html(formatReal(TOTAL));
+
+	let valor_recebido = $('#valor_recebido').val();
+	valor_recebido = valor_recebido.replace(",", ".");
+	valor_recebido = parseFloat(valor_recebido)
+
+	if((TOTAL + VALORBAIRRO + VALORACRESCIMO - DESCONTO) > valor_recebido){
+		$('#finalizar-venda').addClass('disabled')
+	}else{
+		$('#finalizar-venda').removeClass('disabled')
+	}
+	console.log(valor_recebido)
+	if(!$('#valor_recebido').val()){
+		$('#finalizar-venda').addClass('disabled')
+	}
+	$('#total-venda').html(formatReal(TOTAL + VALORBAIRRO + VALORACRESCIMO - DESCONTO));
 }
 
 function montaTabela(){
@@ -378,26 +401,6 @@ function limparCamposFormProd(){
 
 function verificaProdutoIncluso(call){
 
-	// if(ITENS.length == 0) call(false);
-	// if($('#prod tbody tr').length == 0) call(false);
-	// let cod = $('#autocomplete-produto').val().split('-')[0];
-	// let duplicidade = false;
-	// 	console.log($('#autocomplete-produto').val())
-
-	// ITENS.map((v) => {
-	// 	console.log(v)
-	// 	if(v.id == cod){
-	// 		duplicidade = true;
-	// 	}
-	// })
-	// console.log(duplicidade)
-
-	// let c;
-	// if(duplicidade){
-	// 	c = !confirm('Produto já adicionado, deseja incluir novamente?');
-	// 	call(c)
-	// } 
-	// else call(false);
 
 	call(false);
 }
@@ -431,7 +434,6 @@ function getProdutoCodBarras(cod, data){
 						PRODUTO = JSON.parse(res);
 						$('#nome-produto').html(PRODUTO.nome);
 						$('#valor_item').val(valor);
-						console.log(res)
 
 					})
 					.fail((err) => {
@@ -482,7 +484,6 @@ function abrirCaixa(){
 				_token: token
 			},
 			success: function(e){
-				console.log(e)
 				caixaAberto = true;
 				$('#modal1').modal('close');
 
@@ -500,7 +501,7 @@ function abrirCaixa(){
 
 function sangriaCaixa(){
 	let token = $('#_token').val();
-	console.log($('#valor_sangria').val())
+
 	$.ajax
 	({
 		type: 'POST',
@@ -511,9 +512,13 @@ function sangriaCaixa(){
 			_token: token
 		},
 		success: function(e){
-			console.log(e)
+
 			caixaAberto = true;
 			$('#modal2').modal('close');
+			$('#valor_sangria').val('');
+			var $toastContent = $('<span>Sangria realizada!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+			Materialize.toast($toastContent, 5000);
+
 
 		}, error: function(e){
 			console.log(e)
@@ -573,10 +578,11 @@ function getVendaDiaria(data){
 function fluxoDiario(){
 	$('#preloader1').css('display', 'block');
 	getSangriaDiaria((sangrias) => {
-		console.log(sangrias)
+
 		let elem = "";
 		let totalSangria = 0;
 		sangrias.map((v) => {
+
 			elem += "<p> Horario: "
 			elem += "<strong>" + v.data_registro.substring(10, 16) + "</strong>, Valor: "
 			elem += "<strong> R$ " + formatReal(v.valor) + "</strong>, Usuario: "
@@ -593,16 +599,19 @@ function fluxoDiario(){
 			elem += "</p>";
 			$('#fluxo_abertura_caixa').html(elem);
 			getVendaDiaria((vendas) => {
-				console.log(vendas)
+
 				elem = "";
 				let totalVendas = 0;
 				vendas.map((v) => {
+					console.log(v)
 					elem += "<p> Horario: "
 					elem += "<strong>" + v.data_registro.substring(10, 16) + "</strong>, Valor: "
-					elem += "<strong> R$ " + formatReal(v.valor_total) + "</strong>, Tipo Pagamento: "
+					elem += "<strong> R$ " + formatReal(parseFloat(v.valor_total) + parseFloat(v.acrescimo) - 
+						parseFloat(v.desconto)) + "</strong>, Tipo Pagamento: "
 					elem += "<strong>" + v.tipo_pagamento + "</strong>"
 					elem += "</p>";
-					totalVendas += parseFloat(v.valor_total);
+					totalVendas += parseFloat(parseFloat(v.valor_total) + parseFloat(v.acrescimo) - 
+						parseFloat(v.desconto));
 				})
 				elem += "<h6>Total: <strong class='orange-text'>" + formatReal(totalVendas) + "</strong></h6>";
 
@@ -616,7 +625,9 @@ function fluxoDiario(){
 	if(caixaAberto){
 		$('#modal3').modal('open');
 	}else{
-		alert('Por favor abra o caixa!');
+
+		var $toastContent = $('<span>Por favor abra o caixa!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+		Materialize.toast($toastContent, 5000);
 		location.reload();
 	}
 }
@@ -640,7 +651,7 @@ $('#valor_recebido').on('keyup', (event) => {
 	let v = $('#valor_recebido').val();
 	v = v.replace(",", ".");
 
-	if(ITENS.length > 0 && (parseFloat(v) >= TOTAL)){
+	if(ITENS.length > 0 && (parseFloat(v) >= (TOTAL + VALORBAIRRO + VALORACRESCIMO - DESCONTO))){
 		$('#finalizar-venda').removeClass('disabled');
 	}else{
 		$('#finalizar-venda').addClass('disabled');
@@ -654,13 +665,12 @@ $('#valor_recebido').on('keyup', (event) => {
 			let troco = v - t;
 			$("#valor_troco").html(formatReal(troco))
 			$('#modal4').modal('open');
-			console.log(troco)
+
 			let resto = troco;
 			notas = [];
 
-			console.log(parseInt(troco / 50))
 			if(parseInt(troco / 50) > 0 && resto > 0){
-				console.log("vai nota de 50 ");
+
 				resto = troco % 50;
 				$('#qtd_50_reais').html(' X'+1);
 				$('.50_reais').css('display', 'block');
@@ -668,7 +678,6 @@ $('#valor_recebido').on('keyup', (event) => {
 			}
 			if(parseInt(resto / 20) > 0){
 				numeroNotas = parseInt(resto/20);
-				console.log(numeroNotas)
 				$('#qtd_20_reais').html(' X'+numeroNotas);
 				resto = resto%(20*numeroNotas);
 				$('.20_reais').css('display', 'block');
@@ -676,7 +685,6 @@ $('#valor_recebido').on('keyup', (event) => {
 			}
 			if(parseInt(resto / 10) > 0){
 				numeroNotas = parseInt(resto/10);
-				console.log(numeroNotas)
 				$('#qtd_10_reais').html(' X'+numeroNotas);
 				resto = resto%(10*numeroNotas);
 				$('.10_reais').css('display', 'block');
@@ -684,7 +692,6 @@ $('#valor_recebido').on('keyup', (event) => {
 			}
 			if(parseInt(resto / 5) > 0){
 				numeroNotas = parseInt(resto/5);
-				console.log(numeroNotas)
 				$('#qtd_5_reais').html(' X'+numeroNotas);
 				resto = duasCasas(resto%(5*numeroNotas));
 				$('.5_reais').css('display', 'block');
@@ -697,59 +704,48 @@ $('#valor_recebido').on('keyup', (event) => {
 				$('.2_reais').css('display', 'block');
 
 			}
-			console.log(parseInt(resto / 1))
+
 			if(parseInt(resto / 1) > 0){
 				numeroNotas = parseInt(resto/1);
-				console.log(numeroNotas)
 				$('#qtd_1_real').html(' X'+numeroNotas);
 				resto = duasCasas(resto%(1*numeroNotas));
 				$('.1_real').css('display', 'block');
 
 			}
-			console.log(resto)
-
 
 			if(parseInt(resto / 0.5) > 0){
 				numeroNotas = parseInt(resto/0.5);
-				console.log(numeroNotas)
 				$('#qtd_50_centavos').html(' X'+numeroNotas);
 				resto = duasCasas(resto%(0.5*numeroNotas));
 				$('.50_centavo').css('display', 'block');
 
 			}
-			console.log(resto)
 
 			if(parseInt(resto / 0.25) > 0){
 				numeroNotas = parseInt(resto/0.25);
-				console.log(numeroNotas)
 				$('#qtd_25_centavos').html(' X'+numeroNotas);
 				resto = duasCasas(resto%(0.25*numeroNotas));
 				$('.25_centavo').css('display', 'block');
 
 			}
-			console.log(resto)
 
 			if(parseInt(resto / 0.10) > 0){
 				numeroNotas = parseInt(resto/0.10);
-				console.log(numeroNotas)
 				$('#qtd_10_centavos').html(' X'+numeroNotas);
 				resto = duasCasas(resto%(0.10*numeroNotas));
 				$('.10_centavo').css('display', 'block');
 
 			}
-			console.log(resto)
 
 
 			if(parseInt(resto / 0.05) > 0){
 				numeroNotas = parseInt(resto/0.05);
-				console.log(numeroNotas)
 				$('#qtd_5_centavos').html(' X'+numeroNotas);
 				resto = resto%(0.05*numeroNotas);
 				$('.5_centavo').css('display', 'block');
 
 			}
 
-			console.log(resto)
 		}
 	}
 })
@@ -762,7 +758,6 @@ $('#autocomplete-produto').on('keyup', () => {
 	let val = $('#autocomplete-produto').val();
 	if($.isNumeric(val) && val.length > 6){
 		getProdutoCodBarras(val, (data) => {
-			console.log(data);
 			setTimeout(() => {
 				addItem();
 				
@@ -794,7 +789,6 @@ function validaCpf(){
 	strCPF = strCPF.replace(".", "");
 	strCPF = strCPF.replace(".", "");
 	strCPF = strCPF.replace("-", "");
-	console.log(strCPF);
 	var Soma;
 	var Resto;
 	Soma = 0;
@@ -840,7 +834,7 @@ function finalizarVenda(acao) {
 		let valorRecebido = $('#valor_recebido').val();
 		let troco = 0;
 		if(valorRecebido.length > 0 && parseFloat(valorRecebido) > TOTAL){
-			troco = parseFloat(valorRecebido) - TOTAL;
+			troco = parseFloat(valorRecebido) - (TOTAL + VALORACRESCIMO + VALORBAIRRO - DESCONTO);
 		}
 
 		let desconto = $('#desconto').val();
@@ -850,6 +844,7 @@ function finalizarVenda(acao) {
 			itens: ITENS,
 			cliente: CLIENTE == null ? null : CLIENTE.id,
 			valor_total: TOTAL,
+			acrescimo: VALORBAIRRO + VALORACRESCIMO,
 			troco: troco,
 			tipo_pagamento: $('#tipo-pagamento').val(),
 			forma_pagamento: '',
@@ -864,7 +859,6 @@ function finalizarVenda(acao) {
 			observacao: OBSERVACAO
 		}
 
-		console.log(js)
 		let token = $('#_token').val();
 		if(acao != 'credito'){
 			$.ajax
@@ -877,11 +871,9 @@ function finalizarVenda(acao) {
 					_token: token
 				},
 				success: function(e){
-					console.log(e)
 					if(acao == 'fiscal'){
 						$('#preloader2').css('display', 'block');
 						$('#preloader9').css('display', 'block');
-						console.log('fiscal');
 						emitirNFCe(e.id);	
 					} else{
 						console.log("Imprime nao fiscal");
@@ -916,22 +908,20 @@ function finalizarVenda(acao) {
 					},
 					success: function(e){
 						$('#modal-venda').modal('close')
+
+						window.open(path + 'nfce/imprimirNaoFiscalCredito/'+e.id, '_blank');
+						$('#modal-credito').modal('open');
+						$('#evento-conta-credito').html('Venda salva na conta crédito do cliente ' +
+							CLIENTE.razao_social)
+
+					}, error: function(e){
 						console.log(e)
+						$('#preloader2').css('display', 'none');
+						$('#preloader9').css('display', 'none');
+						$('#modal-venda').modal('close')
+					}
 
-					// console.log("Imprime nao fiscal");
-					window.open(path + 'nfce/imprimirNaoFiscalCredito/'+e.id, '_blank');
-					$('#modal-credito').modal('open');
-					$('#evento-conta-credito').html('Venda salva na conta crédito do cliente ' +
-						CLIENTE.razao_social)
-
-				}, error: function(e){
-					console.log(e)
-					$('#preloader2').css('display', 'none');
-					$('#preloader9').css('display', 'none');
-					$('#modal-venda').modal('close')
-				}
-
-			});
+				});
 			}
 			
 		}
@@ -943,8 +933,8 @@ function finalizarVenda(acao) {
 
 function emitirNFCe(vendaId){
 	// $('#modal-venda').modal('close')
+	$('#preloader_'+vendaId).css('display', 'inline-block');
 
-	console.log("Emitindo NFCe...")
 	let token = $('#_token').val();
 	$.ajax
 	({
@@ -957,15 +947,13 @@ function emitirNFCe(vendaId){
 		},
 		success: function(e){
 			$('#modal-cpf-nota').modal('close')
+			$('#preloader_'+vendaId).css('display', 'none');
 
-			console.log(e)
 			let recibo = e;
 			let retorno = recibo.substring(0,4);
 			let mensagem = recibo.substring(5,recibo.length);
 			if(retorno == 'Erro'){
 				let m = JSON.parse(mensagem);
-				// console.log(m.protNFe.infProt.xMotivo)
-				// console.log(m)
 				$('#modal-alert-erro').modal('open');
 				$('#evento-erro').html("[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo)
 
@@ -976,7 +964,9 @@ function emitirNFCe(vendaId){
 
 			}
 			else if(e == 'Apro'){
-				alert("Esta NF já esta aprovada, não é possível enviar novamente!");
+
+				var $toastContent = $('<span>Esta NF já esta aprovada, não é possível enviar novamente!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+				Materialize.toast($toastContent, 5000);
 			}
 			else{
 				$('#modal-venda').modal('close')
@@ -990,8 +980,12 @@ function emitirNFCe(vendaId){
 			$('#preloader1').css('display', 'none');
 		}, error: function(err){
 			console.log(err)
-			deletarVenda(vendaId)
-			alert('Erro ao enviar NFC-e')
+			$('#preloader_'+vendaId).css('display', 'none');
+
+			// deletarVenda(vendaId)
+
+			var $toastContent = $('<span>Erro ao enviar NFC-e</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+			Materialize.toast($toastContent, 5000);
 			$('#preloader2').css('display', 'none');
 			$('#preloader9').css('display', 'none');
 
@@ -1015,7 +1009,6 @@ function emitirNFCe(vendaId){
 }
 
 function deletarVenda(id){
-	console.log('Deletando venda')
 	$.get(path + 'nfce/deleteVenda/'+id)
 	.done((data) => {
 		console.log(data)
@@ -1053,16 +1046,21 @@ function cancelar(){
 		url: path + 'nfce/cancelar',
 		dataType: 'json',
 		success: function(e){
-			console.log(e)
-			let js = JSON.parse(e);
-			console.log(js)
-			alert(js.retEvento.infEvento.xMotivo)
+			
+			alert(e.retEvento.infEvento.xMotivo)
 
 			$('#preloader').css('display', 'none');
 		}, error: function(e){
-			console.log(e)
-			Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
 			$('#preloader').css('display', 'none');
+			console.log(e)
+			let js = e.responseJSON;
+			if(e.status == 404){
+				alert(js.mensagem)
+			}else{
+				alert(js.retEvento.infEvento.xMotivo)
+				Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
+				
+			}
 		}
 	});
 }
@@ -1070,7 +1068,6 @@ function cancelar(){
 function verItens(){
 	$('#modal-itens').modal('open');
 	let t = montaTabela();
-	console.log(ITENS);
 	$('#body-modal').html(t);
 
 }
@@ -1096,17 +1093,20 @@ function apontarComanda(){
 	let cod = $('#cod-comanda').val()
 	$.get(path+'pedidos/itensParaFrenteCaixa', {cod: cod})
 	.done((success) => {
-		console.log(success)
 		montarComanda(success, (rs) => {
 			if(rs){
 				COMANDA = cod;
 				$('#modal-comanda').modal('close')
+				var $toastContent = $('<span>Comanda setada!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+				Materialize.toast($toastContent, 3000);
 			}
 		})
 	})
 	.fail((err) => {
 		if(err.status == 401){
-			alert("Nada encontrado!!!");
+
+			var $toastContent = $('<span>Nada encontrado!!!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+			Materialize.toast($toastContent, 5000);
 		}
 		console.log(err)
 	})
@@ -1115,7 +1115,6 @@ function apontarComanda(){
 function montarComanda(itens, call){
 	let cont = 0;
 	itens.map((v) => {
-		console.log(v)
 		let nome = '';
 		let valorUnit = 0;
 		if(v.sabores.length > 0){
@@ -1143,16 +1142,39 @@ function montarComanda(itens, call){
 			pizza: v.maiorValor ? true : false,
 			itemPedido: v.item_pedido
 		}
-		console.log(item)
 
 		ITENS.push(item)
-			// console.log(item)
-			TOTAL += parseFloat(item.valor)*(item.quantidade);
-		});
+		TOTAL += parseFloat(item.valor)*(item.quantidade);
+	});
 	let t = montaTabela();
 
 	atualizaTotal();
 	$('#body').html(t);
 	call(true)
 }
+
+$('#acrescimo').keyup(() => {
+	$('#desconto').val('0')
+
+	let total = TOTAL+VALORBAIRRO;
+	let acrescimo = $('#acrescimo').val();
+	if(acrescimo.substring(0, 1) == "%"){
+
+		let perc = acrescimo.substring(1, acrescimo.length);
+
+		VALORACRESCIMO = total * (perc/100);
+
+
+	}else{
+		acrescimo = acrescimo.replace(",", ".")
+		VALORACRESCIMO = parseFloat(acrescimo)
+	}
+
+	if(acrescimo.length == 0) VALORACRESCIMO = 0;
+	atualizaTotal();
+
+
+})
+
+
 

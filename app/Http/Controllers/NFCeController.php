@@ -57,6 +57,7 @@ class NFCeController extends Controller
 			header('Content-type: text/html; charset=UTF-8');
 
 			$nfce = $nfe_service->gerarNFCe($vendaId);
+
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 			$signed = $nfe_service->sign($nfce['xml']);
 			file_put_contents($public.'xml_nfce/'.$venda->id.'.xml',$signed);
@@ -156,23 +157,31 @@ class NFCeController extends Controller
 
 
 		$nfce = $nfe_service->cancelarNFCe($request->id, $request->justificativa);
-		if(is_array($nfce)){
+		
+		if(!isset($nfce['cStat'])){
+			return response()->json($nfce, 404);
+		}
+		if($nfce['retEvento']['infEvento']['cStat'] == 135){
 			$venda = VendaCaixa::
 			where('id', $request->id)
 			->first();
 			$venda->estado = 'CANCELADO';
 			$venda->save();
-			if($venda){
-				$stockMove = new StockMove();
+			// if($venda){
+			// 	$stockMove = new StockMove();
 
-				foreach($venda->itens as $i){
-					$stockMove->pluStock($i->produto_id, 
-						$i->quantidade, -50); // -50 na altera valor compra
-				}
-			}
+			// 	foreach($venda->itens as $i){
+			// 		$stockMove->pluStock($i->produto_id, 
+			// 			$i->quantidade, -50); // -50 na altera valor compra
+			// 	}
+			// }
+			return response()->json($nfce, 200);
+
+		}else{
+			return response()->json($nfce, 401);
 		}
 		
-		echo json_encode($nfce);
+		
 	}
 
 	public function deleteVenda($id){

@@ -1,20 +1,5 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
-
-//Route::get('/', 'HomeController@index');
-// header('Access-Control-Allow-Origin', '*');
-
-
 
 Route::group(['prefix' => '/'], function(){
 	Route::get('/', 'DeliveryController@index');
@@ -53,7 +38,7 @@ Route::group(['prefix' => '/autenticar'], function(){
 	Route::get('/novo', 'DeliveryController@autenticarCliente');
 	Route::post('/registro', 'DeliveryController@salvarRegistro');
 	Route::get('/esqueceu_a_senha', 'DeliveryController@recuperarSenha');
-	Route::post('/esqueceu_a_senha', 'DeliveryController@enviarSenhaEmail');
+	Route::post('/esqueceu_a_senha', 'DeliveryController@enviarSenha');
 	Route::post('/validaToken', 'DeliveryController@validaToken');
 	Route::get('/ativar/{cliente_id}', 'DeliveryController@ativar');
 	Route::post('/refreshToken', 'DeliveryController@refreshToken');
@@ -78,7 +63,6 @@ Route::group(['prefix' => '/pizza'], function(){
 	Route::get('/adicionais', 'DeliveryController@adicionais');
 	Route::get('/pesquisa', 'DeliveryController@pesquisa');
 	Route::get('/pizzas', 'DeliveryController@pizzas');
-	
 });
 
 Route::group(['prefix' => '/carrinho'], function(){
@@ -213,6 +197,7 @@ Route::group(['prefix' => 'pedidos'], function(){
 	Route::get('/itensParaFrenteCaixa', 'PedidoController@itensParaFrenteCaixa');
 	Route::get('/setarEndereco', 'PedidoController@setarEndereco');
 	Route::get('/setarBairro', 'PedidoController@setarBairro');
+	Route::get('/imprimirItens', 'PedidoController@imprimirItens');
 
 });
 
@@ -690,6 +675,7 @@ Route::group(['prefix' => 'compras'],function(){
 
 	Route::get('/emitirEntrada/{id}', 'PurchaseController@emitirEntrada');
 	Route::post('/gerarEntrada', 'PurchaseController@gerarEntrada');
+	Route::get('/imprimir/{id}', 'PurchaseController@imprimir');
 
 
 });

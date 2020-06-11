@@ -69,6 +69,7 @@ class DeliveryController extends Controller
             return view('delivery/tipoPizza')
             ->with('tamanhos', $tamanhos)
             ->with('config', $this->config)
+            ->with('categoria', $categoria)
             ->with('title', 'TIPO DA PIZZA'); 
 
         }else{
@@ -99,6 +100,7 @@ public function escolherSabores(Request $request){
     $tipo = $request->tipo;
     $tamanho = explode("-", $tipo)[0];
     $sabores = explode("-", $tipo)[1];
+    $categoria = $request->categoria;
     
     $session = [
         'tamanho' => $tamanho,
@@ -110,6 +112,7 @@ public function escolherSabores(Request $request){
     $t = TamanhoPizza::
     where('nome', $tamanho)
     ->first();
+    $tamanho = session('tamanho_pizza');
 
     $sabores = session('sabores');
 
@@ -123,6 +126,13 @@ public function escolherSabores(Request $request){
             $p->produto;
             $p->galeria;
 
+            foreach($p->pizza as $pz){
+                if($tamanho['tamanho'] == $pz->tamanho->nome){
+                    $valor = $pz->valor;
+                }
+            }
+            $p->valorPizza = $valor;
+
             array_push($saboresIncluidos, $p);
         }
     }
@@ -131,6 +141,7 @@ public function escolherSabores(Request $request){
     ->with('pizzas', $t->produtoPizza)
     ->with('config', $this->config)
     ->with('pizzaJs', true)
+    ->with('categoria', $categoria)
     ->with('saboresIncluidos', $saboresIncluidos)
     ->with('title', 'PIZZAS'); 
 }
@@ -162,6 +173,14 @@ public function pesquisa(Request $request){
 
             $p->produto;
             $p->galeria;
+            $valor = 0;
+
+            foreach($p->pizza as $pz){
+                if($tamanho['tamanho'] == $pz->tamanho->nome){
+                    $valor = $pz->valor;
+                }
+            }
+            $p->valorPizza = $valor;
 
             array_push($saboresIncluidos, $p);
         }
@@ -310,6 +329,7 @@ public function acompanhamento($id){
             return view('delivery/tipoPizza')
             ->with('tamanhos', $tamanhos)
             ->with('config', $this->config)
+            ->with('categoria', $produto->categoria)
             ->with('title', 'TIPO DA PIZZA'); 
         }else{
 
@@ -440,8 +460,9 @@ public function salvarRegistro(Request $request){
         $celular = $request->celular;
         $celular = str_replace(" ", "", $celular);
         $celular = str_replace("-", "", $celular);
-        if(getenv("AUTENTICACAO_SMS") == 1) $this->sendSms($celular, $cod);
-        // $this->sendEmailCod($request->email, $cod);
+
+        if(getenv("AUTENTICACAO_SMS") == 1) 
+            $this->sendSms($celular, $cod);
         if(getenv("AUTENTICACAO_EMAIL") == 1 && getenv("SERVIDOR_WEB") == 1) 
             $this->sendEmailLink($request->email, $cod);
 
@@ -549,14 +570,17 @@ public function recuperarSenha(){
     ->with('title', 'Recuperar Senha');
 }
 
-public function enviarSenhaEmail(Request $request){
+public function enviarSenha(Request $request){
     $mailPhone = $request->mail_phone;
+
     $mailPhone = str_replace(" ", "", $mailPhone);
+
     $cliente = null;
     if(is_numeric($mailPhone)){
+
         if(strlen($mailPhone) != 11){
             session()->flash('message_erro_telefone', 'Digite o telefone seguindo este padrao de exemplo 43999998888 - 11 Digitos.');
-            return redirect("/autenticar");
+            return redirect("/autenticar/esqueceu_a_senha");
         }
 
         $cliente = ClienteDelivery::where('celular', $this->setaMascaraPhone($mailPhone))
@@ -568,25 +592,51 @@ public function enviarSenhaEmail(Request $request){
     }
 
     if($cliente == null){
-        session()->flash('message_erro', 'Email ou telefone não cadastrado.');
+        session()->flash('message_erro', 'Email ou telefone não encontrado.');
         return redirect('/autenticar/esqueceu_a_senha');
     }else{
         $newPass = $this->randomPassword();
-        Mail::send('mail.nova_senha', ['senha' => $newPass], function($m) use ($cliente){
+        if(getenv("AUTENTICACAO_SMS") == 1) {
 
-            $nomeEmail = getenv('MAIL_NAME');
-            $nomeEmail = str_replace("_", " ", $nomeEmail);
-            $m->from(getenv('MAIL_USERNAME'), $nomeEmail);
+            $this->sendSmsSenha($mailPhone, $newPass);
+            $cliente->senha = md5($newPass);
+            $cliente->save();
+            session()->flash('message_sucesso', 'SMS enviado com sua nova senha, aguarde o recebimento...');
+            return redirect('/autenticar');
+        }
+        if(getenv("AUTENTICACAO_EMAIL") == 1 && getenv("SERVIDOR_WEB") == 1) {
 
-            $m->subject('recuperacao de senha');
-            $m->to($cliente->email);
-        });
-        $cliente->senha = md5($newPass);
-        $cliente->save();
-        session()->flash('message_sucesso', 'Email enviado com sua nova senha.');
-        return redirect('/autenticar/esqueceu_a_senha');
+            Mail::send('mail.nova_senha', ['senha' => $newPass], function($m) use ($cliente){
+
+                $nomeEmail = getenv('MAIL_NAME');
+                $nomeEmail = str_replace("_", " ", $nomeEmail);
+                $m->from(getenv('MAIL_USERNAME'), $nomeEmail);
+
+                $m->subject('recuperacao de senha');
+                $m->to($cliente->email);
+            });
+            $cliente->senha = md5($newPass);
+            $cliente->save();
+            session()->flash('message_sucesso', 'Email enviado com sua nova senha, aguarde o recebimento...');
+            return redirect('/autenticar/esqueceu_a_senha');
+        }else{
+            session()->flash('message_sucesso', 'Nada configurado.');
+            return redirect('/autenticar');
+        }
+        
+        
     }
 
+}
+
+private function sendSmsSenha($phone, $cod){
+    $nomeEmpresa = getenv('SMS_NOME_EMPRESA');
+    $nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+    $nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+    $content = $nomeEmpresa. ", sua nova senha é ". $cod;
+    $textMessageService = new TextMessageService(getenv('SMS_KEY'));
+    $res = $textMessageService->send("Sender", $content, [$phone]);
+    return $res;
 }
 
 private function randomPassword() {

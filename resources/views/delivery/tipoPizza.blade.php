@@ -40,7 +40,8 @@
 	<form action="/pizza/escolherSabores" method="get">
 		<section class="blog_w3ls py-5">
 			<div class="container pb-xl-5 pb-lg-3">
-
+				<input type="hidden" name="categoria" value="{{$categoria->id}}">
+				
 				<div class="container">
 
 					<fieldset class="form-group">

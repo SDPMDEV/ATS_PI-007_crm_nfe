@@ -161,9 +161,7 @@ table tbody{
 						<div class="col s5 offset-s1">
 							<button style="width: 100%" onclick="verItens()" href="" class="btn">Ver todos os itens</button>
 						</div>
-						<div class="col s12">
-							<h5>Total: <strong id="total-venda" class="green-text">R$ 0,00</strong></h5>
-						</div>
+						
 
 					</div>
 
@@ -180,7 +178,9 @@ table tbody{
 							</select>
 							<label>Tipo de Pagamento</label>
 						</div>
+
 					</div>
+					
 
 					<div class="row">
 						<button id="finalizar-venda" style="width: 100%;" class="btn-large green modal-trigger disabled" href="#modal-venda">Finalizar Venda</button>

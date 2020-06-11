@@ -53,6 +53,13 @@ class ItemPedido extends Model
             }
             $nome .= " | Tamanho: " . $this->tamanho->nome;
 
+            if(sizeof($this->itensAdicionais) > 0){
+                $nome .= " | Adicional: ";
+                foreach($this->itensAdicionais as $a){
+                    $nome .= $a->adicional->nome;
+                }
+            }
+
             if($this->observacao != ''){
                $nome .= " | " .$this->observacao;
             }
