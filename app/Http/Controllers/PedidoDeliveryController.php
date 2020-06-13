@@ -270,16 +270,27 @@ class PedidoDeliveryController extends Controller
 			}
 
 			$i->valorAdicional = $valorAdicional;
-
-			if(count($i->sabores) > 0){
+			$somaValores = 0;
+			if(sizeof($i->sabores) > 0){
 				$i->sabores;
 
 				$maiorValor = 0;
+
 				foreach($i->sabores as $sb){
+
+					
 					$sb->produto->produto;
+					
 					$v = $sb->maiorValor($sb->sabor_id, $i->tamanho_id);
+					$somaValores += $v;
 					if($v > $maiorValor) $maiorValor = $v;
+
+
 				}
+				if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+					$maiorValor = $somaValores/sizeof($i->sabores);
+				}
+
 				$i->maiorValor = $maiorValor;
 			}else{
 				$i->produto->valor_venda = $i->produto->valor;
@@ -389,7 +400,7 @@ class PedidoDeliveryController extends Controller
 		if($tokens == null){
 			$fields['included_segments'] = array('All');
 			if($data['image'] != '')
-			$fields['chrome_web_image'] = $data['image'];
+				$fields['chrome_web_image'] = $data['image'];
 		}else{
 			$fields['include_player_ids'] = $tokens;
 		}

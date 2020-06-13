@@ -45,11 +45,16 @@ class PedidoDelivery extends Model
 
 				if(count($i->sabores) > 0){
 					$maiorValor = 0;
+					$somaValores = 0;
 					foreach($i->sabores as $sb){
 						$v = $sb->maiorValor($sb->sabor_id, $i->tamanho_id);
+						$somaValores += $v;
 						if($v > $maiorValor) $maiorValor = $v;
 					}
-					$total += $maiorValor;
+					if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+						$maiorValor = number_format(($somaValores/sizeof($isabores)),2);
+					}
+					$total += $i->quantidade * $maiorValor;
 				}else{
 					$total += $i->quantidade * $i->produto->valor;
 				}

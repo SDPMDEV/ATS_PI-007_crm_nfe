@@ -6,10 +6,14 @@ var MAXIMOSABORES = 0;
 var ADICIONAISESCOLHIDOS = [];
 var TODOSSABORES = [];
 var maiorValorPizza = 0;
+var DIVISAO_VALOR_PIZZA = 0;
+var VALOR_PIZZA= 0;
 
 $(function () {
+
+  DIVISAO_VALOR_PIZZA = $('#DIVISAO_VALOR_PIZZA').val();
+
   verificaUnidadeCompra();
-  
 
   // console.log($('#composto').val())
   if($('#composto').val() == 'true'){
@@ -57,7 +61,6 @@ $(function () {
     getProduto(v[0], (data) => {
 
       $('#valor').val(data.valor_venda)
-
       console.log(data)
       if(data.delivery && data.delivery.pizza.length > 0){
         setaTamanhosPizza(data.delivery)
@@ -227,12 +230,13 @@ function getSaboresPizza(){
   console.log(maiorValorPizza)
   $.get(path+'/pizza/pizzas', {tamanho: TAMANHOPIZZASELECIONADO})
   .done((data) => {
+
     let js = JSON.parse(data);
     console.log(js)
     let tags = [];
     TODOSSABORES = js;
     js.map((v) => {
-
+      console.log(v)
       if(v.produto.delivery && v.produto.delivery.galeria.length > 0)
         tags[v.produto.nome] = path+'imagens_produtos/'+v.produto.delivery.galeria[0].path
       else
@@ -309,12 +313,22 @@ $('#sabores').on('chip.add', function(e, chip){
   if(SABORESESCOLHIDOS.length >= MAXIMOSABORES-1){
     $('#sabores input').css('display', 'none')
   }
-
+  let soma = 0;
   TODOSSABORES.map((v) => {
-    if(v.tamanhoValor > maiorValorPizza) maiorValorPizza = v.tamanhoValor;
-  })
+    console.log(v)
+    console.log(SABORESESCOLHIDOS)
+    if(SABORESESCOLHIDOS.includes(v.produto.nome)){
+      if(DIVISAO_VALOR_PIZZA == 0){
+        if(v.tamanhoValor > maiorValorPizza) maiorValorPizza = v.tamanhoValor;
+        $('#valor').val(maiorValorPizza)
+      }else{
 
-  $('#valor').val(maiorValorPizza)
+        soma += parseFloat(v.tamanhoValor);
+      }
+    }
+  })
+  let calc = (soma + parseFloat(VALOR_PIZZA) )/(SABORESESCOLHIDOS.length + 1);
+  $('#valor').val(calc.toFixed(2));
 
 
 });
@@ -333,6 +347,7 @@ $('#sabores').on('chip.delete', function(e, chip){
 $('#tamanhos').on('chip.select', function(e, chip){
   console.log(chip.item)
   maiorValorPizza = chip.item.valor;
+  VALOR_PIZZA = chip.item.valor;
   $('#valor').val(maiorValorPizza)
   TAMANHOPIZZASELECIONADO = chip.item.tamanho_id;
   MAXIMOSABORES = chip.item.tamanho.maximo_sabores;

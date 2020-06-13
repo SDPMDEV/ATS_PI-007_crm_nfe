@@ -16,7 +16,7 @@
 		<div class="card">
 			<div class="row">
 				<div class="col s12">
-					<h4 class="center-align">EMISSÃO DE CT-E</h4>
+					<h4 class="center-align">EMISSÃO DE CT-e</h4>
 					<h5 class="grey-text">DADOS INICIAIS</h5>
 					<div class="row">
 						<div class="col s4">

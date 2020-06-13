@@ -66,6 +66,10 @@ class ProdutoRestController extends Controller
 		
 	}
 
+	public function dividePizza(){
+		return response()->json(getenv("DIVISAO_VALOR_PIZZA"), 200);
+	}
+
 	public function pizzaValorPorTamanho(Request $request){
 		$produto = Produto::
 		where('id', $request->produto)

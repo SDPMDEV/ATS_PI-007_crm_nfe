@@ -102,10 +102,15 @@
 							@if(count($i->sabores) > 0)
 							<?php 
 							$maiorValor = 0; 
-
+							$somaValores = 0;
 							foreach($i->sabores as $it){
 								$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
+								$somaValores += $v;
 								if($v > $maiorValor) $maiorValor = $v;
+							}
+
+							if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+								$maiorValor = number_format(($somaValores/sizeof($i->sabores)),2);
 							}
 
 							$total += $maiorValor * $i->quantidade;
@@ -137,7 +142,7 @@
 						</tbody>
 						<tfoot>
 							<tr class="visible-xs">
-								<td class="text-center">Total do pedido: <strong style="color: red">R$ {{number_format($geral, 2, ',', '.')}}</strong>
+								<td class="text-center">Total do pedido: <strong style="color: red">R$ {{number_format($pedido->valor_total, 2, ',', '.')}}</strong>
 								</td>
 
 							</tr>

@@ -41,7 +41,7 @@ class DFeController extends Controller
 
 		$dfe_service = new DFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -76,7 +76,7 @@ class DFeController extends Controller
 
 		$dfe_service = new DFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -121,7 +121,7 @@ class DFeController extends Controller
 
 		$dfe_service = new DFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -175,7 +175,7 @@ class DFeController extends Controller
 
 		$dfe_service = new DFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,

@@ -29,4 +29,5 @@ class ItemPizzaPedido extends Model
 
 		return $p->valor ?? 0;
 	}
+
 }

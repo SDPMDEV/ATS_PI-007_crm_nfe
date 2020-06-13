@@ -7,7 +7,7 @@
 <div class="main-banner-2">
 
 </div>
-<?php $maiorValor = 0; ?>
+
 
 <section class="portfolio py-5">
 	<div class="container py-xl-5 py-lg-3">
@@ -137,9 +137,7 @@
 				<div class="card border-0">
 					<div class="card-header p-0">
 
-						<?php 
-						if($s['valorPizza'] > $maiorValor) $maiorValor = $s['valorPizza'];
-						?>
+
 						<a href="#!">
 							@if(count($s['galeria']) > 0)
 							<img src="/imagens_produtos/{{$s['galeria'][0]->path}}" 
@@ -178,7 +176,7 @@
 <a href="/pizza/adicionais" type="button" id="finalizar-venda" class="btn btn-success btn-lg btn-block @if(count($saboresIncluidos) < session('tamanho_pizza')['sabores'] )
 disabled
 @endif">
-<span class="fa fa-check mr-2"></span> ADICIONAR <strong id="total">R$ {{number_format($maiorValor, 2)}}</strong>
+<span class="fa fa-check mr-2"></span> ADICIONAR <strong id="total">R$ {{number_format($valorPizza, 2)}}</strong>
 </a>
 <br>
 
@@ -200,7 +198,7 @@ disabled
 							<div class="card border-0">
 								<div class="card-header p-0">
 									<a href="single.html">
-										<img src="" id="img" class="card-img-bottom img-fluid" alt="image">
+										<img style="height: 200px; width: 100%" src="" id="img" class="card-img-bottom img-fluid" alt="image">
 									</a>
 
 								</div>

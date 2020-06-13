@@ -105,7 +105,7 @@ class PedidoRestController extends Controller
 					'desativado' => false,
 					'rua' => '',
 					'numero' => '',
-					'bairro_id' => '',
+					'bairro_id' => null,
 					'referencia' => '',
 					'telefone' => '', 
 					'nome' => ''

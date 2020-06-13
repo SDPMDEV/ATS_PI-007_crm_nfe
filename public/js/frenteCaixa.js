@@ -90,7 +90,7 @@ $(function () {
 		}
 		let cont = 1;
 		itensPedido.map((v) => {
-
+			console.log(v)
 			let nome = '';
 			let valorUnit = 0;
 			if(v.sabores.length > 0){

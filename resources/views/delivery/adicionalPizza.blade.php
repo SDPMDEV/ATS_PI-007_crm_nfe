@@ -26,7 +26,9 @@
 				<input type="hidden" value="{{json_encode($sabores)}}" id="sabores">
 				<input type="hidden" value="{{$tamanho}}" id="tamanho">
 				<h3>Valor R$ <strong id="valor_produto">{{$maiorValor}}</strong></span></h3>
+				@if(getenv("DIVISAO_VALOR_PIZZA") == 0)
 				<p>Permanece o preço do sabor com maior valor.</p>
+				@endif
 			</div>
 
 

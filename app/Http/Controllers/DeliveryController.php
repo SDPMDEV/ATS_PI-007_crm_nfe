@@ -73,16 +73,16 @@ class DeliveryController extends Controller
             ->with('title', 'TIPO DA PIZZA'); 
 
         }else{
-         return view('delivery/produtos')
-         ->with('produtos', $categoria->produtos)
-         ->with('categoria', $categoria)
-         ->with('config', $this->config)
-         ->with('title', 'PRODUTOS'); 
-     }
+           return view('delivery/produtos')
+           ->with('produtos', $categoria->produtos)
+           ->with('categoria', $categoria)
+           ->with('config', $this->config)
+           ->with('title', 'PRODUTOS'); 
+       }
 
- }
+   }
 
- public function verProduto($id){
+   public function verProduto($id){
 
     $produto = ProdutoDelivery
     ::where('id', $id)
@@ -117,6 +117,10 @@ public function escolherSabores(Request $request){
     $sabores = session('sabores');
 
     $saboresIncluidos = [];
+    $valorPizza;
+    $somaValores = 0;
+    $valorPizza = 0;
+    $maiorValor = 0;
     if($sabores){
         foreach($sabores as $s){
             $p = ProdutoDelivery::
@@ -125,16 +129,24 @@ public function escolherSabores(Request $request){
 
             $p->produto;
             $p->galeria;
+            
 
             foreach($p->pizza as $pz){
                 if($tamanho['tamanho'] == $pz->tamanho->nome){
                     $valor = $pz->valor;
                 }
             }
-            $p->valorPizza = $valor;
+            $somaValores += $p->valorPizza = $valor;
+            if($valor > $maiorValor) $maiorValor = $valor;
 
             array_push($saboresIncluidos, $p);
         }
+    }
+
+    if(getenv("DIVISAO_VALOR_PIZZA") == 1 && sizeof($sabores) > 0){
+        $valorPizza = $somaValores/sizeof($sabores);
+    }else{
+        $valorPizza = $maiorValor;
     }
 
     return view('delivery/pizzas')
@@ -142,6 +154,7 @@ public function escolherSabores(Request $request){
     ->with('config', $this->config)
     ->with('pizzaJs', true)
     ->with('categoria', $categoria)
+    ->with('valorPizza', $valorPizza)
     ->with('saboresIncluidos', $saboresIncluidos)
     ->with('title', 'PIZZAS'); 
 }
@@ -165,6 +178,9 @@ public function pesquisa(Request $request){
 
     $sabores = session('sabores');
     $saboresIncluidos = [];
+    $somaValores = 0;
+    $valorPizza = 0;
+    $maiorValor = 0;
     if($sabores){
         foreach($sabores as $s){
             $p = ProdutoDelivery::
@@ -180,10 +196,16 @@ public function pesquisa(Request $request){
                     $valor = $pz->valor;
                 }
             }
+            $somaValores += $p->valorPizza = $valor;
             $p->valorPizza = $valor;
 
             array_push($saboresIncluidos, $p);
         }
+    }
+    if(getenv("DIVISAO_VALOR_PIZZA") == 1 && sizeof($sabores) > 0){
+        $valorPizza = $somaValores/sizeof($sabores);
+    }else{
+        $valorPizza = $maiorValor;
     }
 
     return view('delivery/pizzas')
@@ -191,6 +213,7 @@ public function pesquisa(Request $request){
     ->with('config', $this->config)
     ->with('pizzaJs', true)
     ->with('pesquisa', true)
+    ->with('valorPizza', $valorPizza)
     ->with('saboresIncluidos', $saboresIncluidos)
     ->with('title', 'PIZZAS'); 
 }
@@ -205,6 +228,7 @@ public function adicionais(){
         $tamanhoId = 0;
 
         $maiorValor = 0;
+        $somaValores = 0;
         if($sabores){
             foreach($sabores as $s){
                 $p = ProdutoDelivery::
@@ -223,17 +247,21 @@ public function adicionais(){
                 foreach($p->pizza as $t){
                     if($t->tamanho->nome == $tamanho['tamanho']){
                         $tamanhoId = $t->tamanho->id;
+                        $somaValores += $t->valor;
                         if($t->valor > $maiorValor){
                             $maiorValor = $t->valor;
                         }
                     }
                 }
             }
+            if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+                $maiorValor = number_format(($somaValores/sizeof($sabores)),2);
+            }
         }
+
 
         $produto = $saboresIncluidos[0];
 
-    // print_r($produto->pizza);
 
         return view('delivery/adicionalPizza')
         ->with('maiorValor', $maiorValor)
@@ -251,26 +279,30 @@ public function adicionais(){
 }
 
 public function pizzas(Request $request){
-    $categoria = CategoriaProdutoDelivery::
+    $categorias = CategoriaProdutoDelivery::
     where('nome', 'like', '%izza%')
-    ->first();
+    ->get();
+    $produtos = [];
+    foreach($categorias as $categoria){
+        foreach($categoria->produtos as $p){
+            if($p->produto->delivery){
+                $p->produto->delivery->galeria;
+                foreach($p->produto->delivery->pizza as $pp){
+                    if($request->tamanho == $pp->tamanho_id){
+                     $p->tamanhoValor = $pp->valor;
+                 }
+             }
 
-    foreach($categoria->produtos as $p){
-        if($p->produto->delivery){
-            $p->produto->delivery->galeria;
-            foreach($p->produto->delivery->pizza as $pp){
-                if($request->tamanho == $pp->tamanho_id){
-                   $p->tamanhoValor = $pp->valor;
-               }
-           }
+         } else{
+           $p->produto;
+           $p->tamanhoValor = 0;
+       }
 
-       } else{
-         $p->produto;
-         $p->tamanhoValor = 0;
-     }
- }
+       array_push($produtos, $p);
+   }
+}
 
- echo json_encode($categoria->produtos);
+echo json_encode($produtos);
 }
 
 

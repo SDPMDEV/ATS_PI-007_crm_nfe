@@ -292,13 +292,15 @@ class NFeService{
 			$nfe->tagIPI($std);
 
 			//TAG ANP
-			$stdComb = new \stdClass();
-			$stdComb->item = 1; 
-			$stdComb->cProdANP = $i->produto->codigo_anp;
-			$stdComb->descANP = $i->produto->descricao_anp; 
-			$stdComb->UFCons = $venda->cliente->cidade->uf;
+			if($i->produto->descricao_anp != ''){
+				$stdComb = new \stdClass();
+				$stdComb->item = 1; 
+				$stdComb->cProdANP = $i->produto->codigo_anp;
+				$stdComb->descANP = $i->produto->descricao_anp; 
+				$stdComb->UFCons = $venda->cliente->cidade->uf;
 
-			$nfe->tagcomb($stdComb);
+				$nfe->tagcomb($stdComb);
+			}
 		}
 
 
@@ -907,6 +909,16 @@ class NFeService{
 			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $i->quantidade) * 
 				($i->produto->perc_cofins/100));
 			$COFINS = $nfe->tagCOFINS($stdCOFINS);
+
+			if($i->produto->descricao_anp != ''){
+				$stdComb = new \stdClass();
+				$stdComb->item = 1; 
+				$stdComb->cProdANP = $i->produto->codigo_anp;
+				$stdComb->descANP = $i->produto->descricao_anp; 
+				$stdComb->UFCons = $venda->cliente->cidade->uf;
+
+				$nfe->tagcomb($stdComb);
+			}
 		}
 
 		//ICMS TOTAL

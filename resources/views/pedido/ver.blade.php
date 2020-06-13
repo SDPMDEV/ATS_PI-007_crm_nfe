@@ -14,7 +14,7 @@
 		@endif
 
 		<h3>Comanda: {{$pedido->comanda}}</h3>
-
+		<input type="hidden" id="DIVISAO_VALOR_PIZZA" value="{{getenv('DIVISAO_VALOR_PIZZA')}}" name="">
 		@if($pedido->observacao != '')
 		<h5>Observação: <strong>{{$pedido->observacao}}</strong></h5>
 		@endif
@@ -299,11 +299,13 @@
 
 	</div>
 
+	@if($pedido->rua != '')
 	<div class="col s12">
 		<p>Nome: <strong class="red-text">{{$pedido->nome}}</strong></p>
 		<p>Rua: <strong class="red-text">{{$pedido->rua}}, {{$pedido->numero}}</strong>, Telefone: <strong class="red-text">{{$pedido->telefone}}</strong></p>
 		<p>Refêrencia: <strong class="red-text">{{$pedido->referencia}}</strong></p>
 	</div>
+	@endif
 
 	<div class="row">
 		<div class="col s12">

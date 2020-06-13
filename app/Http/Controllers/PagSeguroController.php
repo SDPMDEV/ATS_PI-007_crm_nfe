@@ -197,13 +197,28 @@ class PagSeguroController extends Controller
 					$total += $a->adicional->valor * $i->quantidade;
 				}
 				
-				if(count($i->sabores) > 0){
-					$maiorValor = 0; 
-					foreach($i->sabores as $it){
-						$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
-						if($v > $maiorValor) $maiorValor = $v;
+				if(sizeof($i->sabores) > 0){
+
+					//INICIO DIVISAO_VALOR_PIZZA
+					if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+
+						$somaValores = 0; 
+						foreach($i->sabores as $it){
+							$somaValores += $it->maiorValor($it->produto->id, $i->tamanho_id);
+							// if($v > $maiorValor) $maiorValor = $v;
+						}
+						$total += $somaValores/sizeof($i->sabores);
+
+					}else{
+						$maiorValor = 0; 
+						foreach($i->sabores as $it){
+							$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
+							if($v > $maiorValor) $maiorValor = $v;
+						}
+						$total += ($maiorValor * $i->quantidade);
 					}
-					$total += ($maiorValor * $i->quantidade);
+
+					//FIM DIVISAO_VALOR_PIZZA
 				}else{
 					$total += ($i->produto->valor * $i->quantidade);
 				}
@@ -299,6 +314,7 @@ class PagSeguroController extends Controller
 
 	public function efetuaPagamentoApp(Request $request){
 		$json = $request;
+		$pedido = PedidoDelivery::find($request->pedido);
 		// return response()->json($json->endereco_id, 200);
 
 		$rua = getenv("RUA_PADRAO");
@@ -324,15 +340,15 @@ class PagSeguroController extends Controller
 			'itemId1' => '0001',
 			'itemQuantity1' => '1',
 			'itemDescription1' => $json->produto_nome,
-			'itemAmount1' => $json->total,
+			'itemAmount1' => number_format($json->total, 2),
 
 			'notificationURL' => getenv('PAGSEGURO_NOTIFICATION'),
 			'reference' => 'codigo0001',
 
 			'senderName' => $json->nome_cartao,
 			'senderAreaCode' => substr($json->telefone, 0, 2),
-			'senderPhone' => substr($json->telefone, 3, 12),
-			'senderEmail' => $json->email,
+			'senderPhone' => str_replace("-", "", substr($json->telefone, 3, 12)),
+			'senderEmail' => $pedido->cliente->email,
 			'senderCPF' => $json->cpf,
 			'senderHash' => $json->hashCliente,
 
@@ -348,14 +364,14 @@ class PagSeguroController extends Controller
 
 			'creditCardToken' => $json->creditCardToken,
 			'installmentQuantity' => (int) $json->parcelas,
-			'installmentValue' => $json->valor,
+			'installmentValue' => number_format($json->valor, 2),
 			'noInterestInstallmentQuantity' => '2',
 
 			'creditCardHolderName' => $json->nome_cartao,
 			'creditCardHolderCPF' => $json->cpf,
 			'creditCardHolderBirthDate' => '27/10/1987',
 			'creditCardHolderAreaCode' => substr($json->telefone, 0, 2),
-			'creditCardHolderPhone' => substr($json->telefone, 3, 12),
+			'creditCardHolderPhone' => str_replace("-", "", substr($json->telefone, 3, 12)),
 
 			'reference' => $referencia,
 
@@ -397,7 +413,7 @@ class PagSeguroController extends Controller
 				$pedido = $this->incluiPedidoCartaoApp($json, $referencia, $xml->code, $consulta->original->status);
 				$arr = [
 					'consulta' => $consulta,
-					'pedido_id' => $pedido->id
+					'pedido_id' => $pedido
 				];
 				return response()->json($arr, 200);
 
@@ -422,81 +438,78 @@ class PagSeguroController extends Controller
 		->first();
 
 		if($pedido){
-			$rs = $this->validaPedidoNovo($pedido);
-			if($rs){
+			
 
-				$total = 0;
+			$total = 0;
 
-				foreach($pedido->itens as $i){
+			foreach($pedido->itens as $i){
 
-					if(count($i->sabores) > 0){
-						$maiorValor = 0; 
-						foreach($i->sabores as $it){
-							$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
-							if($v > $maiorValor) $maiorValor = $v;
-						}
-						$total += $maiorValor * $i->quantidade;
-					}else{
-						$total += ($i->produto->valor * $i->quantidade);
+				if(count($i->sabores) > 0){
+					$maiorValor = 0; 
+					foreach($i->sabores as $it){
+						$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
+						if($v > $maiorValor) $maiorValor = $v;
 					}
-
-					foreach($i->itensAdicionais as $a){
-						$total += $a->adicional->valor * $i->quantidade;
-					}
+					$total += $maiorValor * $i->quantidade;
+				}else{
+					$total += ($i->produto->valor * $i->quantidade);
 				}
 
-				if($request->desconto){
-					$total -= str_replace(",", ".", $request->desconto);
+				foreach($i->itensAdicionais as $a){
+					$total += $a->adicional->valor * $i->quantidade;
 				}
-
-				if($request->endereco_id != 'balcao'){
-					$config = DeliveryConfig::first();
-					$total += $config->valor_entrega;
-				}
-
-				$cupom = null;
-				if($request->cupom != 'null'){
-					$c = CodigoDesconto::
-					where('codigo', $request->cupom)
-					->first();
-					$cupom = $c->id;
-
-					if($c->cliente_id != null){
-						$c->ativo = false;
-						$c->save();
-					}
-				}
-
-				$pedido->forma_pagamento = $request->forma_pagamento;
-				$pedido->observacao = $request->observacao ?? '';
-				$pedido->endereco_id = $request->forma_entrega == 'balcao' ? null : $request->endereco_id;
-				$pedido->valor_total = $total;
-				$pedido->telefone = $request->telefone ?? '';
-				$pedido->troco_para = $request->troco ?? 0;
-				$pedido->data_registro = date('Y-m-d H:i:s');
-				$pedido->cupom_id = $cupom;
-				$pedido->desconto = $request->desconto;
-
-				$pedido->save();
-
-				$pagseguro = PedidoPagSeguro::create(
-					[
-						'pedido_delivery_id' => $pedido->id,
-						'numero_cartao' => $request->numero_cartao,
-						'cpf' => $request->cpf,
-						'nome_impresso' => $request->nome_cartao,
-						'codigo_transacao' => $codigoTransacao,
-						'referencia' => $referencia,
-						'parcelas' => $request->parcelas,
-						'bandeira' => $request->bandeira,
-						'status' => $status
-					]
-				);
-
-				return response()->json($pedido, 200);
-			}else{
-				return response()->json(false, 403);
 			}
+
+			if($request->desconto){
+				$total -= str_replace(",", ".", $request->desconto);
+			}
+
+			if($request->endereco_id != 'balcao'){
+				$config = DeliveryConfig::first();
+				$total += $config->valor_entrega;
+			}
+
+			$cupom = null;
+			if($request->cupom != 'null'){
+				$c = CodigoDesconto::
+				where('codigo', $request->cupom)
+				->first();
+				$cupom = $c->id;
+
+				if($c->cliente_id != null){
+					$c->ativo = false;
+					$c->save();
+				}
+			}
+
+			$pedido->forma_pagamento = $request->forma_pagamento;
+			$pedido->observacao = $request->observacao ?? '';
+			$pedido->endereco_id = $request->forma_entrega == 'balcao' ? null : $request->endereco_id;
+			$pedido->valor_total = $total;
+			$pedido->telefone = $request->telefone ?? '';
+			$pedido->troco_para = $request->troco ?? 0;
+			$pedido->data_registro = date('Y-m-d H:i:s');
+			$pedido->cupom_id = $cupom;
+			$pedido->desconto = $request->desconto;
+
+			$pedido->save();
+
+			$pagseguro = PedidoPagSeguro::create(
+				[
+					'pedido_delivery_id' => $pedido->id,
+					'numero_cartao' => $request->numero_cartao,
+					'cpf' => $request->cpf,
+					'nome_impresso' => $request->nome_cartao,
+					'codigo_transacao' => $codigoTransacao,
+					'referencia' => $referencia,
+					'parcelas' => $request->parcelas,
+					'bandeira' => $request->bandeira,
+					'status' => $status
+				]
+			);
+
+			return $pedido;
+			
 		}else{
 			return response()->json(false, 404);
 		}

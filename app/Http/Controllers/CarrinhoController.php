@@ -231,9 +231,14 @@ class CarrinhoController extends Controller
 						$total += ($i->produto->valor * $i->quantidade);
 						if(count($i->sabores) > 0){
 							$maiorValor = 0;
+							$somaValores = 0;
 							foreach($i->sabores as $it){
 								$v = $it->maiorValor($it->sabor_id, $i->tamanho_id);
+								$somaValores += $v;
 								if($v > $maiorValor) $maiorValor = $v;
+							}
+							if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+								$maiorValor = number_format(($somaValores/sizeof($i->sabores)),2);
 							}
 							$total += $i->quantidade * $maiorValor;
 						}
@@ -299,9 +304,13 @@ class CarrinhoController extends Controller
 		$pedidos = PedidoDelivery::where('cliente_id', $clienteId)
 		->get();
 		$arr = [];
+		$cartaoInserido = [];
 		foreach($pedidos as $p){
 			if($p->forma_pagamento == 'pagseguro'){
-				array_push($arr, $p->pagseguro);
+				if(!in_array($p->pagseguro->numero_cartao, $cartaoInserido)){
+					array_push($arr, $p->pagseguro);
+					array_push($cartaoInserido, $p->pagseguro->numero_cartao);
+				}
 			}
 		}
 
@@ -324,9 +333,15 @@ class CarrinhoController extends Controller
 				
 				if(count($i->sabores) > 0){
 					$maiorValor = 0; 
+					$somaValores = 0;
 					foreach($i->sabores as $it){
 						$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
+						$somaValores += $v;
 						if($v > $maiorValor) $maiorValor = $v;
+					}
+
+					if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+						$maiorValor = number_format(($somaValores/sizeof($i->sabores)),2);
 					}
 					$total += ($maiorValor * $i->quantidade);
 				}else{

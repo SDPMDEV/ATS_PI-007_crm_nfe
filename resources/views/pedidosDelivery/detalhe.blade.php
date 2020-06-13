@@ -163,11 +163,17 @@
 							@if(count($i->sabores) > 0)
 							<?php 
 							$maiorValor = 0; 
-
+							$somaValores = 0;
 							foreach($i->sabores as $it){
 								$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
+								$somaValores += $v;
 								if($v > $maiorValor) $maiorValor = $v;
 							}
+
+							if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+								$maiorValor = number_format(($somaValores/sizeof($i->sabores)),2);
+							}
+
 
 							?>
 							{{number_format($maiorValor, 2, ',', '.')}}
@@ -198,7 +204,7 @@
 							@endif
 						</td>
 						<?php  
-						if(count($i->sabores) > 0){
+						if(sizeof($i->sabores) > 0){
 							$subTotal = $subComAdicional = $maiorValor * $i->quantidade;
 						}else{
 							$subTotal = $subComAdicional = $i->produto->valor * $i->quantidade;

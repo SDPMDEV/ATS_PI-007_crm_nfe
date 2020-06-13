@@ -34,7 +34,7 @@ Route::group(['prefix' => 'appProduto'],function(){
 	Route::post('/saboresPorTamanho', 'AppProdutoController@saboresPorTamanho');
 
 });
-
+ 
 Route::group(['prefix' => 'appCarrinho'],function(){
 	Route::get('/index', 'AppCarrinhoController@index')->middleware('token');
 	Route::get('/historico', 'AppCarrinhoController@historico')->middleware('token');
@@ -59,7 +59,8 @@ Route::group(['prefix' => 'pedidoProduto'],function(){
 	Route::get('/saboresPorTamanho', 'ProdutoRestController@saboresPorTamanho');
 	Route::get('/pizzaValorPorTamanho', 'ProdutoRestController@pizzaValorPorTamanho');
 	Route::get('/pesquisaRest', 'ProdutoRestController@pesquisa');
-
+	Route::get('/dividePizza', 'ProdutoRestController@dividePizza');
+ 
 });
 
 Route::group(['prefix' => 'pedidos'],function(){

@@ -293,14 +293,27 @@ private function addAtributes($itens){
 
       $i->valorAdicional = $valorAdicional;
 
+
+
       $maiorValor = 0;
+      $somaValores = 0; 
       foreach($i->sabores as $sb){
         $sb->produto->produto;
+        
         $v = $sb->maiorValor($sb->sabor_id, $i->tamanho_pizza_id);
-
+        $somaValores += $v;
         if($v > $maiorValor) $maiorValor = $v;
+
+        
       }
-      $i->maiorValor = $maiorValor;
+
+      if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+        $divide = sizeof($i->sabores);
+        $divide = $divide == 0 ? 1 : $divide; 
+        $i->maiorValor = $somaValores/$divide;
+      }
+
+      
     }
     $i->produto->valor_venda = $i->valor;
     $i->produto_id = $i->produto->id;
