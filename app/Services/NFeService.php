@@ -189,6 +189,11 @@ class NFeService{
 			$stdProd->NCM = $ncm;
 			$stdProd->CFOP = $config->UF != $venda->cliente->cidade->uf ?
 			$i->produto->CFOP_saida_inter_estadual : $i->produto->CFOP_saida_estadual;
+
+			$cest = $i->produto->CEST;
+			$cest = str_replace(".", "", $cest);
+			$stdProd->CEST = $cest;
+
 			$stdProd->uCom = $i->produto->unidade_venda;
 			$stdProd->qCom = $i->quantidade;
 			$stdProd->vUnCom = $this->format($i->valor);
@@ -246,6 +251,13 @@ class NFeService{
 				$stdICMS->item = $itemCont; 
 				$stdICMS->orig = 0;
 				$stdICMS->CSOSN = $i->produto->CST_CSOSN;
+
+				if($i->produto->CST_CSOSN == '500'){
+					$stdICMS->vBCSTRet = 0.00;
+					$stdICMS->pST = 0.00;
+					$stdICMS->vICMSSTRet = 0.00;
+				}
+
 				$stdICMS->pCredSN = $this->format($i->produto->perc_icms);
 				$stdICMS->vCredICMSSN = $this->format($i->produto->perc_icms);
 				$ICMS = $nfe->tagICMSSN($stdICMS);
@@ -814,9 +826,11 @@ class NFeService{
 			$ncm = $i->produto->NCM;
 			$ncm = str_replace(".", "", $ncm);
 			$stdProd->NCM = $ncm;
-			// $stdProd->CFOP = '5102';
-			$stdProd->CFOP = $i->produto->CFOP_saida_estadual;
 
+			$stdProd->CFOP = $i->produto->CFOP_saida_estadual;
+			$cest = $i->produto->CEST;
+			$cest = str_replace(".", "", $cest);
+			$stdProd->CEST = $cest;
 			$stdProd->uCom = $i->produto->unidade_venda;
 			$stdProd->qCom = $i->quantidade;
 			$stdProd->vUnCom = $this->format($i->valor);

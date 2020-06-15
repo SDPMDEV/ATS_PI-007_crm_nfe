@@ -202,7 +202,8 @@ class AppProdutoController extends Controller
 				'endereco_id' => NULL,
 				'troco_para' => 0,
 				'desconto' => 0,
-				'cupom_id' => NULL
+				'cupom_id' => NULL,
+				'app' => true
 			]);
 		} // se nao usa o ja existe
 

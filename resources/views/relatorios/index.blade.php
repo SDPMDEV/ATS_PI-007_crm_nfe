@@ -7,6 +7,14 @@
 </style>
 <div class="row">
 
+	@if(session()->has('message'))
+	<div class="row">
+		<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
+			<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
+		</div>
+	</div>
+	@endif
+
 	<div class="col s6">
 		<div class="card relatorios">
 			<div class="row">

@@ -33,7 +33,19 @@ class CompraFiscalController extends Controller
 
 	
 	public function index(){
+		$natureza = Produto::firstNatureza();
+		if($natureza == null){
+            session()->flash('color', 'red');
+            session()->flash('message', 'Cadastre uma natureza de operação!');
+            return redirect('/naturezaOperacao');
+        }
 
+        $categoria = Categoria::first();
+        if($categoria == null){
+        	session()->flash('color', 'red');
+            session()->flash('message', 'Cadastre uma categoria de produto!');
+            return redirect('/categorias');
+        }
 		return view('compraFiscal/new')
 		->with('title', 'Compra Fiscal');
 	}

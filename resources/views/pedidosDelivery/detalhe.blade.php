@@ -10,6 +10,7 @@
 		<div class="row">
 			<div class="col s12">
 				<h4>Cliente: <strong class="cyan-text">{{$pedido->cliente->nome}}</strong></h4>
+				<h4>Telefone: <strong class="cyan-text">{{$pedido->telefone}}</strong></h4>
 				<h4>Horario: <strong class="cyan-text">{{ \Carbon\Carbon::parse($pedido->data_registro)->format('H:i:s')}}</strong></h4>
 				<h4>Estado Atual: @if($pedido->estado == 'nv')
 					<strong class="blue-text">NOVO</strong>
@@ -49,11 +50,15 @@
 				<a target="_blank" class="btn cyan waves-light green" href="/pedidosDelivery/print/{{$pedido->id}}">
 					<i class="material-icons left">print</i> Imprimir Pedido
 				</a>
-				@if(count($pedido->cliente->tokensWeb) > 0 || count($pedido->cliente->tokens) > 0)
+				@if($pedido->app == false)
 				<a class="btn cyan waves-light blue modal-trigger" href="#modal-push">
 					<i class="material-icons left">notifications</i> Enviar Push
 				</a>
 				@endif
+
+				<a onclick="setaTelefone('{{$pedido->telefone}}')" class="btn cyan waves-light orange modal-trigger" href="#modal-sms">
+					<i class="material-icons left">send</i> Enviar SMS
+				</a>
 
 
 			</div>
@@ -305,13 +310,13 @@
 		<div class="row">
 			<div class="col s6 input-field">
 				<input type="text" id="titulo-push">
-				<label>Titulo</label>
+				<label>Titulo Push</label>
 			</div>
 		</div>
 		<div class="row">
 			<div class="col s12 input-field">
 				<input type="text" id="texto-push">
-				<label>Texto</label>
+				<label>Texto Push</label>
 			</div>
 		</div>
 
@@ -323,7 +328,7 @@
 		</div>
 	</div>
 	<div class="modal-footer">
-		<a href="#!" id="btn-enviar-push" class="modal-action btn blue">Enviar</a>
+		<a href="#!" id="btn-enviar-push" class="modal-action btn blue">Enviar Push</a>
 		<a href="#!" class="modal-action modal-close btn grey">Fechar</a>
 	</div>
 </div>
@@ -339,6 +344,39 @@
 	</div>
 	<div class="modal-footer">
 		<a href="#!" class="modal-action modal-close btn grey">Fechar</a>
+	</div>
+</div>
+
+<div id="modal-sms" class="modal">
+	<div class="row">
+		<div class="col s2 offset-s5">
+			<i class="material-icons large orange-text">send</i>
+		</div>
+
+	</div>
+	<div class="modal-content">
+		<h4>Enviar SMS</h4>
+		<p>Saldo: <strong class="red-text">{{$saldoSms}}</strong></p>
+		<div class="row">
+			<div class="col s6 input-field">
+				<input type="tel" id="telefone-sms">
+				<label>Telefone SMS</label>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col s12 input-field">
+				<input type="text" value="Pedido saiu para entrega" id="texto-sms">
+				<label>Texto SMS</label>
+			</div>
+		</div>
+		@if($saldoSms == 0)
+		<p class="red-text">Saldo Vazio!!</p>
+		@endif
+	</div>
+	<div class="modal-footer">
+		<a href="#!" class="modal-action modal-close btn grey">Fechar</a>
+		<a href="#!" id="btn-enviar-sms" class="modal-action btn blue @if($saldoSms == 0) disabled @endif">Enviar SMS</a>
+
 	</div>
 </div>
 @endsection	

@@ -42,7 +42,7 @@ class Compra extends Model
 	public static function filtroData($dataInicial, $dataFinal){
 		$c = Compra::
 		select('compras.*')
-		->whereBetween('date_register', [$dataInicial, 
+		->whereBetween('compras.crated_at', [$dataInicial, 
 			$dataFinal]);
 
 		return $c->get();
@@ -53,7 +53,7 @@ class Compra extends Model
 		select('compras.*')
 		->join('fornecedors', 'fornecedors.id' , '=', 'compras.fornecedor_id')
 		->where('fornecedors.razao_social', 'LIKE', "%$fornecedor%")
-		->whereBetween('date_register', [$dataInicial, 
+		->whereBetween('compras.created_at', [$dataInicial, 
 			$dataFinal]);
 
 		return $c->get();

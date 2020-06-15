@@ -74,7 +74,8 @@ class CarrinhoController extends Controller
 					'endereco_id' => NULL,
 					'troco_para' => 0,
 					'desconto' => 0,
-					'cupom_id' => NULL
+					'cupom_id' => NULL,
+					'app' => false
 				]);
 			} // se nao usa o ja existe
 
@@ -137,7 +138,8 @@ class CarrinhoController extends Controller
 				'endereco_id' => NULL,
 				'troco_para' => 0,
 				'desconto' => 0,
-				'cupom_id' => NULL
+				'cupom_id' => NULL,
+				'app' => false
 				
 			]);
 		} // se nao usa o ja existe
@@ -259,6 +261,7 @@ class CarrinhoController extends Controller
 
 						$ultimoPedido = PedidoDelivery::
 						where('cliente_id', $cliente->id)
+						->where('valor_total', '>', 0)
 						->orderBy('id', 'desc')
 						->first();
 
@@ -362,7 +365,7 @@ class CarrinhoController extends Controller
 			}
 
 			$pedido->forma_pagamento = $data['forma_pagamento'];
-			$pedido->observacao = $data['observacao'] ?? '';
+			$pedido->observacao = $data['observacao'] ? substr($data['observacao'], 0, 50) : '';
 			$pedido->endereco_id = $data['endereco_id'] == 'balcao' ? null : $data['endereco_id'];
 			$pedido->valor_total = $total;
 			$pedido->telefone = $data['telefone'];
@@ -436,7 +439,8 @@ class CarrinhoController extends Controller
 				'endereco_id' => NULL,
 				'troco_para' => 0,
 				'cupom_id' => NULL,
-				'desconto' => 0
+				'desconto' => 0,
+				'app' => false
 			]);
 
 

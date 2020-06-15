@@ -242,6 +242,7 @@ class PagSeguroController extends Controller
 			$pedido->troco_para = $data['troco'] ? str_replace(",", ".", $data['troco']) : 0;
 			$pedido->data_registro = date('Y-m-d H:i:s');
 			$pedido->desconto = $data['desconto'] ? str_replace(",", ".", $data['desconto']) : 0;
+			$pedido->app = false;
 
 			if($data['cupom'] != ''){
 				$cupom = CodigoDesconto::
@@ -464,7 +465,7 @@ class PagSeguroController extends Controller
 			// 	$total -= str_replace(",", ".", $request->desconto);
 			// }
 
-			if($request->endereco_id != 'balcao'){
+			if($request->forma_entrega != 'balcao'){
 				$config = DeliveryConfig::first();
 				$total += $config->valor_entrega;
 			}
@@ -485,12 +486,13 @@ class PagSeguroController extends Controller
 			$pedido->forma_pagamento = $request->forma_pagamento;
 			$pedido->observacao = $request->observacao ?? '';
 			$pedido->endereco_id = $request->forma_entrega == 'balcao' ? null : $request->endereco_id;
-			$pedido->valor_total = $request->total;
+			$pedido->valor_total = $total;
 			$pedido->telefone = $request->telefone ?? '';
 			$pedido->troco_para = $request->troco ?? 0;
 			$pedido->data_registro = date('Y-m-d H:i:s');
 			$pedido->cupom_id = $cupom;
 			$pedido->desconto = $request->desconto;
+			$pedido->app = true;
 
 			$pedido->save();
 

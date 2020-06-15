@@ -43,6 +43,8 @@ class CreatePedidoDeliveriesTable extends Migration
             $table->foreign('cupom_id')->references('id')->on('codigo_descontos')->onDelete('cascade');
             $table->decimal('desconto', 10,2);
 
+            $table->boolean('app');
+
 
             $table->timestamps();
         });

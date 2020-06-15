@@ -42,11 +42,16 @@ class AppCarrinhoController extends Controller
 
 			$maiorValor = 0;
 			if(count($i->sabores) > 0){
+				$somaValores = 0;
 				foreach($i->sabores as $s){
 					$s->produto->produto;
 					$v = $s->maiorValor($s->sabor_id, $i->tamanho_id);
+					$somaValores += $v;
 					if($v > $maiorValor) $maiorValor = $v;
 				}
+			}
+			if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+				$maiorValor = $somaValores/sizeof($i->sabores);
 			}
 			$i->valorPizza = $maiorValor;
 			
@@ -121,9 +126,14 @@ class AppCarrinhoController extends Controller
 
 					if(count($i->sabores) > 0){
 						$maiorValor = 0; 
+						$somaValores = 0;
 						foreach($i->sabores as $it){
 							$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
+							$somaValores += $v;
 							if($v > $maiorValor) $maiorValor = $v;
+						}
+						if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+							$maiorValor = $somaValores/sizeof($i->sabores);
 						}
 						$total += $maiorValor * $i->quantidade;
 					}else{
@@ -139,7 +149,7 @@ class AppCarrinhoController extends Controller
 					$total -= str_replace(",", ".", $request->desconto);
 				}
 
-				if($request->endereco_id != 'balcao'){
+				if($request->forma_entrega != 'balcao'){
 					$config = DeliveryConfig::first();
 					$total += $config->valor_entrega;
 				}
@@ -207,11 +217,16 @@ class AppCarrinhoController extends Controller
 				$i->tamanho;
 				if(count($i->sabores) > 0){
 					$maiorValor = 0; 
+					$somaValores = 0;
 					foreach($i->sabores as $it){
 						$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
+						$somaValores += $v;
 						if($v > $maiorValor) $maiorValor = $v;
 
 						$it->produto->produto;
+					}
+					if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+						$maiorValor = $somaValores/sizeof($i->sabores);
 					}
 					$sub += $maiorValor * $i->quantidade;
 					$i->pPizza = true;
@@ -257,7 +272,8 @@ class AppCarrinhoController extends Controller
 				'endereco_id' => NULL,
 				'troco_para' => 0,
 				'cupom_id' => NULL,
-				'desconto' => 0
+				'desconto' => 0,
+				'app' => true
 			]);
 
 

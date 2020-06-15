@@ -10,6 +10,9 @@ use App\ClienteDelivery;
 use NFePHP\DA\NFe\PedidoPrint;
 use App\VendaCaixa;
 use App\ConfigNota;
+use Comtele\Services\CreditService;
+use Comtele\Services\TextMessageService;
+
 
 class PedidoDeliveryController extends Controller
 {
@@ -177,9 +180,17 @@ class PedidoDeliveryController extends Controller
 		::where('id', $id)
 		->first();
 
+		$saldoSms = 0;
+		$creditService = new CreditService(getenv('SMS_KEY'));
+
+		if(getenv("SMS_KEY") != '') {
+			$saldoSms = $creditService->get_my_credits();
+		} 
+		
 		return view('pedidosDelivery/detalhe')
 		->with('tipo', 'Detalhes do Pedido')
 		->with('pedido', $pedido)
+		->with('saldoSms', $saldoSms)
 		->with('pedidoDeliveryJs', true)
 		->with('title', 'Pedidos de Delivery');
 	}
@@ -353,6 +364,24 @@ class PedidoDeliveryController extends Controller
 		file_put_contents($public.'pdf/PEDIDODELIVERY.pdf',$pdf);
 		return redirect($public.'pdf/PEDIDODELIVERY.pdf');
 		// echo $pdf;
+	}
+
+	public function sendSms(Request $request){
+
+		$phone = $request['telefone'];
+		$msg = $request['texto'];
+		$res = $this->sendGo($phone, $msg);
+		echo json_encode($res);
+	}
+
+	private function sendGo($phone, $msg){
+		$nomeEmpresa = getenv('SMS_NOME_EMPRESA');
+		$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+		$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+		$content = $msg . " Att, $nomeEmpresa";
+		$textMessageService = new TextMessageService(getenv('SMS_KEY'));
+		$res = $textMessageService->send("Sender", $content, [$phone]);
+		return $res;
 	}
 
 	public function sendPush(Request $request){

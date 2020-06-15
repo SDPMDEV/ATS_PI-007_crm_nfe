@@ -85,6 +85,12 @@ class RelatorioController extends Controller
 			else return $a['data'] < $b['data'];
 		});
 
+		if(sizeof($arr) == 0){
+			session()->flash('color', 'red');
+			session()->flash("message", "Relatório sem registro!");
+			return redirect('/relatorios');
+		}
+
 		$p = view('relatorios/relatorio_venda')
 		->with('ordem', $ordem == 'asc' ? 'Menos' : 'Mais')
 
@@ -116,7 +122,7 @@ class RelatorioController extends Controller
 		}
 
 		$compras = Compra
-		::select(\DB::raw('DATE_FORMAT(compras.date_register, "%d-%m-%Y") as data, sum(compras.valor) as total, sum(item_compras.quantidade) as itens'))
+		::select(\DB::raw('DATE_FORMAT(compras.created_at, "%d-%m-%Y") as data, sum(compras.valor) as total, sum(item_compras.quantidade) as itens'))
 		->join('item_compras', 'item_compras.compra_id', '=', 'item_compras.id')
 		->orWhere(function($q) use ($data_inicial, $data_final){
 			if($data_final && $data_final){
@@ -130,6 +136,11 @@ class RelatorioController extends Controller
 		->limit($total_resultados ?? 1000000)
 		->get();
 
+		if(sizeof($compras) == 0){
+			session()->flash('color', 'red');
+			session()->flash("message", "Relatório sem registro!");
+			return redirect('/relatorios');
+		}
 
 		$p = view('relatorios/relatorio_compra')
 		->with('data_inicial', $request->data_inicial)
@@ -174,6 +185,8 @@ class RelatorioController extends Controller
 		// ->limit($total_resultados ?? 1000000)
 		->get();
 
+
+
 		$itensVendaCaixa = ItemVendaCaixa
 		::select(\DB::raw('produtos.id as id, produtos.nome as nome, produtos.valor_venda as valor_venda, sum(item_venda_caixas.quantidade) as total, sum(item_venda_caixas.quantidade * item_venda_caixas.valor) as total_dinheiro'))
 		->join('produtos', 'produtos.id', '=', 'item_venda_caixas.produto_id')
@@ -190,6 +203,12 @@ class RelatorioController extends Controller
 		->get();
 
 		$arr = $this->uneArrayProdutos($itensVenda, $itensVendaCaixa);
+
+		if(sizeof($arr) == 0){
+			session()->flash('color', 'red');
+			session()->flash("message", "Relatório sem registro!");
+			return redirect('/relatorios');
+		}
 
 		if($total_resultados){
 			$arr = array_slice($arr, 0, $total_resultados);
@@ -243,6 +262,12 @@ class RelatorioController extends Controller
 
 		->limit($total_resultados ?? 1000000)
 		->get();
+
+		if(sizeof($vendas) == 0){
+			session()->flash('color', 'red');
+			session()->flash("message", "Relatório sem registro!");
+			return redirect('/relatorios');
+		}
 
 
 		$p = view('relatorios/relatorio_clientes')

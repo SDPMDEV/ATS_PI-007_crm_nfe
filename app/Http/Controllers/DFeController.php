@@ -10,6 +10,7 @@ use NFePHP\NFe\Common\Standardize;
 use App\Cidade;
 use App\Produto;
 use App\Categoria;
+use App\Certificado;
 use App\Fornecedor;
 use App\Compra;
 use App\ContaPagar;
@@ -33,6 +34,19 @@ class DFeController extends Controller
 	public function index(){
 
 		$config = ConfigNota::first();
+
+		if($config == null){
+			session()->flash('color', 'red');
+			session()->flash('message', 'Configure o Emitente');
+			return redirect('configNF');
+		}
+
+		$certificado = Certificado::first();
+		if($certificado == null){
+			session()->flash('color', 'red');
+			session()->flash('message', 'Configure o Certificado');
+			return redirect('configNF');
+		}
 
 		$cnpj = str_replace(".", "", $config->cnpj);
 		$cnpj = str_replace("/", "", $cnpj);

@@ -101,6 +101,7 @@ Route::group(['prefix' => '/pedidosDelivery'], function(){
 	Route::get('/push/{id}', 'PedidoDeliveryController@push');
 	Route::get('/emAberto', 'PedidoDeliveryController@emAberto');
 	Route::post('/sendPush', 'PedidoDeliveryController@sendPush');
+	Route::post('/sendSms', 'PedidoDeliveryController@sendSms');
 
 });
 

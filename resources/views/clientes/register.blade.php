@@ -133,9 +133,9 @@
 							<select name="contribuinte">
 								<option value=""></option>
 								<option @if(isset($cliente) && $cliente->contribuinte == 1)
-									selected @endif value="1" @if(old('contribuinte') == 1) selected @endif>SIM</option>
+									selected @endif value="1">SIM</option>
 									<option @if(isset($cliente) && $cliente->contribuinte == 0)
-										selected @endif value="0" @if(old('contribuinte') == 0) selected @endif>NAO</option>
+										selected @endif value="0" >NAO</option>
 									</select>
 									<label>Contribuinte</label>
 

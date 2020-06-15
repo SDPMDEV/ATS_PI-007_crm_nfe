@@ -25,6 +25,38 @@ $('#btn-enviar-push').click(() => {
 	})
 })
 
+function setaTelefone(telefone){
+	telefone = telefone.replace(" ", "").replace("-", "")
+	$('#telefone-sms').val(telefone)
+	Materialize.updateTextFields();
+}
+
+$('#btn-enviar-sms').click(() => {
+
+
+	let texto = $('#texto-sms').val();
+	let telefone = $('#telefone-sms').val();
+
+	let js = {
+		telefone: telefone,
+		texto: texto,
+		cliente: $('#cliente').val(),
+		_token: $('#token').val()
+	}
+	console.log(js)
+	$.post(path+'pedidosDelivery/sendSms', js)
+	.done((success) => {
+		console.log(success)
+		alert('SMS Enviado')
+		$('#modal-sms').modal('close')
+
+	})
+	.fail((err) => {
+		console.log(err)
+		alert('Erro ao enviar SMS')
+	})
+})
+
 function consultar(codigo){
 	$('#preloader').css('display', 'block')
 	console.log(codigo)

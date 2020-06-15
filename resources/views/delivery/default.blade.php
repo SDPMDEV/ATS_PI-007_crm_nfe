@@ -63,6 +63,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 	}
 </style>
 
+<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+<script>
+  window.OneSignal = window.OneSignal || [];
+  OneSignal.push(function() {
+    OneSignal.init({
+      appId: "<?php echo getenv("ONE_SIGNAL_APP_ID") ?>",
+    });
+  });
+</script>
+
 <!-- //Web-Fonts -->
 </head>
 
@@ -393,10 +403,10 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 			<script src="https://www.gstatic.com/firebasejs/7.9.1/firebase-app.js"></script>
 			<!-- <script src="https://www.gstatic.com/firebasejs/5.9.1/firebase-analytics.js"></script> -->
 
-			<script src="https://www.gstatic.com/firebasejs/7.9.1/firebase-messaging.js"></script>
+			<!-- <script src="https://www.gstatic.com/firebasejs/7.9.1/firebase-messaging.js"></script>
 			<script src="https://www.gstatic.com/firebasejs/7.9.1/firebase-analytics.js"></script>
 
-			<script src="/jsd/token.js" type="text/javascript"></script>
+			<script src="/jsd/token.js" type="text/javascript"></script> -->
 
 			@endif
 		</body>

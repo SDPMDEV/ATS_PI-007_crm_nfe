@@ -9,7 +9,7 @@ class PedidoDelivery extends Model
 {
 	protected $fillable = [
 		'cliente_id', 'valor_total', 'forma_pagamento', 'observacao',
-		'telefone', 'estado', 'endereco_id', 'motivoEstado', 'troco_para', 'cupom_id', 'desconto'
+		'telefone', 'estado', 'endereco_id', 'motivoEstado', 'troco_para', 'cupom_id', 'desconto', 'app'
 	];
 
 	public function itens(){

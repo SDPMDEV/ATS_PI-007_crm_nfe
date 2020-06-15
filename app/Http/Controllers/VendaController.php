@@ -51,6 +51,10 @@ class VendaController extends Controller
 	}
 
 	public function nova(){
+		$config = ConfigNota::first();
+		if($config == null){
+			return redirect('configNF');
+		}
 		$lastNF = Venda::lastNF();
 
 		$naturezas = NaturezaOperacao::all();

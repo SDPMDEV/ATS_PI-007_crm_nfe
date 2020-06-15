@@ -61,15 +61,17 @@ class PurchaseController extends Controller
         $mesAnterior = null;
         $anoAnterior = null;
 
-        foreach($compras as $c){
-            $date = $c->date_register;
+        foreach($compras as $key => $c){
+            $date = $c->created_at;
             $mes = substr($date, 5, 2);
             $ano = substr($date, 0, 4);
+
 
             if($mesAnterior != $mes){
                 $temp["Mes: ".$mes."/$ano"] = $c->valor;
             }else{
                 $temp["Mes: ".$mesAnterior."/$anoAnterior"] += $c->valor;
+
             }
             $mesAnterior = $mes;
             $anoAnterior = $ano;
@@ -88,7 +90,7 @@ class PurchaseController extends Controller
 
 
         foreach($compras as $c){
-            $date = $c->date_register;
+            $date = $c->created_at;
             $mes = substr($date, 5, 2);
             $ano = substr($date, 0, 4);
 
@@ -112,7 +114,7 @@ class PurchaseController extends Controller
         $s = 0;
 
         foreach($compras as $c){
-            $date = $c->date_register;
+            $date = $c->created_at;
             $dia = substr($date, 8, 2);
             $mes = substr($date, 5, 2);
             if($diaAnterior != $dia){
