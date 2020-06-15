@@ -39,7 +39,8 @@ class CreateDevolucaosTable extends Migration
             $table->decimal('vFrete', 10, 2);
             $table->decimal('vDesc', 10, 2);
 
-            $table->string('chave_gerada',44);
+            $table->string('chave_gerada', 44);
+            $table->integer('numero_gerado');
 
             $table->timestamps();
         });

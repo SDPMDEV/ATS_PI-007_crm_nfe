@@ -91,7 +91,7 @@
 						@foreach($compra->fatura as $f)
 						<tr>
 							<th>{{ \Carbon\Carbon::parse($f->data_vencimento)->format('d/m/Y')}}</th>
-							<td>{{number_format(($f->valor_integral), 2, ',', '.')}}</td>
+							<td>{{number_format(($f->valor), 2, ',', '.')}}</td>
 							
 						</tr>
 						@endforeach
@@ -100,7 +100,7 @@
 					<tbody>
 						<tr>
 							<th>{{ \Carbon\Carbon::parse($compra->created_at)->format('d/m/Y')}}</th>
-							<td>{{number_format(($f->valor), 2, ',', '.')}}</td>
+							<td>{{number_format(($compra->valor), 2, ',', '.')}}</td>
 							
 						</tr>
 					</tbody>

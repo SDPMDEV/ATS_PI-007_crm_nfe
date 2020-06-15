@@ -39,7 +39,11 @@
 
 	<form action="/pizza/escolherSabores" method="get">
 		<section class="blog_w3ls py-5">
+
 			<div class="container pb-xl-5 pb-lg-3">
+				@if(session()->has('message_erro'))
+				<div class="p-3 mb-2 bg-danger text-white">{{ session()->get('message_erro') }}</div>
+				@endif
 				<input type="hidden" name="categoria" value="{{$categoria->id}}">
 				
 				<div class="container">

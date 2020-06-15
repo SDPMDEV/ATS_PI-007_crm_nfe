@@ -17,6 +17,7 @@ var HASHCLIENTE = '';
 var TOKENCARTAO = '';
 
 $(function(){
+
 	MAXIMOPARCELAMENTO = $('#maximo_parcelamento').val();
 
 	lat = latPadrao = $('#lat_padrao').val()
@@ -49,7 +50,7 @@ $(function(){
 	$.get(path + 'pagseguro/getSessao')
 	.done((success) => {
 		let token = success.id
-		console.log('token da compra', token)
+		// console.log('token da compra', token)
 		let res = PagSeguroDirectPayment.setSessionId(token);
 
 	})
@@ -236,6 +237,8 @@ $('#pagseguro').click(() => {
 
 		location.href="#modal-pagseguro"
 		$('#abre-modal').modal('click');
+		HASHCLIENTE = PagSeguroDirectPayment.getSenderHash();
+		console.log('HASHCLIENTE', HASHCLIENTE)
 	}else{
 		
 		if(!enderecoSelecionado){

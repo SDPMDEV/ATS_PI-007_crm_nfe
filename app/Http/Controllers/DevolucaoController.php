@@ -10,6 +10,7 @@ use App\Cidade;
 use App\NaturezaOperacao;
 use App\ConfigNota;
 use NFePHP\DA\NFe\Danfe;
+use NFePHP\DA\NFe\Daevento;
 use App\Services\DevolucaoService;
 
 class DevolucaoController extends Controller
@@ -286,7 +287,8 @@ class DevolucaoController extends Controller
 			'nNf' => $data['nNf'],
 			'vFrete' => str_replace(",", ".", $data['vFrete']),
 			'vDesc' => str_replace(",", ".", $data['vDesc']),
-			'chave_gerada' => ''
+			'chave_gerada' => '',
+			'numero_gerado' => 0
 		]);
 
 		//salvar itens
@@ -314,7 +316,9 @@ class DevolucaoController extends Controller
 		where('id', $id)
 		->first();
 		// $xml = file_get_contents('xml_devolucao/'.$devolucao->chave_gerada.'.xml');
-		$xml = simplexml_load_file('xml_devolucao/'.$devolucao->chave_gerada.'.xml');
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+
+		$xml = simplexml_load_file($public.'xml_devolucao/'.$devolucao->chave_gerada.'.xml');
 
 		$cidade = Cidade::getCidadeCod($xml->NFe->infNFe->emit->enderEmit->cMun);
 		$dadosEmitente = [
@@ -357,8 +361,8 @@ class DevolucaoController extends Controller
 		$devolucao = Devolucao::
 		where('id', $id)
 		->first();
-
-		return response()->download('xml_devolucao_entrada/'.$devolucao->chave_nf_entrada.'.xml');
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		return response()->download($public.'xml_devolucao_entrada/'.$devolucao->chave_nf_entrada.'.xml');
 
 	}
 
@@ -366,8 +370,8 @@ class DevolucaoController extends Controller
 		$devolucao = Devolucao::
 		where('id', $id)
 		->first();
-
-		return response()->download('xml_devolucao/'.$devolucao->chave_gerada.'.xml');
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		return response()->download($public . 'xml_devolucao/'.$devolucao->chave_gerada.'.xml');
 
 	}
 
@@ -377,7 +381,8 @@ class DevolucaoController extends Controller
 		->delete();
 
 		session()->flash('color', 'blue');
-		session()->flash("message", "deletado com sucesso!");
+		session()->flash("message", "Deletado com sucesso!");
+		return redirect('devolucao');
 	}
 
 	public function imprimir($id){
@@ -385,20 +390,55 @@ class DevolucaoController extends Controller
 		where('id', $id)
 		->first();
 
-		$xml = file_get_contents('xml_devolucao/'.$devolucao->chave_gerada.'.xml');
-		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents('imgs/logo.jpg'));
-		// $docxml = FilesFolders::readFile($xml);
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		if($devolucao->estado == 1){
+			$xml = file_get_contents($public .'xml_devolucao/'.$devolucao->chave_gerada.'.xml');
 
-		try {
-			$danfe = new Danfe($xml);
-			$id = $danfe->monta($logo);
-			$pdf = $danfe->render();
-			header('Content-Type: application/pdf');
+			$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public .'imgs/logo.jpg'));
 
-			echo $pdf;
-		} catch (InvalidArgumentException $e) {
-			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
-		}  
+			try {
+				$danfe = new Danfe($xml);
+				$id = $danfe->monta($logo);
+				$pdf = $danfe->render();
+				header('Content-Type: application/pdf');
+
+				echo $pdf;
+			} catch (InvalidArgumentException $e) {
+				echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+			}  
+		}else if($devolucao->estado == 3){
+			$xml = file_get_contents($public .'xml_devolucao_cancelada/'.$devolucao->chave_gerada.'.xml');
+
+			$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public .'imgs/logo.jpg'));
+
+			$dadosEmitente = $this->getEmitente();
+			try {
+				$danfe = new Daevento($xml, $dadosEmitente);
+				$id = $danfe->monta($logo);
+				$pdf = $danfe->render();
+				header('Content-Type: application/pdf');
+
+				echo $pdf;
+			} catch (InvalidArgumentException $e) {
+				echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+			} 
+		}
+	}
+
+	private function getEmitente(){
+		$config = ConfigNota::first();
+		return [
+			'razao' => $config->razao_social,
+			'logradouro' => $config->logradouro,
+			'numero' => $config->numero,
+			'complemento' => '',
+			'bairro' => $config->bairro,
+			'CEP' => $config->cep,
+			'municipio' => $config->municipio,
+			'UF' => $config->UF,
+			'telefone' => $config->telefone,
+			'email' => ''
+		];
 	}
 
 
@@ -418,7 +458,7 @@ class DevolucaoController extends Controller
 
 		$nfe_dev = new DevolucaoService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => $config->ambiente,
+			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -442,7 +482,7 @@ class DevolucaoController extends Controller
 				$devolucao->chave_gerada = $dev['chave'];
 				$devolucao->estado = 1;
 
-				$devolucao->nNf = $dev['nNf'];
+				$devolucao->numero_gerado = $dev['nNf'];
 				$devolucao->save();
 			}else{
 				$devolucao->estado = 2;
@@ -453,5 +493,47 @@ class DevolucaoController extends Controller
 		}else{
 			echo json_encode(false);
 		}
+	}
+
+	public function cancelar(Request $request){
+		$devolucao = Devolucao::
+		where('id', $request->devolucao_id)
+		->first();
+
+		$config = ConfigNota::first();
+
+		$cnpj = str_replace(".", "", $config->cnpj);
+		$cnpj = str_replace("/", "", $cnpj);
+		$cnpj = str_replace("-", "", $cnpj);
+		$cnpj = str_replace(" ", "", $cnpj);
+
+		$nfe_dev = new DevolucaoService([
+			"atualizacao" => date('Y-m-d h:i:s'),
+			"tpAmb" => (int)$config->ambiente,
+			"razaosocial" => $config->razao_social,
+			"siglaUF" => $config->UF,
+			"cnpj" => $cnpj,
+			"schemes" => "PL_009_V4",
+			"versao" => "4.00",
+			"tokenIBPT" => "AAAAAAA",
+			"CSC" => getenv('CSC'),
+			"CSCid" => "000002"
+		], 55);
+
+		$resultado = $nfe_dev->cancelar($devolucao, $request->justificativa);
+		if($this->isJson($resultado)){
+			
+			$devolucao->estado = 3;
+			$devolucao->save();
+			return response()->json($resultado, 200);
+
+		}
+		
+		return response()->json($resultado, 401);
+	}
+
+	private function isJson($string) {
+		json_decode($string);
+		return (json_last_error() == JSON_ERROR_NONE);
 	}
 }

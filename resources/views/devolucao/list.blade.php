@@ -6,12 +6,6 @@
 
 		<h4>Lista de Devoluções</h4>
 
-		@if(session()->has('message'))
-		<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-			<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-		</div>
-		@endif
-
 		<div class="row">
 			<br>
 			<form method="get" action="/devolucao/filtro">
@@ -66,7 +60,8 @@
 						<th>Valor Devolvido</th>
 						<th>Estado</th>
 						<th>Data</th>
-						<th>NF</th>
+						<th>NF Entrada</th>
+						<th>NF Devolução</th>
 
 
 						<th>Motivo</th>
@@ -91,6 +86,7 @@
 						</td>
 						
 						<td id="id">{{$d->id}}</td>
+						<td style="display: none" id="estado_{{$d->id}}">{{$d->estado}}</td>
 						
 						<td>{{$d->fornecedor->razao_social}}</td>
 						<td>{{$d->usuario->nome}}</td>
@@ -103,11 +99,15 @@
 								brightness_1
 							</i>
 							@elseif($d->estado == 2)
+							<i class="material-icons yellow-text">
+								brightness_1
+							</i>
+							@elseif($d->estado == 3)
 							<i class="material-icons red-text">
 								brightness_1
 							</i>
 							@else
-							<i class="material-icons gray-text">
+							<i class="material-icons blue-text">
 								brightness_1
 							</i>
 
@@ -115,7 +115,7 @@
 						</td>
 						<th>{{ \Carbon\Carbon::parse($d->data_registro)->format('d/m/Y H:i:s')}}</th>
 						<td id="numeroNf">{{$d->nNf}}</td>
-
+						<td id="numeroNf">{{$d->numero_gerado ?? '--'}}</td>
 
 						<td>
 							<a class="btn brown lighten-2 tooltipped" data-position="bottom" data-delay="50" data-tooltip="{{$d->motivo}}"
@@ -129,7 +129,7 @@
 						</td>
 
 						<td>
-							@if($d->estado == 0)
+							@if($d->estado != 1)
 							<a href="/devolucao/delete/{{$d->id}}">
 								<i class="material-icons red-text">delete</i>
 							</a>	
@@ -148,23 +148,6 @@
 				</tbody>
 			</table>
 		</div>
-		<div class="row">
-			<div class="col s2">
-				<a id="btn-enviar" onclick="enviar()" style="width: 100%" class="btn-large green accent-4" href="#!">Enviar</a>
-			</div>
-
-			<div class="col s2">
-				<a id="btn-enviar" onclick="imprimir()" style="width: 100%" class="btn-large purple" href="#!">Imprimir</a>
-			</div>
-		</div>
-
-		<input type="hidden" id="token" value="{{csrf_token()}}">
-		@if(isset($devolucoes))
-		<ul class="pagination center-align">
-			<li class="waves-effect">{{$devolucoes->links()}}</li>
-		</ul>
-		@endif
-
 		<div class="row" id="preloader1" style="display: none">
 			<div class="col s12 center-align">
 				<div class="preloader-wrapper active">
@@ -180,6 +163,27 @@
 				</div>
 			</div>
 		</div>
+
+		<div class="row">
+			<div class="col s2">
+				<a id="btn-enviar" onclick="enviar()" style="width: 100%" class="btn-large green accent-4" href="#!">Enviar</a>
+			</div>
+
+			<div class="col s2">
+				<a id="btn-imprimir" onclick="imprimir()" style="width: 100%" class="btn-large purple" href="#!">Imprimir</a>
+			</div>
+
+			<div class="col s2">
+				<a id="btn-cancelar" onclick="setarNumero()" style="width: 100%" class="btn-large red modal-trigger" href="#modal1">Cancelar</a>
+			</div>
+		</div>
+
+		<input type="hidden" id="token" value="{{csrf_token()}}">
+		@if(isset($devolucoes))
+		<ul class="pagination center-align">
+			<li class="waves-effect">{{$devolucoes->links()}}</li>
+		</ul>
+		@endif
 
 		
 	</div>
@@ -200,6 +204,19 @@
 	</div>
 </div>
 
+<div id="modal-sucesso-cancela" class="modal">
+
+	<div class="modal-content">
+		<p class="center-align"><i class="large material-icons green-text">check_circle</i></p>
+		<h4 class="center-align">Devolução Cancelada</h4>
+		<p class="center-align" id="evento-cancela"></p>
+
+	</div>
+	<div class="modal-footer">
+		<a href="#!" onclick="redireciona()" class="modal-action modal-close waves-effect waves-green btn-flat">Fechar</a>
+	</div>
+</div>
+
 <div id="modal-alert-erro" class="modal">
 
 	<div class="modal-content">
@@ -210,6 +227,38 @@
 	</div>
 	<div class="modal-footer">
 		<a href="#!" onclick="redireciona()" class="modal-action modal-close waves-effect waves-green btn-flat">Fechar</a>
+	</div>
+</div>
+
+<div id="modal1" class="modal">
+	<div class="modal-content">
+		<h4>Cancelamento da Devolução <strong class="orange-text" id="numero_cancelamento"></strong></h4>
+		<div class="row">
+			<div class="input-field col s12">
+				<textarea id="justificativa" class="materialize-textarea"></textarea>
+				<label for="justificativa">Justificativa minimo de 15 caracteres</label>
+			</div>
+		</div>
+	</div>
+	<div class="row" id="preloader5" style="display: none">
+		<div class="col s12 center-align">
+			<div class="preloader-wrapper active">
+				<div class="spinner-layer spinner--only">
+					<div class="circle-clipper left">
+						<div class="circle"></div>
+					</div><div class="gap-patch">
+						<div class="circle"></div>
+					</div><div class="circle-clipper right">
+						<div class="circle"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-footer">
+		<a href="#!" class="modal-action modal-close btn grey">Fechar</a>
+		<button onclick="cancelar()" class="btn red">Cancelar Nota</button>
+
 	</div>
 </div>
 

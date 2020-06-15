@@ -31,6 +31,8 @@
 
 
 @foreach($destaques as $d)
+
+@if(!isset($d->block))
 <div class="baneer-w3ls">
 	<div class="row no-gutters">
 		<div class="col-xl-5 col-lg-6">
@@ -106,7 +108,7 @@
 			</div>
 		</div>
 	</div><br>
-
+	@endif
 	@endforeach
 
 	<div class="clearfix"></div>

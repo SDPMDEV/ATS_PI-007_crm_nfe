@@ -47,7 +47,6 @@ class CreateProdutosTable extends Migration
             $table->string('codigo_anp', 10);
             $table->string('descricao_anp', 95);
 
-
             $table->timestamps();
         });
     }

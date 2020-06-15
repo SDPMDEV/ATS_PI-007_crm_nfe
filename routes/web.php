@@ -818,6 +818,7 @@ Route::group(['prefix' => 'devolucao'],function(){
 	Route::post('/new', 'DevolucaoController@renderizarXml');
 	Route::post('/salvar', 'DevolucaoController@salvar');
 	Route::post('/enviarSefaz', 'DevolucaoController@enviarSefaz');
+	Route::post('/cancelar', 'DevolucaoController@cancelar');
 	Route::get('/ver/{id}', 'DevolucaoController@ver');
 	Route::get('/delete/{id}', 'DevolucaoController@delete');
 	Route::get('/imprimir/{id}', 'DevolucaoController@imprimir');

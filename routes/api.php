@@ -32,6 +32,7 @@ Route::group(['prefix' => 'appProduto'],function(){
 	Route::get('/tamanhosPizza', 'AppProdutoController@tamanhosPizza');
 	Route::post('/pizzaValorPorTamanho', 'AppProdutoController@pizzaValorPorTamanho');
 	Route::post('/saboresPorTamanho', 'AppProdutoController@saboresPorTamanho');
+	Route::get('/dividePizza', 'ProdutoRestController@dividePizza');
 
 });
  
@@ -77,12 +78,23 @@ Route::group(['prefix' => 'pedidos'],function(){
 Route::group(['prefix' => '/pagseguro'], function(){
 	Route::get('/getSessao', 'PagSeguroController@getSessao');
 	Route::get('/getFuncionamento', 'PagSeguroController@getFuncionamento');
+	Route::post('/cartoes', 'PagSeguroController@cartoes')->middleware('token');
 	
 	Route::post('/efetuaPagamento', 'PagSeguroController@efetuaPagamentoApp');
 	Route::get('/consultaJS', 'PagSeguroController@consultaJS');
 });
 
 //fim pagseguro
+
+Route::group(['prefix' => 'appFiscal'],function(){
+
+	Route::group(['prefix' => 'clientes'],function(){
+		Route::get('/', 'AppFiscal\\ClienteController@clientes');
+		Route::post('/salvar', 'AppFiscal\\ClienteController@salvar');
+
+	});
+	Route::get('/cidades', 'AppFiscal\\ClienteController@cidades');
+});
 
 
 

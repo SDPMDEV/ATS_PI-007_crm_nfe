@@ -49,8 +49,8 @@ class Venda extends Model
         ->first();
 
         $devolucao = Devolucao::
-        where('nNf', '!=', 0)
-        ->orderBy('nNf', 'desc')
+        where('numero_gerado', '!=', 0)
+        ->orderBy('numero_gerado', 'desc')
         ->first();
 
         $compra = Compra::
@@ -58,7 +58,7 @@ class Venda extends Model
         ->orderBy('numero_emissao', 'desc')
         ->first();
 
-        $numeroDevolucao = $devolucao != null ? $devolucao->nNf : 0;
+        $numeroDevolucao = $devolucao != null ? $devolucao->numero_gerado : 0;
         $numeroCompra = $compra != null ? $compra->numero_emissao : 0;
         $numeroVenda = $venda != null ? $venda->NfNumero : 0;
 

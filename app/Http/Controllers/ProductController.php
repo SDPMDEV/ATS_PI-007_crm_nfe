@@ -240,7 +240,7 @@ class ProductController extends Controller
         $resp->perc_ipi = $request->input('perc_ipi');
         $resp->CFOP_saida_estadual = $request->input('CFOP_saida_estadual');
         $resp->CFOP_saida_inter_estadual = $request->input('CFOP_saida_inter_estadual');
-        $resp->codigo_anp = $request->input('anp');
+        $resp->codigo_anp = $request->input('anp') ?? '';
         $resp->descricao_anp = $descAnp;
 
         
@@ -384,6 +384,7 @@ class ProductController extends Controller
     public function salvarProdutoDaNota(Request $request){
         //echo json_encode($request->produto);
         $produto = $request->produto;
+        $natureza = Produto::firstNatureza();
 
         $valorVenda = str_replace(".", "", $produto['valorVenda']);
         $valorVenda = str_replace(",", ".", $valorVenda);
@@ -404,6 +405,14 @@ class ProductController extends Controller
             'CST_PIS' => $produto['CST_PIS'],
             'CST_COFINS' => $produto['CST_COFINS'],        
             'CST_IPI' => $produto['CST_IPI'],
+            'perc_icms' => 0,
+            'perc_pis' => 0,
+            'perc_cofins' => 0,
+            'perc_ipi' => 0,
+            'CFOP_saida_estadual' => $natureza->CFOP_saida_estadual,
+            'CFOP_saida_inter_estadual' => $natureza->CFOP_saida_inter_estadual,
+            'codigo_anp' => '', 
+            'descricao_anp' => ''
 
         ]);
 
@@ -413,14 +422,14 @@ class ProductController extends Controller
     public function salvarProdutoDaNotaComEstoque(Request $request){
         //echo json_encode($request->produto);
         $produto = $request->produto;
-
+        $natureza = Produto::firstNatureza();
         $valorVenda = str_replace(",", ".", $produto['valorVenda']);
 
         $valorCompra = str_replace(",", ".", $produto['valorCompra']);
         $result = Produto::create([
             'nome' => $produto['nome'],
             'NCM' => $produto['ncm'],
-            // 'CFOP' => $produto['cfop'],
+
             'valor_venda' => $valorVenda,
             'valor_livre' => false,
             'cor' => $produto['cor'],
@@ -434,6 +443,14 @@ class ProductController extends Controller
             'CST_PIS' => $produto['CST_PIS'],
             'CST_COFINS' => $produto['CST_COFINS'],        
             'CST_IPI' => $produto['CST_IPI'],
+            'perc_icms' => 0,
+            'perc_pis' => 0,
+            'perc_cofins' => 0,
+            'perc_ipi' => 0,
+            'CFOP_saida_estadual' => $natureza->CFOP_saida_estadual,
+            'CFOP_saida_inter_estadual' => $natureza->CFOP_saida_inter_estadual,
+            'codigo_anp' => '', 
+            'descricao_anp' => ''
 
         ]);
 

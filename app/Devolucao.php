@@ -9,7 +9,7 @@ class Devolucao extends Model
 	protected $fillable = [
 		'fornecedor_id', 'usuario_id', 'natureza_id', 'data_registro', 'valor_integral', 
 		'valor_devolvido', 'motivo', 'observacao', 'estado', 'devolucao_parcial', 
-		'chave_nf_entrada', 'nNf', 'vFrete', 'vDesc', 'chave_gerada'
+		'chave_nf_entrada', 'nNf', 'vFrete', 'vDesc', 'chave_gerada', 'numero_gerado'
 	];
 
 	public function fornecedor(){

@@ -7,7 +7,7 @@ use App\Cotacao;
 use App\ItemCotacao;
 
 class CotacaoResponseController extends Controller
-{
+{	
 
 	public function response($link){
 

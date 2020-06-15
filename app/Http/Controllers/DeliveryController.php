@@ -13,6 +13,7 @@ use App\TamanhoPizza;
 use App\TokenWeb;
 use Comtele\Services\TextMessageService;
 use App\Rules\CelularDup;
+use App\ItemPedidoDelivery;
 
 class DeliveryController extends Controller
 {
@@ -33,6 +34,29 @@ class DeliveryController extends Controller
         where('destaque', true)
         ->where('status', true)
         ->get();
+
+        $dataHoje = date('Y-m-d');
+
+        foreach($destaques as $d){
+
+            $itens = ItemPedidoDelivery::
+            selectRaw('DATE_FORMAT(created_at, "%Y-%m-%d") as data, quantidade')
+            ->where('produto_id', $d->id)
+            ->whereRaw('DATE_FORMAT(created_at, "%Y-%m-%d") = "' . $dataHoje . '"')
+            ->get();
+
+            $soma = 0;
+            foreach($itens as $i){
+
+                $soma += 2;
+            }
+
+            if($d->limite_diario <= $soma){
+                $d->block = true;
+            }
+
+
+        }
 
         if($this->config == null || getenv("DELIVERY") == 0) {
             return redirect('/login');
@@ -97,66 +121,71 @@ class DeliveryController extends Controller
 }
 
 public function escolherSabores(Request $request){
-    $tipo = $request->tipo;
-    $tamanho = explode("-", $tipo)[0];
-    $sabores = explode("-", $tipo)[1];
-    $categoria = $request->categoria;
-    
-    $session = [
-        'tamanho' => $tamanho,
-        'sabores' => $sabores
-    ];
-    session(['tamanho_pizza' => $session]);
+    if($request->tipo){
+        $tipo = $request->tipo;
+        $tamanho = explode("-", $tipo)[0];
+        $sabores = explode("-", $tipo)[1];
+        $categoria = $request->categoria;
+
+        $session = [
+            'tamanho' => $tamanho,
+            'sabores' => $sabores
+        ];
+        session(['tamanho_pizza' => $session]);
 
 
-    $t = TamanhoPizza::
-    where('nome', $tamanho)
-    ->first();
-    $tamanho = session('tamanho_pizza');
+        $t = TamanhoPizza::
+        where('nome', $tamanho)
+        ->first();
+        $tamanho = session('tamanho_pizza');
 
-    $sabores = session('sabores');
+        $sabores = session('sabores');
 
-    $saboresIncluidos = [];
-    $valorPizza;
-    $somaValores = 0;
-    $valorPizza = 0;
-    $maiorValor = 0;
-    if($sabores){
-        foreach($sabores as $s){
-            $p = ProdutoDelivery::
-            where('id', $s)
-            ->first();
+        $saboresIncluidos = [];
+        $valorPizza;
+        $somaValores = 0;
+        $valorPizza = 0;
+        $maiorValor = 0;
+        if($sabores){
+            foreach($sabores as $s){
+                $p = ProdutoDelivery::
+                where('id', $s)
+                ->first();
 
-            $p->produto;
-            $p->galeria;
-            
+                $p->produto;
+                $p->galeria;
 
-            foreach($p->pizza as $pz){
-                if($tamanho['tamanho'] == $pz->tamanho->nome){
-                    $valor = $pz->valor;
+
+                foreach($p->pizza as $pz){
+                    if($tamanho['tamanho'] == $pz->tamanho->nome){
+                        $valor = $pz->valor;
+                    }
                 }
+                $somaValores += $p->valorPizza = $valor;
+                if($valor > $maiorValor) $maiorValor = $valor;
+
+                array_push($saboresIncluidos, $p);
             }
-            $somaValores += $p->valorPizza = $valor;
-            if($valor > $maiorValor) $maiorValor = $valor;
-
-            array_push($saboresIncluidos, $p);
         }
-    }
 
-    if(getenv("DIVISAO_VALOR_PIZZA") == 1 && sizeof($sabores) > 0){
-        $valorPizza = $somaValores/sizeof($sabores);
+        if(getenv("DIVISAO_VALOR_PIZZA") == 1 && sizeof($sabores) > 0){
+            $valorPizza = $somaValores/sizeof($sabores);
+        }else{
+            $valorPizza = $maiorValor;
+        }
+
+        return view('delivery/pizzas')
+        ->with('pizzas', $t->produtoPizza)
+        ->with('config', $this->config)
+        ->with('pizzaJs', true)
+        ->with('categoria', $categoria)
+        ->with('valorPizza', $valorPizza)
+        ->with('saboresIncluidos', $saboresIncluidos)
+        ->with('title', 'PIZZAS'); 
     }else{
-        $valorPizza = $maiorValor;
+        session()->flash("message_erro", "Escolha um sabor");
+        return back()->withInput();
     }
-
-    return view('delivery/pizzas')
-    ->with('pizzas', $t->produtoPizza)
-    ->with('config', $this->config)
-    ->with('pizzaJs', true)
-    ->with('categoria', $categoria)
-    ->with('valorPizza', $valorPizza)
-    ->with('saboresIncluidos', $saboresIncluidos)
-    ->with('title', 'PIZZAS'); 
 }
 
 public function pesquisa(Request $request){

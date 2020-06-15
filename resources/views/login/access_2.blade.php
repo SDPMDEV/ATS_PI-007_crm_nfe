@@ -65,9 +65,9 @@
 					</div>
 
 					<div class="text-center p-t-136">
-						<a target="_blank" class="txt2" href="http://wa.me/5543920004769">
+						<a target="_blank" class="txt2" href="http://wa.me/55{{getenv('RESP_FONE')}}">
 							<i class="fa fa-whatsapp" aria-hidden="true"></i>
-							Suporte (43) 920004769
+							Suporte {{getenv("RESP_FONE")}}
 
 						</a>
 					</div>

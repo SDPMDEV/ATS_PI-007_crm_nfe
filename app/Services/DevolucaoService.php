@@ -500,4 +500,48 @@ class DevolucaoService{
 		return number_format((float) $number, $dec, ".", "");
 	}
 
+	public function cancelar($devolucao, $justificativa){
+		try {
+
+			$chave = $devolucao->chave_gerada;
+			$response = $this->tools->sefazConsultaChave($chave);
+			$stdCl = new Standardize($response);
+			$arr = $stdCl->toArray();
+			sleep(1);
+				// return $arr;
+			$xJust = $justificativa;
+
+
+			$nProt = $arr['protNFe']['infProt']['nProt'];
+
+			$response = $this->tools->sefazCancela($chave, $xJust, $nProt);
+			sleep(2);
+			$stdCl = new Standardize($response);
+			$std = $stdCl->toStd();
+			$arr = $stdCl->toArray();
+			$json = $stdCl->toJson();
+
+			if ($std->cStat != 128) {
+        //TRATAR
+			} else {
+				$cStat = $std->retEvento->infEvento->cStat;
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+				if ($cStat == '101' || $cStat == '135' || $cStat == '155' ) {
+            //SUCESSO PROTOCOLAR A SOLICITAÇÂO ANTES DE GUARDAR
+					$xml = Complements::toAuthorize($this->tools->lastRequest, $response);
+					file_put_contents($public.'xml_devolucao_cancelada/'.$chave.'.xml',$xml);
+
+					return $json;
+				} else {
+            //houve alguma falha no evento 
+            //TRATAR
+					return $json;	
+				}
+			}    
+		} catch (\Exception $e) {
+			return $e->getMessage();
+    //TRATAR
+		}
+	}
+
 }

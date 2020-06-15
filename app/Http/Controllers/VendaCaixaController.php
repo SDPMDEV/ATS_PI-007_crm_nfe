@@ -15,6 +15,17 @@ use App\Pedido;
 
 class VendaCaixaController extends Controller
 {
+
+  public function __construct(){
+    $this->middleware(function ($request, $next) {
+      $value = session('user_logged');
+      if(!$value){
+        return redirect("/login");
+      }
+      return $next($request);
+    });
+  }
+  
   public function save(Request $request){
 
    $venda = $request->venda;

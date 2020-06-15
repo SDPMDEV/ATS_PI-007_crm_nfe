@@ -1,6 +1,6 @@
 
 function enviar(id){
-	var r = confirm("Deseja gerar Entrada fiscal desta Compra?");
+	var r = confirm("Deseja gerar entrada fiscal desta Compra?");
 	if (r == true) {
 		
 		$('#preloader').css('display', 'block')
@@ -24,7 +24,6 @@ function enviar(id){
 				$('#modal-alert').modal('open');
 				$('#evento').html("NF-e de Entrada emitida com sucesso RECIBO: "+e)
 				window.open(path+"compras/imprimir/"+id, "_blank");
-
 
 			}, error: function(e){
 				$('#preloader').css('display', 'none')

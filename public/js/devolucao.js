@@ -2,6 +2,7 @@ var ITENS = [];
 var SOMAITENS = 0;
 
 $(function () {
+
 	ITENS = JSON.parse($('#itens_nf').val());
 
 	prepara((res) => {

@@ -292,7 +292,8 @@ class NFeService{
 			$nfe->tagIPI($std);
 
 			//TAG ANP
-			if($i->produto->descricao_anp != ''){
+
+			if(strlen($i->produto->descricao_anp) > 5){
 				$stdComb = new \stdClass();
 				$stdComb->item = 1; 
 				$stdComb->cProdANP = $i->produto->codigo_anp;
@@ -910,7 +911,7 @@ class NFeService{
 				($i->produto->perc_cofins/100));
 			$COFINS = $nfe->tagCOFINS($stdCOFINS);
 
-			if($i->produto->descricao_anp != ''){
+			if(strlen($i->produto->descricao_anp) > 5){
 				$stdComb = new \stdClass();
 				$stdComb->item = 1; 
 				$stdComb->cProdANP = $i->produto->codigo_anp;

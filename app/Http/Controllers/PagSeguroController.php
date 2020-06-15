@@ -413,7 +413,7 @@ class PagSeguroController extends Controller
 				$pedido = $this->incluiPedidoCartaoApp($json, $referencia, $xml->code, $consulta->original->status);
 				$arr = [
 					'consulta' => $consulta,
-					'pedido_id' => $pedido
+					'pedido' => $pedido
 				];
 				return response()->json($arr, 200);
 
@@ -442,27 +442,27 @@ class PagSeguroController extends Controller
 
 			$total = 0;
 
-			foreach($pedido->itens as $i){
+			// foreach($pedido->itens as $i){
 
-				if(count($i->sabores) > 0){
-					$maiorValor = 0; 
-					foreach($i->sabores as $it){
-						$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
-						if($v > $maiorValor) $maiorValor = $v;
-					}
-					$total += $maiorValor * $i->quantidade;
-				}else{
-					$total += ($i->produto->valor * $i->quantidade);
-				}
+			// 	if(count($i->sabores) > 0){
+			// 		$maiorValor = 0; 
+			// 		foreach($i->sabores as $it){
+			// 			$v = $it->maiorValor($it->produto->id, $i->tamanho_id);
+			// 			if($v > $maiorValor) $maiorValor = $v;
+			// 		}
+			// 		$total += $maiorValor * $i->quantidade;
+			// 	}else{
+			// 		$total += ($i->produto->valor * $i->quantidade);
+			// 	}
 
-				foreach($i->itensAdicionais as $a){
-					$total += $a->adicional->valor * $i->quantidade;
-				}
-			}
+			// 	foreach($i->itensAdicionais as $a){
+			// 		$total += $a->adicional->valor * $i->quantidade;
+			// 	}
+			// }
 
-			if($request->desconto){
-				$total -= str_replace(",", ".", $request->desconto);
-			}
+			// if($request->desconto){
+			// 	$total -= str_replace(",", ".", $request->desconto);
+			// }
 
 			if($request->endereco_id != 'balcao'){
 				$config = DeliveryConfig::first();
@@ -485,7 +485,7 @@ class PagSeguroController extends Controller
 			$pedido->forma_pagamento = $request->forma_pagamento;
 			$pedido->observacao = $request->observacao ?? '';
 			$pedido->endereco_id = $request->forma_entrega == 'balcao' ? null : $request->endereco_id;
-			$pedido->valor_total = $total;
+			$pedido->valor_total = $request->total;
 			$pedido->telefone = $request->telefone ?? '';
 			$pedido->troco_para = $request->troco ?? 0;
 			$pedido->data_registro = date('Y-m-d H:i:s');
@@ -507,12 +507,33 @@ class PagSeguroController extends Controller
 					'status' => $status
 				]
 			);
-
+			$pedido->itens;
 			return $pedido;
 			
 		}else{
 			return response()->json(false, 404);
 		}
+	}
+
+	public function cartoes(Request $request){
+
+		$pedidos = PedidoDelivery::where('cliente_id', $request->cliente)
+		->get();
+		$arr = [];
+		$cartaoInserido = [];
+		foreach($pedidos as $p){
+			if($p->forma_pagamento == 'pagseguro'){
+				if(!in_array($p->pagseguro->numero_cartao, $cartaoInserido)){
+					$p->pagseguro->src_bandeira = 'https://stc.pagseguro.uol.com.br/public/img/payment-methods-flags/68x30/'.
+					$p->pagseguro->bandeira . '.png';
+					array_push($arr, $p->pagseguro);
+					array_push($cartaoInserido, $p->pagseguro->numero_cartao);
+				}
+			}
+		}
+
+		return response()->json($arr, 200);
+
 	}
 
 }

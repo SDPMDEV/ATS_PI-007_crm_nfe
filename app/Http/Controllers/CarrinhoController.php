@@ -308,6 +308,8 @@ class CarrinhoController extends Controller
 		foreach($pedidos as $p){
 			if($p->forma_pagamento == 'pagseguro'){
 				if(!in_array($p->pagseguro->numero_cartao, $cartaoInserido)){
+					$p->pagseguro->src_bandeira = 'https://stc.pagseguro.uol.com.br/public/img/payment-methods-flags/68x30/'.
+					$p->pagseguro->bandeira . '.png';
 					array_push($arr, $p->pagseguro);
 					array_push($cartaoInserido, $p->pagseguro->numero_cartao);
 				}
