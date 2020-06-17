@@ -270,16 +270,16 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 							</div>
 							<ul class="list-unstyled payment-links mt-4">
 								<li>
-									<a href="login.html"><img src="/images/pay2.png" alt=""></a>
+									<a href="#!"><img src="/images/pay2.png" alt=""></a>
 								</li>
 								<li>
-									<a href="login.html"><img src="/images/pay5.png" alt=""></a>
+									<a href="#!"><img src="/images/pay5.png" alt=""></a>
 								</li>
 								<li>
-									<a href="login.html"><img src="/images/pay1.png" alt=""></a>
+									<a href="#!"><img src="/images/pay1.png" alt=""></a>
 								</li>
 								<li>
-									<a href="login.html"><img src="/images/pay4.png" alt=""></a>
+									<a href="#!"><img src="/images/pay4.png" alt=""></a>
 								</li>
 							</ul>
 						</div>

@@ -45,6 +45,7 @@
 				<div class="p-3 mb-2 bg-danger text-white">{{ session()->get('message_erro') }}</div>
 				@endif
 				<input type="hidden" name="categoria" value="{{$categoria->id}}">
+				<input type="hidden" name="produto" value="{{{isset($produto) ? $produto->id : 0 }}}">
 				
 				<div class="container">
 

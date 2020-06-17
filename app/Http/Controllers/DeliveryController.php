@@ -97,16 +97,16 @@ class DeliveryController extends Controller
             ->with('title', 'TIPO DA PIZZA'); 
 
         }else{
-           return view('delivery/produtos')
-           ->with('produtos', $categoria->produtos)
-           ->with('categoria', $categoria)
-           ->with('config', $this->config)
-           ->with('title', 'PRODUTOS'); 
-       }
+         return view('delivery/produtos')
+         ->with('produtos', $categoria->produtos)
+         ->with('categoria', $categoria)
+         ->with('config', $this->config)
+         ->with('title', 'PRODUTOS'); 
+     }
 
-   }
+ }
 
-   public function verProduto($id){
+ public function verProduto($id){
 
     $produto = ProdutoDelivery
     ::where('id', $id)
@@ -121,16 +121,18 @@ class DeliveryController extends Controller
 }
 
 public function escolherSabores(Request $request){
+
     if($request->tipo){
         $tipo = $request->tipo;
         $tamanho = explode("-", $tipo)[0];
-        $sabores = explode("-", $tipo)[1];
+        $auxSabor = $sabores = explode("-", $tipo)[1];
         $categoria = $request->categoria;
 
         $session = [
             'tamanho' => $tamanho,
             'sabores' => $sabores
         ];
+
         session(['tamanho_pizza' => $session]);
 
 
@@ -140,6 +142,18 @@ public function escolherSabores(Request $request){
         $tamanho = session('tamanho_pizza');
 
         $sabores = session('sabores');
+
+        if(empty($sabores) && $request->produto > 0){
+            $session = [
+                $request->produto,
+            ];
+            session(['sabores' => $session]);
+            $sabores = session('sabores');
+            if($auxSabor == 1){
+                return redirect('/pizza/adicionais');
+            }
+        }
+
 
         $saboresIncluidos = [];
         $valorPizza;
@@ -318,20 +332,20 @@ public function pizzas(Request $request){
                 $p->produto->delivery->galeria;
                 foreach($p->produto->delivery->pizza as $pp){
                     if($request->tamanho == $pp->tamanho_id){
-                     $p->tamanhoValor = $pp->valor;
-                 }
-             }
+                       $p->tamanhoValor = $pp->valor;
+                   }
+               }
 
-         } else{
-           $p->produto;
-           $p->tamanhoValor = 0;
-       }
+           } else{
+             $p->produto;
+             $p->tamanhoValor = 0;
+         }
 
-       array_push($produtos, $p);
-   }
-}
+         array_push($produtos, $p);
+     }
+ }
 
-echo json_encode($produtos);
+ echo json_encode($produtos);
 }
 
 
@@ -379,6 +393,7 @@ public function verificaPizzaAdicionada(Request $request){
 }
 
 public function acompanhamento($id){
+
     $value = session('cliente_log');
     if($value){
         $produto = ProdutoDelivery::where('id', $id)
@@ -386,10 +401,12 @@ public function acompanhamento($id){
 
 
         if(strpos(strtolower($produto->categoria->nome), 'izza') !== false){
+
             $tamanhos = TamanhoPizza::all();
             return view('delivery/tipoPizza')
             ->with('tamanhos', $tamanhos)
             ->with('config', $this->config)
+            ->with('produto', $produto)
             ->with('categoria', $produto->categoria)
             ->with('title', 'TIPO DA PIZZA'); 
         }else{
@@ -522,10 +539,22 @@ public function salvarRegistro(Request $request){
         $celular = str_replace(" ", "", $celular);
         $celular = str_replace("-", "", $celular);
 
-        if(getenv("AUTENTICACAO_SMS") == 1) 
+        if(getenv("AUTENTICACAO_SMS") == 1){
             $this->sendSms($celular, $cod);
-        if(getenv("AUTENTICACAO_EMAIL") == 1 && getenv("SERVIDOR_WEB") == 1) 
+        }
+        else if(getenv("AUTENTICACAO_EMAIL") == 1 && getenv("SERVIDOR_WEB") == 1) {
             $this->sendEmailLink($request->email, $cod);
+        }else{
+            $cliente = ClienteDelivery::find($result->id);
+            $session = [
+                'id' => $cliente->id,
+                'nome' => $cliente->nome,
+                'ativo' => true
+            ];
+            session(['cliente_log' => $session]);
+            session()->flash("message_sucesso", "Bem vindo ". $cliente->nome);
+            return redirect('/'); 
+        }
 
         return view('delivery/autenticarCliente')
         ->with('config', $this->config)

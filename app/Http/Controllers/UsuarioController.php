@@ -48,7 +48,8 @@ class UsuarioController extends Controller
 			'acesso_caixa' => $request->acesso_caixa ? true : false,
 			'acesso_estoque' => $request->acesso_estoque ? true : false,
 			'acesso_compra' => $request->acesso_compra ? true : false,
-			'acesso_fiscal' => $request->acesso_fiscal ? true : false
+			'acesso_fiscal' => $request->acesso_fiscal ? true : false,
+			'ativo' => true
 		]);
 
 		if($result){
