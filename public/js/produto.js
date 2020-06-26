@@ -6,7 +6,7 @@ var SABORESESCOLHIDOS = [];
 $(function () {
   verificaUnidadeCompra();
   
-
+  validaAtribuiDelivery();
   // console.log($('#composto').val())
   if($('#composto').val() == 'true'){
     getProdutosComposto(function(data){
@@ -52,6 +52,8 @@ $(function () {
     });
   }
   verificaCategoria()
+
+
 
 });
 
@@ -175,19 +177,19 @@ function alterarStatus(id){
 function verificaCategoria(){
   let cat = $('#categoria-select option:selected').html();
   if(cat && cat.toLowerCase().includes('izza')){
-      $('#produto-pizza').css('display', 'block');
-      $('#produto-comum').css('display', 'none');
+    $('#produto-pizza').css('display', 'block');
+    $('#produto-comum').css('display', 'none');
 
-    }else{
-      $('#produto-comum').css('display', 'block');
-      $('#produto-pizza').css('display', 'none');
+  }else{
+    $('#produto-comum').css('display', 'block');
+    $('#produto-pizza').css('display', 'none');
 
-    }
   }
+}
 
-  $('#categoria-select').change(() => {
-    verificaCategoria()
-  })
+$('#categoria-select').change(() => {
+  verificaCategoria()
+})
 
 //chips
 
@@ -256,7 +258,18 @@ $('#sabores-esc').on('delete', function(e, chip){
 });
 
 
+$('#atribuir_delivery').click(() => {
+  validaAtribuiDelivery();
+})
 
+function validaAtribuiDelivery(){
+  let delivery = $('#atribuir_delivery').is(':checked');
+  if(delivery){
+    $('#delivery').css('display', 'block')
+  }else{
+    $('#delivery').css('display', 'none')
+  }
+}
 
 // $('#sabores').on('chip.select', function(e, chip){
 //   console.log(chip.item)

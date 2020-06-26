@@ -86,7 +86,7 @@
 			<input type="hidden" id="_token" value="{{ csrf_token() }}">
 
 			<button onclick="adicionar()" type="button" class="btn btn-warning btn-lg btn-block">
-				<span class="fa fa-cart-plus mr-2"></span> ADICIONAR AO CARRINHO R$ <strong id="valor_total">{{$maiorValor}}</strong>
+				<span class="fa fa-cart-plus mr-2"></span> ADICIONAR R$ <strong id="valor_total">{{$maiorValor}}</strong>
 			</button>
 		</section>
 

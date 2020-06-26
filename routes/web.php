@@ -5,6 +5,11 @@ Route::group(['prefix' => '/'], function(){
 	Route::get('/', 'DeliveryController@index');
 });
 
+Route::group(['prefix' => 'mercado'], function(){
+
+	Route::get('/', 'MercadoController@index');
+});
+
 Route::group(['prefix' => '/pagseguro'], function(){
 	Route::get('/getSessao', 'PagSeguroController@getSessao');
 	Route::post('/efetuaPagamento', 'PagSeguroController@efetuaPagamento');
@@ -84,7 +89,6 @@ Route::group(['prefix' => '/carrinho'], function(){
 Route::group(['prefix' => '/enderecoDelivery'], function(){
 	// Route::get('/{id}', 'EnderecoDeliveryController@index');
 	Route::post('/save', 'EnderecoDeliveryController@save');
-
 });
 
 Route::group(['prefix' => '/pedidosDelivery'], function(){
@@ -103,12 +107,32 @@ Route::group(['prefix' => '/pedidosDelivery'], function(){
 	Route::post('/sendPush', 'PedidoDeliveryController@sendPush');
 	Route::post('/sendSms', 'PedidoDeliveryController@sendSms');
 
+	//para frente de pedido
+	Route::get('/frente', 'PedidoDeliveryController@frente');
+	Route::get('/frenteComPedido/{id}', 'PedidoDeliveryController@frenteComPedido');
+	Route::get('/clientes', 'PedidoDeliveryController@clientes');
+	Route::post('/abrirPedidoCaixa', 'PedidoDeliveryController@abrirPedidoCaixa');
+	Route::post('/novoClienteDeliveryCaixa', 'PedidoDeliveryController@novoClienteDeliveryCaixa');
+	Route::post('/novoEnderecoClienteCaixa', 'PedidoDeliveryController@novoEnderecoClienteCaixa');
+	Route::post('/setEnderecoCaixa', 'PedidoDeliveryController@setEnderecoCaixa');
+	Route::post('/getEnderecoCaixa/{cliente_id}', 'PedidoDeliveryController@getEnderecoCaixa');
+	Route::post('/saveItemCaixa', 'PedidoDeliveryController@saveItemCaixa');
+	Route::get('/produtos', 'PedidoDeliveryController@produtos');
+	Route::get('/deleteItem/{id}', 'PedidoDeliveryController@deleteItem');
+	Route::get('/getProdutoDelivery/{id}', 'PedidoDeliveryController@getProdutoDelivery');
+	Route::get('/frenteComPedidoFinalizar', 'PedidoDeliveryController@frenteComPedidoFinalizar');
+
 });
 
 
 Route::group(['prefix' => '/configDelivery'], function(){
 	Route::get('/', 'ConfigDeliveryController@index');
 	Route::post('/save', 'ConfigDeliveryController@save');
+});
+
+Route::group(['prefix' => '/configMercado'], function(){
+	Route::get('/', 'MercadoConfigController@index');
+	Route::post('/save', 'MercadoConfigController@save');
 });
 
 Route::group(['prefix' => 'deliveryCategoria'], function(){
@@ -199,6 +223,13 @@ Route::group(['prefix' => 'pedidos'], function(){
 	Route::get('/setarEndereco', 'PedidoController@setarEndereco');
 	Route::get('/setarBairro', 'PedidoController@setarBairro');
 	Route::get('/imprimirItens', 'PedidoController@imprimirItens');
+	Route::get('/controleComandas', 'PedidoController@controleComandas');
+	Route::get('/verDetalhes/{id}', 'PedidoController@verDetalhes');
+	Route::get('/filtroComanda', 'PedidoController@filtroComanda');
+
+	Route::get('/mesas', 'PedidoController@mesas');
+	Route::get('/verMesa/{mesa_id}', 'PedidoController@verMesa');
+
 
 });
 
@@ -212,7 +243,6 @@ Route::group(['prefix' => 'cidades'], function(){
 	Route::get('/find/{id}', 'CidadeController@find');
 	Route::get('/findNome/{nome}', 'CidadeController@findNome');
 });
-
 
 Route::group(['prefix' => 'login'],function(){
 	Route::get('/', 'UserController@newAccess');
@@ -495,6 +525,7 @@ Route::group(['prefix' => 'clientes'],function(){
 Route::group(['prefix' => 'clientesDelivery'],function(){
 	Route::get('/', 'ClienteDeliveryController@index');
 	Route::get('/edit/{id}', 'ClienteDeliveryController@edit');
+	Route::get('/delete/{id}', 'ClienteDeliveryController@delete');
 	Route::get('/all', 'ClienteDeliveryController@all');
 	Route::post('/update', 'ClienteDeliveryController@update');
 
@@ -632,6 +663,7 @@ Route::group(['prefix' => 'ordemServico'],function(){
 	Route::post('/saveFuncionario', 'OrderController@saveFuncionario');
 
 	Route::get('/alterarStatusServico/{id}', 'OrderController@alterarStatusServico');
+	Route::get('/imprimir/{id}', 'OrderController@imprimir');
 	
 });
 
@@ -662,6 +694,8 @@ Route::group(['prefix' => 'vendas'],function(){
 	Route::post('/salvar', 'VendaController@salvar');
 	Route::post('/salvarCrediario', 'VendaController@salvarCrediario');
 	Route::get('/filtro', 'VendaController@filtro');
+	Route::get('/rederizarDanfe/{id}', 'VendaController@rederizarDanfe');
+	Route::get('/imprimirPedido/{id}', 'VendaController@imprimirPedido');
 });
 
 Route::group(['prefix' => 'compras'],function(){
@@ -677,7 +711,10 @@ Route::group(['prefix' => 'compras'],function(){
 	Route::get('/emitirEntrada/{id}', 'PurchaseController@emitirEntrada');
 	Route::post('/gerarEntrada', 'PurchaseController@gerarEntrada');
 	Route::get('/imprimir/{id}', 'PurchaseController@imprimir');
-
+	Route::get('/produtosSemValidade', 'PurchaseController@produtosSemValidade');
+	Route::post('/salvarValidade', 'PurchaseController@salvarValidade');
+	Route::get('/validadeAlerta', 'PurchaseController@validadeAlerta');
+	
 
 });
 
@@ -850,6 +887,38 @@ Route::group(['prefix' => 'bairrosDelivery'],function(){
 	Route::post('/save', 'BairroDeliveryController@save');
 	Route::post('/update', 'BairroDeliveryController@update');
 });
+
+Route::group(['prefix' => 'mesas'],function(){
+	Route::get('/', 'MesaController@index');
+	Route::get('/delete/{id}', 'MesaController@delete');
+	Route::get('/edit/{id}', 'MesaController@edit');
+	Route::get('/new', 'MesaController@new');
+
+	Route::post('/save', 'MesaController@save');
+	Route::post('/update', 'MesaController@update');
+});
+
+Route::group(['prefix' => 'bannerTopo'],function(){
+	Route::get('/', 'BannerTopoController@index');
+	Route::get('/delete/{id}', 'BannerTopoController@delete');
+	Route::get('/edit/{id}', 'BannerTopoController@edit');
+	Route::get('/new', 'BannerTopoController@new');
+
+	Route::post('/save', 'BannerTopoController@save');
+	Route::post('/update', 'BannerTopoController@update');
+});
+
+Route::group(['prefix' => 'bannerMaisVendido'],function(){
+	Route::get('/', 'BannerMaisVendidoController@index');
+	Route::get('/delete/{id}', 'BannerMaisVendidoController@delete');
+	Route::get('/edit/{id}', 'BannerMaisVendidoController@edit');
+	Route::get('/new', 'BannerMaisVendidoController@new');
+
+	Route::post('/save', 'BannerMaisVendidoController@save');
+	Route::post('/update', 'BannerMaisVendidoController@update');
+});
+
+
 
 
 

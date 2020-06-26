@@ -55,21 +55,25 @@
 							<th>{{ $c->email }}</th>
 							<th>{{ count($c->favoritos) }}</th>
 							<th>
+
+								<a onclick = "if (! confirm('Deseja excluir este cliente')) { return false; }" href="/clientesDelivery/delete/{{ $c->id }}">
+									<i class="material-icons left red-text">delete</i>					
+								</a>
 								<a href="/clientesDelivery/edit/{{ $c->id }}">
-									<i class="material-icons left">edit</i>					
+									<i class="material-icons left yellow-text">edit</i>					
 								</a>
 
-								<a title="pedidos" href="/clientesDelivery/pedidos/{{ $c->id }}">
+								<a title="Pedidos" href="/clientesDelivery/pedidos/{{ $c->id }}">
 									<i class="material-icons left black-text">shopping_cart</i>					
 								</a>
 								
-								<a title="enderecos" href="/clientesDelivery/enderecos/{{ $c->id }}">
-									<i class="material-icons left red-text">map</i>					
+								<a title="Enderecos" href="/clientesDelivery/enderecos/{{ $c->id }}">
+									<i class="material-icons left green-text">map</i>					
 								</a>
 
 
-								<a title="enderecos" href="/clientesDelivery/favoritos/{{ $c->id }}">
-									<i class="material-icons left green-text">favorite</i>					
+								<a title="Favoritos" href="/clientesDelivery/favoritos/{{ $c->id }}">
+									<i class="material-icons left blue-text">favorite</i>					
 								</a>
 								
 							</th>

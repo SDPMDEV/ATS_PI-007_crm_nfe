@@ -374,6 +374,10 @@ function validaBtns(){
 			$('#btn-correcao').addClass("disabled");
 			$('#btn-xml').addClass("disabled");
 
+			$('#btn-danfe').removeClass("disabled");
+			$('#btn-imprimir-cce').addClass("disabled");
+			$('#btn-imprimir-cancelar').addClass("disabled");
+
 
 		} else if(estado == 'REJEITADO'){
 			$('#btn-enviar').removeClass("disabled");
@@ -385,6 +389,10 @@ function validaBtns(){
 			$('#btn-cancelar').addClass("disabled");
 			$('#btn-xml').addClass("disabled");
 
+			$('#btn-danfe').removeClass("disabled");
+			$('#btn-imprimir-cce').addClass("disabled");
+			$('#btn-imprimir-cancelar').addClass("disabled");
+
 
 		} else if(estado == 'CANCELADO'){
 			$('#btn-enviar').addClass("disabled");
@@ -395,6 +403,10 @@ function validaBtns(){
 			$('#btn-cancelar').addClass("disabled");
 			$('#btn-xml').addClass("disabled");
 
+			$('#btn-danfe').removeClass("disabled");
+			$('#btn-imprimir-cce').addClass("disabled");
+			$('#btn-imprimir-cancelar').removeClass("disabled");
+
 
 		} else if(estado == 'APROVADO'){
 			$('#btn-enviar').addClass("disabled");
@@ -404,6 +416,10 @@ function validaBtns(){
 			$('#btn-cancelar').removeClass("disabled");
 			$('#btn-correcao').removeClass("disabled");
 			$('#btn-xml').removeClass("disabled");
+
+			$('#btn-danfe').addClass("disabled");
+			$('#btn-imprimir-cce').removeClass("disabled");
+			$('#btn-imprimir-cancelar').addClass("disabled");
 		}
 
 	}
@@ -417,6 +433,9 @@ function desabilitaBotoes(){
 	$('#btn-correcao').addClass("disabled");
 	$('#btn-inutilizar').addClass("disabled");
 	$('#btn-xml').addClass("disabled");
+	$('#btn-danfe').addClass("disabled");
+	$('#btn-imprimir-cce').addClass("disabled");
+	$('#btn-imprimir-cancelar').addClass("disabled");
 
 }
 
@@ -468,4 +487,12 @@ function enviarWhatsApp(){
 	window.open(api)
 }
 
+$('#btn-danfe').click(() => {
+	let id = 0
+	$('#body tr').each(function(){
+		if($(this).find('#checkbox input').is(':checked'))
+			id = $(this).find('#id').html();
+	})
+	window.open(path + 'vendas/rederizarDanfe/' + id);
+})
 

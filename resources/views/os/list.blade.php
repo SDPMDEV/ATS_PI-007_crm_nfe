@@ -117,9 +117,9 @@
 								<i class="material-icons left red-text">delete</i>					
 							</a>
 							@endif
-							<a href="#" onclick="printOs({{$o->id}})">
+							<!-- <a href="#" onclick="printOs({{$o->id}})">
 								<i class="material-icons left blue-text">print</i>	
-							</a>
+							</a> -->
 
 							<a href="/ordemServico/servicosordem/{{$o->id}}">
 								<i class="material-icons left green-text">list</i>	
@@ -136,11 +136,16 @@
 					<tr class="red lighten-5">
 						<td colspan="2"></td>
 						<td><strong class="green-text">{{number_format($total , 2, ',', '.')}}</strong></td>
-						<td colspan="5"></td>
+						<td colspan="6"></td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
+		@if(isset($orders))
+		<ul class="pagination center-align">
+			<li class="waves-effect">{{$orders->links()}}</li>
+		</ul>
+		@endif
 	</div>
 </div>
 @endsection	

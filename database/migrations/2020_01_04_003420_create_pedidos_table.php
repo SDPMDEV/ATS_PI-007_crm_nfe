@@ -19,6 +19,9 @@ class CreatePedidosTable extends Migration
             $table->string('observacao', 200);
             $table->boolean('status');
 
+            $table->integer('mesa_id')->nullable()->unsigned();
+            $table->foreign('mesa_id')->references('id')->on('mesas');
+
             $table->integer('bairro_id')->nullable()->unsigned();
             $table->foreign('bairro_id')->references('id')->on('bairro_deliveries');
 

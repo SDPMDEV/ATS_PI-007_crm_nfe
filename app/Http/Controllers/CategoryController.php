@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Categoria;
+use App\CategoriaProdutoDelivery;
 
 class CategoryController extends Controller
 {
@@ -30,18 +31,54 @@ class CategoryController extends Controller
 
     public function new(){
         return view('categorias/register')
+        ->with('categoriaJs', true)
         ->with('title', 'Cadastrar Categoria');
     }
 
     public function save(Request $request){
+
+
+
         $category = new Categoria();
         $this->_validate($request);
 
         $result = $category->create($request->all());
 
+        $atribuir_delivery = $request->atribuir_delivery;
+        $msgSucesso = "Categoria cadastrada com sucesso";
+        if($atribuir_delivery){
+            $this->_validateDelivery($request);
+            $file = $request->file('file');
+
+            $extensao = $file->getClientOriginalExtension();
+            $nomeImagem = md5($file->getClientOriginalName()).".".$extensao;
+            $upload = $file->move(public_path('imagens_categorias'), $nomeImagem);
+
+            if(!$upload){
+                session()->flash('color', 'red');
+                session()->flash('message', 'Erro ao realizar upload da imagem.');
+            }else{
+
+                $result = CategoriaProdutoDelivery::create(
+                    [
+                        'nome' => $request->nome,
+                        'descricao' => $request->descricao,
+                        'path' => $nomeImagem
+                    ]
+                );
+                if($result){
+                    $msgSucesso = "Categoria cadastrada e atribuida ao delivery com sucesso";
+                }
+            }
+
+        }
+
+
+
+
         if($result){
             session()->flash('color', 'blue');
-            session()->flash("message", "Categoria cadastrada com sucesso.");
+            session()->flash("message", $msgSucesso);
         }else{
             session()->flash('color', 'red');
             session()->flash('message', 'Erro ao cadastrar categoria.');
@@ -115,6 +152,21 @@ class CategoryController extends Controller
         $messages = [
             'nome.required' => 'O campo nome é obrigatório.',
             'nome.max' => '50 caracteres maximos permitidos.'
+        ];
+        $this->validate($request, $rules, $messages);
+    }
+
+
+    private function _validateDelivery(Request $request){
+        $rules = [
+            'descricao' => 'required|max:120',
+            'file' => 'required'
+        ];
+
+        $messages = [
+            'descricao.required' => 'O campo descricao é obrigatório.',
+            'descricao.max' => '120 caracteres maximos permitidos.',
+            'file.required' => 'O campo imagem é obrigatório.'
         ];
         $this->validate($request, $rules, $messages);
     }

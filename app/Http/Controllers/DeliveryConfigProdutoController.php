@@ -13,12 +13,12 @@ class DeliveryConfigProdutoController extends Controller
 {
     public function __construct(){
       $this->middleware(function ($request, $next) {
-       $value = session('user_logged');
-       if(!$value){
-        return redirect("/login");
-    }
-    return $next($request);
-});
+         $value = session('user_logged');
+         if(!$value){
+            return redirect("/login");
+        }
+        return $next($request);
+    });
   }
 
   public function index(){
@@ -100,7 +100,6 @@ return redirect('/deliveryProduto');
 }
 
 public function saveImagem(Request $request){
-
 
     $file = $request->file('file');
     $produtoDeliveryId = $request->id;
@@ -239,24 +238,25 @@ public function alterarDestaque($id){
   }
 
   public function delete($id){
-     $produto = ProdutoDelivery
-     ::where('id', $id)
-     ->first();
+   $produto = ProdutoDelivery
+   ::where('id', $id)
+   ->first();
 
-     foreach ($produto->galeria as $g) {
-        if(file_exists('imagens_produtos/'.$g->path))
-            unlink('imagens_produtos/'.$g->path);
-    }
+   foreach ($produto->galeria as $g) {
+    $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+    if(file_exists($public . 'imagens_produtos/'.$g->path))
+        unlink($public . 'imagens_produtos/'.$g->path);
+}
 
 
-    if($produto->delete()){
-      session()->flash('color', 'blue');
-      session()->flash('message', 'Registro removido!');
-  }else{
-      session()->flash('color', 'red');
-      session()->flash('message', 'Erro!');
-  }
-  return redirect('/deliveryProduto');
+if($produto->delete()){
+  session()->flash('color', 'blue');
+  session()->flash('message', 'Registro removido!');
+}else{
+  session()->flash('color', 'red');
+  session()->flash('message', 'Erro!');
+}
+return redirect('/deliveryProduto');
 }
 
 public function deleteImagem($id){
@@ -264,9 +264,9 @@ public function deleteImagem($id){
     ::where('id', $id)
     ->first();
 
-
-    if(file_exists('imagens_produtos/'.$imagem->path))
-        unlink('imagens_produtos/'.$imagem->path);
+    $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+    if(file_exists($public . 'imagens_produtos/'.$imagem->path))
+        unlink($public . 'imagens_produtos/'.$imagem->path);
 
 
     if($imagem->delete()){

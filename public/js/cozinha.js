@@ -51,8 +51,8 @@ function pronto(id){
 function montaHtml(obj){
 	let html = '';
 	obj.map((v) => {
-
-		criaDiv(v.pedido_id, v.produto.nome, v.quantidade, v.data, v.id, 
+		console.log(v)
+		criaDiv(v.comanda, v.produto.nome, v.quantidade, v.data, v.id, 
 			v.adicionais, v.saboresPizza, v.tamanhoPizza, (res) => {
 
 				html += res;

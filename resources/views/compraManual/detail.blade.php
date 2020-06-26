@@ -42,6 +42,7 @@
 					<th>#</th>
 					<th>Produto</th>
 					<th>Valor</th>
+					<th>Validade</th>
 					<th>Quantidade</th>
 					<th>Subtotal</th>
 					<th>Ações</th>
@@ -55,6 +56,8 @@
 					<td>{{$i->produto_id}}</td>
 					<td>{{$i->produto->nome}}</td>
 					<td>{{number_format($i->valor_unitario, 2, ',', '.')}}</td>
+					<td>{{ \Carbon\Carbon::parse($i->validade)->format('d/m/Y')}}</td>
+
 					<td>{{$i->quantidade}}</td>
 					<td>{{number_format(($i->valor_unitario * $i->quantidade), 2, ',', '.')}}</td>
 					<td>

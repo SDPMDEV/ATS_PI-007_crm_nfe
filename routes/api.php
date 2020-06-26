@@ -66,6 +66,8 @@ Route::group(['prefix' => 'pedidoProduto'],function(){
 
 Route::group(['prefix' => 'pedidos'],function(){
 	Route::get('/comandasAberta', 'PedidoRestController@comandasAberta');
+	Route::get('/mesas', 'PedidoRestController@mesas');
+	Route::get('/mesasTodas', 'PedidoRestController@mesasTodas');
 	Route::get('/abrirComanda', 'PedidoRestController@abrirComanda');
 	Route::get('/addProduto', 'PedidoRestController@addProduto');
 	Route::get('/deleteItem', 'PedidoRestController@deleteItem');

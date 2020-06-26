@@ -193,7 +193,7 @@ $('#salvar').click(() => {
 		CST_COFINS: CST_COFINS,
 		CST_IPI: CST_IPI
 	}
-	console.log(prod)
+	console.log(prod.quantidade)
 
 	//console.log(this.semRegitro)
 
@@ -214,6 +214,7 @@ $('#salvar').click(() => {
 			$("#th_acao2_"+codigo).css('display', 'block');
 			$('#preloader').css('display', 'none');
 			$('#modal1').modal('close');
+			alert("Produto Saldo, e inserido o estoque quantidade: " + prod.quantidade)
 			location.reload();
 
 		}, error: function(e){

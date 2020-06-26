@@ -20,7 +20,7 @@ $(function () {
 					$('#logradouro').html(d.rua)
 					$('#numero').html(d.numero)
 
-					$('#cnpj').html(d.cpf_npj)
+					$('#cnpj').html(d.cpf_cnpj)
 					$('#ie').html(d.ie_rg)
 					$('#fone').html(d.telefone)
 					$('#cidade').html(d.nome_cidade)

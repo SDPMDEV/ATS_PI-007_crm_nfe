@@ -61,7 +61,7 @@ function consultaCadastro(){
 
 					$('#ie_rg').val(info.IE)
 					$('#razao_social').val(info.xNome)
-					$('#nome_fantasia').val(info.xFant)
+					$('#nome_fantasia').val(info.xFant ? info.xFant : info.xNome)
 
 					$('#rua').val(info.ender.xLgr)
 					$('#numero').val(info.ender.nro)

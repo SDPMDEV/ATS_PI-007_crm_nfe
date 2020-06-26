@@ -3,11 +3,12 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
+use App\PedidoDelete;
 class Pedido extends Model
 {
 	protected $fillable = [
-		'comanda', 'status', 'desativado', 'observacao', 'rua', 'numero', 'bairro_id', 'referencia', 'telefone', 'nome'
+		'comanda', 'status', 'desativado', 'observacao', 'rua', 'numero', 'bairro_id', 'referencia', 'telefone', 'nome',
+		'mesa_id'
 	];
 
 	public function itens(){
@@ -16,6 +17,10 @@ class Pedido extends Model
 
 	public function bairro(){
         return $this->belongsTo(BairroDelivery::class, 'bairro_id');
+    }
+
+    public function mesa(){
+        return $this->belongsTo(Mesa::class, 'mesa_id');
     }
 
 	public function somaItems(){
@@ -65,6 +70,14 @@ class Pedido extends Model
 			if(!$i->status) $cont++;
 		}
 		return $cont;
+	}
+
+	public function temItemDeletetado(){
+		$item = PedidoDelete::
+		where('pedido_id', $this->id)
+		->first();
+
+		return $item != null;
 	}
 	
 }

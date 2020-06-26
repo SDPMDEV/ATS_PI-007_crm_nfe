@@ -37,6 +37,13 @@ h1{
 					<h5>Horário Abertura: <strong>{{ \Carbon\Carbon::parse($p->data_registro)->format('H:i')}}</strong></h5>
 					<h5>Total de itens: <strong class="red-text">{{count($p->itens)}}</strong></h5>
 					<h5>Itens Pendentes: <strong class="red-text">{{$p->itensPendentes()}}</strong></h5>
+					<h5>Mesa: 
+						@if($p->mesa != null)
+						<strong class="red-text">{{$p->mesa->nome}}</strong>
+						@else
+						<strong class="red-text">AVULSA</strong>
+						@endif
+					</h5>
 
 					<a class="btn white red-text" onclick = "if (! confirm('Deseja desativar esta comanda? os dados não poderam ser retomados!')) { return false; }" href="/pedidos/desativar/{{$p->id}}"><i class="material-icons red-text left">close</i> desativar</a>
 				</div>
@@ -49,7 +56,12 @@ h1{
 		@endforeach
 
 		<div class="row">
-			
+			<div class="col s12">
+
+				<div class="col s6 offset-s3">
+					<a style="width: 100%;" href="/pedidos/mesas" class="btn-large red">VER MESAS</a>
+				</div>
+			</div>
 		</div>
 	</div>
 	@else
@@ -73,6 +85,16 @@ h1{
 				<div class="input-field col s6">
 					<input type="text" name="comanda" id="comanda" data-length="20">
 					<label>Código da Comanda</label>
+				</div>
+
+				<div class="input-field col s4">
+					<select name="mesa_id">
+						<option value="null">*</option>
+						@foreach($mesas as $m)
+						<option value="{{$m->id}}">{{$m->nome}}</option>
+						@endforeach
+					</select>
+					<label>Mesa</label>
 				</div>
 			</div>
 

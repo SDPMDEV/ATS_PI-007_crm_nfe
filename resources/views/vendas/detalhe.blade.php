@@ -8,12 +8,13 @@
 			<div class="container">
 				<div class="row">
 
-					<h3>Venda código: <strong>{{$venda->id}}</strong></h3>
+					<h3 class="center-align">Venda código: <strong>{{$venda->id}}</strong></h3>
 
-					<h4>Cliente: <strong>{{$venda->cliente->razao_social}}</strong></h4>
-					<h5>CNPJ: <strong>{{$venda->cliente->cpf_cnpj}}</strong></h5>
-					<h5>Data: <strong>{{ \Carbon\Carbon::parse($venda->data_registro)->format('d/m/Y H:i:s')}}</strong></h5>
-					<h5>Valor Total: <strong>{{ number_format($venda->valor_total, 2, ',', '.') }}</strong></h5>
+					<h4>Cliente: <strong class="red-text">{{$venda->cliente->razao_social}}</strong></h4>
+					<h5>CNPJ: <strong class="red-text">{{$venda->cliente->cpf_cnpj}}</strong></h5>
+					<h5>Data: <strong class="red-text">{{ \Carbon\Carbon::parse($venda->data_registro)->format('d/m/Y H:i:s')}}</strong></h5>
+					<h5>Valor Total: <strong class="red-text">{{ number_format($venda->valor_total, 2, ',', '.') }}</strong></h5>
+					<h5>Cidade: <strong class="red-text">{{ $venda->cliente->cidade->nome }} ({{ $venda->cliente->cidade->uf }})</strong></h5>
 				</div>
 
 				<div class="divider"></div>
@@ -83,6 +84,13 @@
 						</tbody>
 						@endif
 					</table>
+				</div>
+
+				<div class="row">
+					<a target="_blank" href="/vendas/imprimirPedido/{{$venda->id}}" class="btn">
+						<i class="material-icons left">print</i>
+						Imprimir
+					</a>
 				</div>
 
 			</div>

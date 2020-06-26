@@ -8,7 +8,7 @@ use App\ItemPurchase;
 class Estoque extends Model
 {
 	protected $fillable = [
-        'produto_id', 'quantidade', 'valor_compra'
+        'produto_id', 'quantidade', 'valor_compra', 'validade'
     ];
 
     public function produto(){

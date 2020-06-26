@@ -60,7 +60,7 @@ class NotaFiscalController extends Controller
 
 			$nfe = $nfe_service->gerarNFe($vendaId);
 			// file_put_contents('xml/teste2.xml', $nfe['xml']);
-
+			return response()->json($nfe['xml'], 200);
 			$signed = $nfe_service->sign($nfe['xml']);
 			$resultado = $nfe_service->transmitir($signed, $nfe['chave']);
 

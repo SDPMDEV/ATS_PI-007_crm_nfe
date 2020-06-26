@@ -5,6 +5,8 @@ $('#cnpj').mask('00.000.000/0000-00', {reverse: true});
 $('#valor').mask('000000000000000,00', {reverse: true});
 $('#valor_parcela').mask('000000000000000,00', {reverse: true});
 $('#vale_valor').mask('000000,00', {reverse: true});
+$('#taxa_entrega').mask('000000.00', {reverse: true});
+$('#troco_para').mask('000000.00', {reverse: true});
 
 $('#valor_frete').mask('000000000000000,00', {reverse: true});
 $('#valor_sangria').mask('000000000000000,00', {reverse: true});
@@ -31,6 +33,9 @@ $('#cep').mask('00000-000', {reverse: true});
 $('.cep').mask('00000-000', {reverse: true});
 $('#numero_sms').mask('00 00000-0000', {reverse: true});
 $('.numero_serie').mask('000', {reverse: true});
+$('.picker').mask('00:00', {reverse: true});
+$('#alterta_vencimento').mask('000', {reverse: true});
+
 
 $('.date-input').mask('00/00/0000', {reverse: true});
 
@@ -80,6 +85,9 @@ $('.v-lacre').mask('00000000000000000000', {reverse: true});
 $('#nDoc').mask('000000', {reverse: true});
 $('.imposto').mask('00.00', {reverse: true});
 $('#vDocFisc').mask('000000.00', {reverse: true});
+$('#cListServ').mask('00.00', {reverse: true});
+
+
 
 
 

@@ -42,7 +42,7 @@ class UserController extends Controller
                 'acesso_fiscal' => $usr->acesso_fiscal,
     		];
     		session(['user_logged' => $session]);
-            return redirect('/frenteCaixa');
+            return redirect('/' . getenv('ROTA_INICIAL'));
     	}else{
     		session()->flash('color', 'red');
             session()->flash('message', 'Credencial incorreta!');

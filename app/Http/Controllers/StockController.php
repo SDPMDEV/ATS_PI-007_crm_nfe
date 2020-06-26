@@ -27,7 +27,7 @@ class StockController extends Controller
     public function index(){
       $estoque = Estoque::
       orderBy('updated_at', 'desc')
-      ->paginate(15);
+      ->paginate(20);
       return view('stock/list')
       ->with('estoque', $estoque)
       ->with('links', true)

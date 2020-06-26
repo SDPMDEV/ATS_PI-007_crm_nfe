@@ -149,7 +149,11 @@
 			<ul class="submenu">
 				<li><a href="/pedidos"><span class="left material-icons">radio_button_unchecked</span>Listar</a></li>
 				<li><a href="/controleCozinha"><span class="left material-icons">radio_button_unchecked</span>Controle de Pedidos</a></li>
-
+				<li><a href="/bairrosDelivery"><span class="left material-icons">radio_button_unchecked</span>Bairros</a></li>
+				<li><a href="/mesas"><span class="left material-icons">radio_button_unchecked</span>Mesas</a></li>
+				@if(session('user_logged')['adm'] == 1)
+				<li><a href="/pedidos/controleComandas"><span class="left material-icons">radio_button_unchecked</span>Controle de Comandas</a></li>
+				@endif
 			</ul> 
 		</li>
 		@endif
@@ -157,22 +161,33 @@
 		@if(getenv("DELIVERY") == 1)
 		<li class="nav-item">
 			<div class="link"><a href="#" class="nav-link">
-				<i class="material-icons right black-text">local_shipping</i>
+				<i class="material-icons right black-text">local_pizza</i>
 				<span style="margin-left: 50px;">Delivery</span>
 			</a></div>
 			<ul class="submenu"> 
 				
 				<li><a href="/deliveryCategoria"><span class="left material-icons">radio_button_unchecked</span>Categorias</a></li>
 				<li><a href="/deliveryProduto"><span class="left material-icons">radio_button_unchecked</span>Produtos</a></li>
-				<li><a href="/bairrosDelivery"><span class="left material-icons">radio_button_unchecked</span>Bairros</a></li>
+				
 				<li><a href="/deliveryComplemento"><span class="left material-icons">radio_button_unchecked</span>Adicionais</a></li>
 				<li><a href="/pedidosDelivery"><span class="left material-icons">radio_button_unchecked</span>Pedidos de Delivery</a></li>
+
+				<li><a href="/pedidosDelivery/frente"><span class="left material-icons">radio_button_unchecked</span>Frente de Pedido</a></li>
+
 				<li><a href="/configDelivery"><span class="left material-icons">radio_button_unchecked</span>Configuração</a></li>
+				@if(getenv("DELIVERY_MERCADO") == 1)
+				<li><a href="/configMercado"><span class="left material-icons">radio_button_unchecked</span>Configuração de Mercado</a></li>
+				@endif
 				<li><a href="/funcionamentoDelivery"><span class="left material-icons">radio_button_unchecked</span>Funcionamento</a></li>
 				<li><a href="/push"><span class="left material-icons">radio_button_unchecked</span>Push</a></li>
+				
 				<li><a href="/tamanhosPizza"><span class="left material-icons">radio_button_unchecked</span>Tamanhos de Pizza</a></li>
 				<li><a href="/clientesDelivery"><span class="left material-icons">radio_button_unchecked</span>Clientes</a></li>
 				<li><a href="/codigoDesconto"><span class="left material-icons">radio_button_unchecked</span>Códigos Promocionais</a></li>
+				@if(getenv("DELIVERY_MERCADO") == 1)
+				<li><a href="/bannerTopo"><span class="left material-icons">radio_button_unchecked</span>Banner do Topo</a></li>
+				<li><a href="/bannerMaisVendido"><span class="left material-icons">radio_button_unchecked</span>Banner mais Vendido</a></li>
+				@endif
 			</ul> 
 		</li>
 		@endif
@@ -246,6 +261,8 @@
 <!-- FIM MENU -->
 <div class="space">
 	@yield('content')
+
+
 
 </div>
 
@@ -348,6 +365,10 @@
 <script type="text/javascript" src="/js/cotacao.js"></script>
 @endif
 
+@if(isset($categoriaJs))
+<script type="text/javascript" src="/js/categoria.js"></script>
+@endif
+
 @if(isset($pushJs))
 <script type="text/javascript" src="/js/push.js"></script>
 @endif
@@ -429,7 +450,21 @@ async defer></script>
 <script type="text/javascript" src="/js/nfeEntrada.js"></script>
 @endif
 
+@if(isset($controleHorarioJs))
+<script type="text/javascript" src="/js/controleHorario.js"></script>
+@endif
 
+@if(isset($frentePedidoDeliveryJs))
+<script type="text/javascript" src="/js/frentePedidoDelivery.js"></script>
+@endif
+
+@if(isset($frentePedidoDeliveryPedidoJs))
+<script type="text/javascript" src="/js/frentePedidoDeliveryPedido.js"></script>
+@endif
+
+@if(isset($bannerJs))
+<script type="text/javascript" src="/js/banner.js"></script>
+@endif
 
 <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
@@ -438,6 +473,8 @@ async defer></script>
 
 <script type="text/javascript" src="/js/grafico.js"></script>
 @endif
+
+
 
 
 
@@ -612,6 +649,29 @@ if(getenv('PATH_URL') != $protocol.$_SERVER['HTTP_HOST']){
 
 @if(!isset($disableFooter))
 <footer class="page-footer black space">
+
+	
+
+
+	<a class="btn-floating btn-small dropdown-button" href='#' data-activates='dropdown1' style="margin-left: 10px; z-index: -1">
+		<i class="material-icons">notifications</i> 
+	</a><span style="margin-left: -16px; font-size: 15px; z-index: 1;">
+		@if(sizeof($alertas) > 0) {{sizeof($alertas)}} @endif</span>
+
+	<ul id='dropdown1' class='dropdown-content'>
+		@if(sizeof($alertas) > 0)
+		@foreach($alertas as $a)
+		<li><a href="{{$a['link']}}"><i class="material-icons">{{$a['icon']}}</i>{{$a['msg']}}</a></li>
+		@endforeach
+		@else
+		<li><a href="#!"><i class="material-icons">hourglass_empty</i>Nada Por aqui</a></li>
+		@endif
+
+	</ul>
+
+
+
+
 	<label class="info-user right white-text">
 		Usuário: <strong class="blue-text">{{ session('user_logged')['nome']}} </strong> 
 		| <a class="red-text" href="/login/logoff">Sair</a></label>

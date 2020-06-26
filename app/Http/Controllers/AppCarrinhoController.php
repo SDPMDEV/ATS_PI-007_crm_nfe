@@ -49,15 +49,16 @@ class AppCarrinhoController extends Controller
 					$somaValores += $v;
 					if($v > $maiorValor) $maiorValor = $v;
 				}
+				if(getenv("DIVISAO_VALOR_PIZZA") == 1){
+					$maiorValor = $somaValores/sizeof($i->sabores);
+				}
+				$i->valorPizza = $maiorValor;
+				
+				foreach($i->itensAdicionais as $a){
+					$a->adicional;
+				}
 			}
-			if(getenv("DIVISAO_VALOR_PIZZA") == 1){
-				$maiorValor = $somaValores/sizeof($i->sabores);
-			}
-			$i->valorPizza = $maiorValor;
 			
-			foreach($i->itensAdicionais as $a){
-				$a->adicional;
-			}
 			$i['temadicional'] = count($i->itensAdicionais) > 0 ? true: false;
 		}
 		return $pedido;

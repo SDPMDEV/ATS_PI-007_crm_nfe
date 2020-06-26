@@ -29,6 +29,35 @@
 	margin-top: 10px;
 }
 
+
+
+
+
+@media only screen and (max-width: 400px) {
+	#endereco-modal{
+		width: 100%; height: 100%; margin-left: 0px;
+	}
+
+	.modal-body { height: 500px; margin-left: 0px;}
+	.popup{
+		margin-left: 0px;
+	}
+}
+@media only screen and (min-width: 401px) and (max-width: 1699px){
+	#endereco-modal{
+		width: 100%; height: 950%;
+	}
+
+	.modal-body{
+		height: 600px;
+		overflow-y: auto;
+		width: 380px;
+		margin-left: 0px;
+
+	}
+}
+
+
 </style>
 
 
@@ -113,9 +142,9 @@
 
 	<div class="container">
 		<div id="acrescimo-entrega" style="display: none" class="form-group"><br>
-			<h2>Acrescimo de entrega R$ <strong id="valor-entrega" style="color: red">
+			<h4 style="margin-left: 10px;">Acrescimo de entrega R$ <strong id="valor-entrega" style="color: red;">
 				
-			</strong></h2>
+			</strong></h4>
 		</div>
 
 		<div class="form-group">
@@ -215,7 +244,7 @@
 </div>
 
 <div id="gal2" class="pop-overlay">
-	<div style="width: 100%; height: 100%" class="popup">
+	<div id="endereco-modal" class="popup">
 
 		<div id="info-mapa">
 			<p>Deslize o pino até sua localização!</p>
@@ -261,7 +290,7 @@
 </div>
 
 <div id="modal-pagseguro" class="pop-overlay">
-	<div style="width: 100%;" class="popup">
+	<div style="overflow-y: scroll; overflow-x: scroll;" class="popup">
 		<div class="row" id="div-cartao-antigo" @if(sizeof($cartoes) > 0) style="display: block" @else style="display: none" @endif>
 			<div class="col-sm-12">
 				<h6>Cartões utilizados em compras anteriores:</h6>
@@ -273,7 +302,7 @@
 					<div class="col-sm-4">
 
 						<input class="form-check-input" type="radio" name="escolha-cartao" value="{{$c}}">
-						<img width="100" src="/images_band/{{$c['bandeira']}}.png">
+						<img width="100" src="https://stc.pagseguro.uol.com.br/public/img/payment-methods-flags/68x30/{{$c['bandeira']}}.png">
 
 					</div>
 					<div class="col-sm-8" >
@@ -297,7 +326,7 @@
 					<div class="col-sm-4">
 
 						<input class="form-check-input" type="radio" name="escolha-cartao" value="null">
-						<img width="100" src="/imgs/credit-card.png">
+						<img width="70" src="/imgs/credit-card.png">
 
 					</div>
 					<div class="col-sm-8">
@@ -312,8 +341,8 @@
 			</div>
 
 		</div><br>
-		<div id="div-pagar" @if(sizeof($cartoes) > 0) style="display: none" @else style="display: block" @endif>
-			<div class="card-wrapper"></div>
+		<div class="modal-body" id="div-pagar" @if(sizeof($cartoes) > 0) style="display: none" @else style="display: block" @endif>
+			<div class="card-wrapper" style="margin-left: -20px;"></div>
 			
 			<form style="margin-top: 20px;">
 
@@ -334,12 +363,12 @@
 						<input type="tel" class="form-control" id="cpf" name="cpf">
 					</div>
 
-					<div class="col-lg-6 col-md-6 margin">
+					<div class="col-lg-12 col-md-12 margin">
 						<label class="">Validade</label>
 						<input type="tel" placeholder="**/****" class="form-control" id="validade" name="validade">
 					</div>
 
-					<div class="col-lg-6 col-md-6  margin">
+					<div class="col-lg-12 col-md-12 margin">
 						<label class="">CVC</label>
 						<input type="tel" class="form-control" id="cvc" name="cvc">
 					</div>
@@ -355,7 +384,7 @@
 
 				<a style="color: #fff" type="button" id="finalizar-venda-cartao" class="btn btn-success btn-lg btn-block">
 					<span class="fa fa-check mr-2"></span> FINALIZAR  <strong id="total-cartao"></strong> <i id="icon-spin" style="display: none;" class="fa fa-spinner fa-spin"></i>
-				</a>
+				</a><br>
 			</form>
 		</div>
 		<a class="close" href="#!"><i id="icon-spin" class="fa fa-close"></i></a>

@@ -55,7 +55,7 @@ class DFeController extends Controller
 
 		$dfe_service = new DFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => (int)$config->ambiente,
+			"tpAmb" => 1,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -90,7 +90,7 @@ class DFeController extends Controller
 
 		$dfe_service = new DFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => (int)$config->ambiente,
+			"tpAmb" => 1,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -135,7 +135,7 @@ class DFeController extends Controller
 
 		$dfe_service = new DFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => (int)$config->ambiente,
+			"tpAmb" => 1,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -151,6 +151,7 @@ class DFeController extends Controller
 		$res = $dfe_service->manifesta($request->chave,	 
 			$manifestaAnterior != null ? ($manifestaAnterior->sequencia_evento + 1) : 1);
 
+		// echo $res['retEvento']['infEvento']['cStat'];
 		if($res['retEvento']['infEvento']['cStat'] == '135'){ //sucesso
 			$manifesta = [
 				'chave' => $request->chave,
@@ -189,7 +190,7 @@ class DFeController extends Controller
 
 		$dfe_service = new DFeService([
 			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => (int)$config->ambiente,
+			"tpAmb" => 1,
 			"razaosocial" => $config->razao_social,
 			"siglaUF" => $config->UF,
 			"cnpj" => $cnpj,
@@ -420,8 +421,8 @@ class DFeController extends Controller
 
 			$conta = [
 				'compra_id' => NULL,
-				'data_vencimento' => \Carbon\Carbon::parse($fat->vencimento)->format('Y-m-d'),
-				'data_pagamento' => \Carbon\Carbon::parse($fat->vencimento)->format('Y-m-d'),
+				'data_vencimento' => \Carbon\Carbon::parse(str_replace("/", "-", $fat->vencimento))->format('Y-m-d'),
+				'data_pagamento' => \Carbon\Carbon::parse(str_replace("/", "-", $fat->vencimento))->format('Y-m-d'),
 				'valor_integral' => str_replace(",", ".", $fat->valor_parcela),
 				'valor_pago' => 0,
 				'referencia' => $fat->referencia,

@@ -96,6 +96,7 @@ class NFeService{
 		$cnpj = str_replace("/", "", $cnpj);
 		$cnpj = str_replace("-", "", $cnpj);
 		$stdEmit->CNPJ = $cnpj;
+		$stdEmit->IM = $ie;
 
 		$emit = $nfe->tagemit($stdEmit);
 
@@ -104,6 +105,7 @@ class NFeService{
 		$stdEnderEmit->xLgr = $config->logradouro;
 		$stdEnderEmit->nro = $config->numero;
 		$stdEnderEmit->xCpl = "";
+		
 		$stdEnderEmit->xBairro = $config->bairro;
 		$stdEnderEmit->cMun = $config->codMun;
 		$stdEnderEmit->xMun = $config->municipio;
@@ -174,7 +176,9 @@ class NFeService{
 
 		$totalItens = count($venda->itens);
 		$somaFrete = 0;
-
+		$somaDesconto = 0;
+		$somaISS = 0;
+		$somaServico = 0;
 		foreach($venda->itens as $i){
 			$itemCont++;
 
@@ -186,9 +190,16 @@ class NFeService{
 			$stdProd->xProd = $i->produto->nome;
 			$ncm = $i->produto->NCM;
 			$ncm = str_replace(".", "", $ncm);
-			$stdProd->NCM = $ncm;
+
+			if($i->produto->perc_iss > 0){
+				$stdProd->NCM = '00';
+			}else{
+				$stdProd->NCM = $ncm;
+			}
+			
 			$stdProd->CFOP = $config->UF != $venda->cliente->cidade->uf ?
 			$i->produto->CFOP_saida_inter_estadual : $i->produto->CFOP_saida_estadual;
+
 
 			$cest = $i->produto->CEST;
 			$cest = str_replace(".", "", $cest);
@@ -201,11 +212,16 @@ class NFeService{
 			$stdProd->uTrib = $i->produto->unidade_venda;
 			$stdProd->qTrib = $i->quantidade;
 			$stdProd->vUnTrib = $this->format($i->valor);
-			$stdProd->indTot = 1;
+			$stdProd->indTot = $i->produto->perc_iss > 0 ? 0 : 1;
 			$somaProdutos += ($i->quantidade * $i->valor);
 
 			if($venda->desconto > 0){
-				$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
+				if($itemCont < sizeof($venda->itens)){
+					$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
+					$somaDesconto += $venda->desconto/$totalItens;
+				}else{
+					$stdProd->vDesc = $venda->desconto - $somaDesconto;
+				}
 			}
 
 			if($venda->frete){
@@ -221,52 +237,79 @@ class NFeService{
 
 			$stdImposto = new \stdClass();
 			$stdImposto->item = $itemCont;
+			if($i->produto->perc_iss > 0){
+				$stdImposto->vTotTrib = 0.00;
+			}
 
 			$imposto = $nfe->tagimposto($stdImposto);
 
 			// ICMS
-			if($tributacao->regime == 1){ // regime normal
+			if($i->produto->perc_iss == 0){
+				// regime normal
+				if($tributacao->regime == 1){ 
 
 				//$venda->produto->CST  CST
-				
-				$stdICMS = new \stdClass();
-				$stdICMS->item = $itemCont; 
-				$stdICMS->orig = 0;
-				$stdICMS->CST = $i->produto->CST_CSOSN;
-				$stdICMS->modBC = 0;
-				$stdICMS->vBC = $this->format($i->valor * $i->quantidade);
-				$stdICMS->pICMS = $this->format($i->produto->perc_icms);
-				$stdICMS->vICMS = $stdICMS->vBC * ($stdICMS->pICMS/100);
 
-				$somaICMS += (($i->valor * $i->quantidade) 
-					* ($stdICMS->pICMS/100));
-				$ICMS = $nfe->tagICMS($stdICMS);
+					$stdICMS = new \stdClass();
+					$stdICMS->item = $itemCont; 
+					$stdICMS->orig = 0;
+					$stdICMS->CST = $i->produto->CST_CSOSN;
+					$stdICMS->modBC = 0;
+					$stdICMS->vBC = $this->format($i->valor * $i->quantidade);
+					$stdICMS->pICMS = $this->format($i->produto->perc_icms);
+					$stdICMS->vICMS = $stdICMS->vBC * ($stdICMS->pICMS/100);
 
-			}else{ // regime simples
+					$somaICMS += (($i->valor * $i->quantidade) 
+						* ($stdICMS->pICMS/100));
+					$ICMS = $nfe->tagICMS($stdICMS);
+					// regime simples
+				}else{ 
 
 				//$venda->produto->CST CSOSN
-				
-				$stdICMS = new \stdClass();
-				
-				$stdICMS->item = $itemCont; 
-				$stdICMS->orig = 0;
-				$stdICMS->CSOSN = $i->produto->CST_CSOSN;
 
-				if($i->produto->CST_CSOSN == '500'){
-					$stdICMS->vBCSTRet = 0.00;
-					$stdICMS->pST = 0.00;
-					$stdICMS->vICMSSTRet = 0.00;
+					$stdICMS = new \stdClass();
+
+					$stdICMS->item = $itemCont; 
+					$stdICMS->orig = 0;
+					$stdICMS->CSOSN = $i->produto->CST_CSOSN;
+
+					if($i->produto->CST_CSOSN == '500'){
+						$stdICMS->vBCSTRet = 0.00;
+						$stdICMS->pST = 0.00;
+						$stdICMS->vICMSSTRet = 0.00;
+					}
+
+					$stdICMS->pCredSN = $this->format($i->produto->perc_icms);
+					$stdICMS->vCredICMSSN = $this->format($i->produto->perc_icms);
+					$ICMS = $nfe->tagICMSSN($stdICMS);
+
+					$somaICMS = 0;
 				}
+			} 
 
-				$stdICMS->pCredSN = $this->format($i->produto->perc_icms);
-				$stdICMS->vCredICMSSN = $this->format($i->produto->perc_icms);
-				$ICMS = $nfe->tagICMSSN($stdICMS);
+			else
+			{
+				$valorIss = $i->valor * $i->quantidade;
+				$somaServico += $valorIss;
+				$valorIss = $valorIss * ($i->produto->perc_iss/100);
+				$somaISS += $valorIss;
 
-				$somaICMS = 0;
+
+				$std = new \stdClass();
+				$std->item = $itemCont; 
+				$std->vBC = $stdProd->vProd;
+				$std->vAliq = $i->produto->perc_iss;
+				$std->vISSQN = $this->format($valorIss);
+				$std->cMunFG = $config->codMun;
+				$std->cListServ = $i->produto->cListServ;
+				$std->indISS = 1;
+				$std->indIncentivo = 1;
+
+				$nfe->tagISSQN($std);
 			}
 
-			
-			$stdPIS = new \stdClass();//PIS
+				//PIS
+			$stdPIS = new \stdClass();
 			$stdPIS->item = $itemCont; 
 			$stdPIS->CST = $i->produto->CST_PIS;
 			$stdPIS->vBC = $this->format($i->produto->perc_pis) > 0 ? $stdProd->vProd : 0.00;
@@ -275,8 +318,8 @@ class NFeService{
 				($i->produto->perc_pis/100));
 			$PIS = $nfe->tagPIS($stdPIS);
 
-
-			$stdCOFINS = new \stdClass();//COFINS
+				//COFINS
+			$stdCOFINS = new \stdClass();
 			$stdCOFINS->item = $itemCont; 
 			$stdCOFINS->CST = $i->produto->CST_COFINS;
 			$stdCOFINS->vBC = $this->format($i->produto->perc_cofins) > 0 ? $stdProd->vProd : 0.00;
@@ -285,23 +328,21 @@ class NFeService{
 				($i->produto->perc_cofins/100));
 			$COFINS = $nfe->tagCOFINS($stdCOFINS);
 
-			
 
-			$std = new \stdClass();//IPI
+				//IPI
+
+			$std = new \stdClass();
 			$std->item = $itemCont; 
-			$std->clEnq = null;
-			$std->CNPJProd = null;
-			$std->cSelo = null;
-			$std->qSelo = null;
-			$std->cEnq = '999'; //999 – para tributação normal IPI
+				//999 – para tributação normal IPI
+			$std->cEnq = '999'; 
 			$std->CST = $i->produto->CST_IPI;
 			$std->vBC = $this->format($i->produto->perc_ipi) > 0 ? $stdProd->vProd : 0.00;
 			$std->pIPI = $this->format($i->produto->perc_ipi);
 			$std->vIPI = $stdProd->vProd * $this->format(($i->produto->perc_ipi/100));
-			$std->qUnid = null;
-			$std->vUnid = null;
 
 			$nfe->tagIPI($std);
+			
+
 
 			//TAG ANP
 
@@ -314,16 +355,18 @@ class NFeService{
 
 				$nfe->tagcomb($stdComb);
 			}
+
+			
 		}
 
 
 		$stdICMSTot = new \stdClass();
-		$stdICMSTot->vBC = $tributacao->regime == 1 ? $this->format($somaProdutos) : 0.00;;
+		$stdICMSTot->vProd = 0;
+		$stdICMSTot->vBC = $tributacao->regime == 1 ? $this->format($somaProdutos) : 0.00;
 		$stdICMSTot->vICMS = $this->format($somaICMS);
 		$stdICMSTot->vICMSDeson = 0.00;
 		$stdICMSTot->vBCST = 0.00;
 		$stdICMSTot->vST = 0.00;
-		$stdICMSTot->vProd = $this->format($somaProdutos);
 
 		if($venda->frete) $stdICMSTot->vFrete = $this->format($venda->frete->valor);
 		else $stdICMSTot->vFrete = 0.00;
@@ -335,7 +378,7 @@ class NFeService{
 		$stdICMSTot->vPIS = 0.00;
 		$stdICMSTot->vCOFINS = 0.00;
 		$stdICMSTot->vOutro = 0.00;
-
+		
 		if($venda->frete){
 			$stdICMSTot->vNF = 
 			$this->format(($somaProdutos+$venda->frete->valor)-$venda->desconto);
@@ -344,6 +387,23 @@ class NFeService{
 
 		$stdICMSTot->vTotTrib = 0.00;
 		$ICMSTot = $nfe->tagICMSTot($stdICMSTot);
+
+		//inicio totalizao issqn
+
+		if($somaISS > 0){
+			$std = new \stdClass();
+			$std->vServ = $this->format($somaServico);
+			$std->vBC = $this->format($somaServico);
+			$std->vISS = $this->format($somaISS);
+			$std->dCompet = date('Y-m-d');
+
+			$std->cRegTrib = 6;
+
+			$nfe->tagISSQNTot($std);
+		}
+
+		//fim totalizao issqn
+
 
 
 		$stdTransp = new \stdClass();
@@ -374,7 +434,7 @@ class NFeService{
 
 
 		if($venda->frete != null){
-			
+
 			$std = new \stdClass();
 
 
@@ -411,36 +471,37 @@ class NFeService{
 
 
 	//Fatura
+		if($somaISS == 0){
+			$stdFat = new \stdClass();
+			$stdFat->nFat = (int)$lastNumero+1;
+			$stdFat->vOrig = $this->format($somaProdutos);
+			$stdFat->vDesc = $this->format($venda->desconto);
+			$stdFat->vLiq = $this->format($somaProdutos-$venda->desconto);
 
-		$stdFat = new \stdClass();
-		$stdFat->nFat = (int)$lastNumero+1;
-		$stdFat->vOrig = $this->format($somaProdutos);
-		$stdFat->vDesc = $this->format($venda->desconto);
-		$stdFat->vLiq = $this->format($somaProdutos-$venda->desconto);
-
-		$fatura = $nfe->tagfat($stdFat);
-
+			$fatura = $nfe->tagfat($stdFat);
+		}
 
 	//Duplicata
+		if($somaISS == 0){
+			if(count($venda->duplicatas) > 0){
+				$contFatura = 1;
+				foreach($venda->duplicatas as $ft){
+					$stdDup = new \stdClass();
+					$stdDup->nDup = "00".$contFatura;
+					$stdDup->dVenc = substr($ft->data_vencimento, 0, 10);
+					$stdDup->vDup = $this->format($ft->valor_integral);
 
-		if(count($venda->duplicatas) > 0){
-			$contFatura = 1;
-			foreach($venda->duplicatas as $ft){
+					$nfe->tagdup($stdDup);
+					$contFatura++;
+				}
+			}else{
 				$stdDup = new \stdClass();
-				$stdDup->nDup = "00".$contFatura;
-				$stdDup->dVenc = substr($ft->data_vencimento, 0, 10);
-				$stdDup->vDup = $this->format($ft->valor_integral);
+				$stdDup->nDup = '001';
+				$stdDup->dVenc = Date('Y-m-d');
+				$stdDup->vDup =  $this->format($somaProdutos-$venda->desconto);
 
 				$nfe->tagdup($stdDup);
-				$contFatura++;
 			}
-		}else{
-			$stdDup = new \stdClass();
-			$stdDup->nDup = '001';
-			$stdDup->dVenc = Date('Y-m-d');
-			$stdDup->vDup =  $this->format($somaProdutos-$venda->desconto);
-
-			$nfe->tagdup($stdDup);
 		}
 
 
@@ -943,7 +1004,7 @@ class NFeService{
 		$stdICMSTot->vICMSDeson = 0.00;
 		$stdICMSTot->vBCST = 0.00;
 		$stdICMSTot->vST = 0.00;
-		$stdICMSTot->vProd = $this->format($somaProdutos);
+		$stdICMSTot->vProd = $i->produto->perc_iss > 0 ? 0.00 : $this->format($i->quantidade * $i->valor);
 		
 		$stdICMSTot->vFrete = 0.00;
 

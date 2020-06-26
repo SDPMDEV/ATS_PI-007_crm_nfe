@@ -10,6 +10,7 @@ use App\FuncionarioOs;
 use App\Funcionario;
 use App\RelatorioOs;
 use App\Servico;
+use App\ConfigNota;
 use App\Helpers\StockMove;
 use \Carbon\Carbon;
 
@@ -26,10 +27,13 @@ class OrderController extends Controller
     }
 
     public function index(){
-      $orders = OrdemServico::all();
+      $orders = OrdemServico::
+      orderBy('id', 'desc')
+      ->paginate(20);
       return view('os/list')
       ->with('orders', $orders)
       ->with('print', true)
+      ->with('links', true)
       ->with('title', 'Orders de Serviço');
   }
 
@@ -374,11 +378,9 @@ public function cashFlow(){
 }
 
 public function find(Request $request){
-    $id = $request->input('id');
-    $order = Order::
-    where('id', $id)
-    ->first();
-
+    $id = $request->id;
+    $order = ordemServico::find($id);
+    return $order;
     $services = [];
     $products = [];
 
@@ -441,6 +443,16 @@ public function print($id){
     ->with('order', $order)
         //->with('print', true)
     ->with('title', 'Orders de Serviço');
+}
+
+public function imprimir($id){
+    $ordem = OrdemServico::find($id);
+    $config = ConfigNota::first();
+
+    return view('os/print')
+    ->with('ordem', $ordem)
+    ->with('config', $config)
+    ->with('title', 'Imprimindo OS');
 }
 
 

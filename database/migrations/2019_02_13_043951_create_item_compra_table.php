@@ -24,7 +24,9 @@ class CreateItemCompraTable extends Migration
 
             $table->decimal('quantidade', 10,2);
             $table->decimal('valor_unitario', 10,2);
-             $table->string('unidade_compra', 10);
+            $table->string('unidade_compra', 10);
+
+            $table->date('validade')->nullable();
             $table->timestamps();
         });
     }

@@ -12,7 +12,12 @@ use App\VendaCaixa;
 use App\ConfigNota;
 use Comtele\Services\CreditService;
 use Comtele\Services\TextMessageService;
-
+use App\EnderecoDelivery;
+use App\ProdutoDelivery;
+use App\Produto;
+use App\ItemPizzaPedido;
+use App\ComplementoDelivery;
+use App\ItemPedidoComplementoDelivery;
 
 class PedidoDeliveryController extends Controller
 {
@@ -354,6 +359,7 @@ class PedidoDeliveryController extends Controller
 		$pedido = PedidoDelivery::
 		where('id', $id)
 		->first();
+
 		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 		$ped = new PedidoPrint($pedido);
 		$ped->monta();
@@ -464,5 +470,312 @@ class PedidoDeliveryController extends Controller
 		$response = curl_exec($ch);
 		curl_close($ch);
 		return $response;
+	}
+
+	public function frente(){
+
+		return view('pedidosDelivery/frente')
+		->with('frentePedidoDeliveryJs', true)
+		->with('title', 'Frente de Pedido');
+
+	}
+
+	public function clientes(){
+		$clientes = ClienteDelivery::all();
+		$arr = array();
+		foreach($clientes as $c){
+			$arr[$c->id. ' - ' .$c->nome] = null;
+                //array_push($arr, $temp);
+		}
+		return response()->json($arr, 200);
+	}
+
+	public function abrirPedidoCaixa(Request $request){
+
+		if(isset($request->cliente)){
+			$pedidoEmAberto = PedidoDelivery::where('estado', 'nv')
+			->where('cliente_id', $request->cliente)
+			->first();
+			if($pedidoEmAberto == null){
+				$pedido = PedidoDelivery::create([
+					'cliente_id' => $request->cliente,
+					'valor_total' => 0,
+					'telefone' => '',
+					'observacao' => '',
+					'forma_pagamento' => '',
+					'estado'=> 'nv',
+					'motivoEstado'=> '',
+					'endereco_id' => NULL,
+					'troco_para' => 0,
+					'desconto' => 0,
+					'cupom_id' => NULL,
+					'app' => false
+				]);
+				return response()->json($pedido, 200);
+
+			}else{
+				session()->flash('color', 'red');
+				session()->flash('message', 'Este cliente possui um pedido em aberto, PEDIDO ' . $pedidoEmAberto->id. '!');
+				return response()->json($pedidoEmAberto, 200);
+
+			}
+		}
+		return response()->json(false, 403);
+
+	}
+
+	public function novoClienteDeliveryCaixa(Request $request){
+		$cli = ClienteDelivery::create(
+			[
+				'nome' => $request->nome,
+				'sobre_nome' => $request->sobre_nome,
+				'celular' => $request->celular,
+				'email' => '',
+				'token' => '',
+				'ativo' => 1,
+				'senha' => md5(rand(1000, 9999))
+			]
+		);
+		if($cli){
+			// novo cliente renderiza nova view caixa
+			$cliente = ClienteDelivery::find($cli->id);
+			$pedido = PedidoDelivery::create([
+				'cliente_id' => $cliente->id,
+				'valor_total' => 0,
+				'telefone' => '',
+				'observacao' => '',
+				'forma_pagamento' => '',
+				'estado'=> 'nv',
+				'motivoEstado'=> '',
+				'endereco_id' => NULL,
+				'troco_para' => 0,
+				'desconto' => 0,
+				'cupom_id' => NULL,
+				'app' => false
+			]);
+			// criou o pedido
+			if($pedido){
+				return redirect('pedidosDelivery/frenteComPedido/'.$pedido->id);
+			}
+		}else{
+			return redirect('pedidosDelivery/frenteErro');
+		}
+	}
+
+	public function frenteComPedido($id){
+		$pedido = PedidoDelivery::find($id);
+
+		if($pedido->estado == 'ap' || $pedido->valor_total > 0){
+			return redirect('/pedidosDelivery/verPedido/' . $pedido->id);
+		}
+		$config = DeliveryConfig::first();
+
+		return view('pedidosDelivery/frente')
+		->with('frentePedidoDeliveryJs', true)
+		->with('frentePedidoDeliveryPedidoJs', true)
+		->with('pedido', $pedido)
+		->with('config', $config)
+		->with('title', 'Frente de Pedido');
+
+	}
+
+	public function setEnderecoCaixa(Request $request){
+		$pedido = PedidoDelivery::find($request->pedido_id);
+		$pedido->endereco_id = $request->endereco;
+		if($request->endereco == 'NULL') $pedido->endereco_id = NULL;
+		$pedido->save();
+		return response()->json($pedido, 200);
+	}
+
+	public function novoEnderecoClienteCaixa(Request $request){
+		$pedido = PedidoDelivery::find($request->pedido_id);
+
+		$endereco = EnderecoDelivery::create(
+			[
+				'cliente_id' => $pedido->cliente_id,
+				'rua' => $request->rua,
+				'numero' => $request->numero,
+				'bairro' => $request->bairro,
+				'referencia' => $request->referencia ?? '',
+				'latitude' => '',
+				'longitude' => ''
+			]
+		);
+
+		$pedido->endereco_id = $endereco->id;
+		$pedido->save();
+		return redirect('/pedidosDelivery/frenteComPedido/'.$pedido->id);
+	}
+
+	public function saveItemCaixa(Request $request){
+		$pedido = PedidoDelivery::find($request->pedido_id);
+
+		$this->_validateItem($request);
+
+		$produto = $request->input('produto');
+		$produto = explode("-", $produto);
+		$produto = $produto[0];
+
+		$result = ItemPedidoDelivery::create([
+			'pedido_id' => $pedido->id,
+			'produto_id' => $produto,
+			'quantidade' => str_replace(",", ".", $request->quantidade),
+			'status' => false,
+			'tamanho_id' => $request->tamanho_pizza_id ?? NULL,
+			'observacao' => $request->observacao ?? '',
+			'valor' => str_replace(",", ".", $request->valor)
+		]);
+
+		$saborDup = false;
+		if($request->tamanho_pizza_id && $request->sabores_escolhidos){
+			$saborDup = false;
+
+			$sabores = explode(",", $request->sabores_escolhidos);
+			if(count($sabores) > 0){
+				foreach($sabores as $sab){
+					$prod = Produto
+					::where('nome', $sab)
+					->first();
+
+					$item = ItemPizzaPedido::create([
+						'item_pedido' => $result->id,
+						'sabor_id' => $prod->delivery->id,
+					]);
+
+					if($prod->id == $produto) $saborDup = true;
+				}
+			}else{
+				$item = ItemPizzaPedido::create([
+					'item_pedido' => $result->id,
+					'sabor_id' => $produto_id,
+				]);
+			}
+		}
+
+		if(!$saborDup && $request->tamanho_pizza_id){
+
+			$item = ItemPizzaPedido::create([
+				'item_pedido' => $result->id,
+				'sabor_id' => $produto,
+			]);
+
+		}
+
+		else if($request->tamanho_pizza_id){
+
+			$item = ItemPizzaPedido::create([
+				'item_pedido' => $result->id,
+				'sabor_id' => $produto,
+			]);
+		}
+
+
+		if($request->adicioanis_escolhidos){
+			$adicionais = explode(",", $request->adicioanis_escolhidos);
+			foreach($adicionais as $ad){
+				$nome = explode("-", $ad);
+
+				$adicional = ComplementoDelivery
+				::where('nome', $nome)
+				->first();
+
+
+				$item = ItemPedidoComplementoDelivery::create([
+					'item_pedido_id' => $result->id,
+					'complemento_id' => $adicional->id,
+					'quantidade' => str_replace(",", ".", $request->quantidade),
+				]);
+			}
+		}
+
+		session()->flash('color', 'green');
+		session()->flash('message', 'Item Adicionado!');
+		return redirect('/pedidosDelivery/frenteComPedido/'.$pedido->id);
+
+	}
+
+	private function _validateItem(Request $request){
+		$validaTamanho = false;
+		if($request->input('produto')){
+			$produto = $request->input('produto');
+			$produto = explode("-", $produto);
+			$produto = $produto[0];
+
+			$p = ProdutoDelivery::
+			where('id', $produto)
+			->first();
+
+			if(strpos(strtolower($p->categoria->nome), 'izza') !== false){
+				$validaTamanho = true;
+			}
+		}
+		$rules = [
+			'produto' => 'required|min:5',
+			'quantidade' => 'required',
+			'tamanho_pizza_id' => $validaTamanho ? 'required' : '',
+		];
+
+		$messages = [
+			'produto.required' => 'O campo produto é obrigatório.',
+			'produto.min' => 'Clique sobre o produto desejado.',
+			'quantidade.required' => 'O campo quantidade é obrigatório.',
+			'tamanho_pizza_id.required' => 'Selecione um tamanho.',
+		];
+
+		$this->validate($request, $rules, $messages);
+	}
+
+	public function produtos(){
+		$products = ProdutoDelivery::all();
+		$arr = array();
+		foreach($products as $p){
+			$arr[$p->id. ' - ' .$p->produto->nome] = null;
+                //array_push($arr, $temp);
+		}
+		echo json_encode($arr);
+	}
+
+	public function deleteItem($id){
+		$item = ItemPedidoDelivery::find($id);
+		$item->delete();
+
+		session()->flash('color', 'green');
+		session()->flash('message', 'Item Removido!');
+		return redirect('/pedidosDelivery/frenteComPedido/'.$item->pedido->id);
+	}
+
+	public function getProdutoDelivery($id){
+		$produto = ProdutoDelivery::find($id);
+		foreach($produto->pizza as $tp){
+			$tp->tamanho;
+		}
+		$produto->produto;
+		return response()->json($produto, 200);
+	}
+
+	public function frenteComPedidoFinalizar(Request $request){
+		$pedido = PedidoDelivery::find($request->pedido_id);
+		$total = $pedido->somaItens();
+		if($pedido->endereco_id != NULL){
+			$config = DeliveryConfig::first();
+			$total -= $config->valor_entrega;
+		}
+
+		$total += str_replace(",", ".", $request->taxa_entrega);
+
+		$pedido->valor_total = $total;
+		$pedido->estado = 'ap';
+		$pedido->telefone = $request->telefone;
+		$pedido->troco_para = str_replace(",", ".", $request->troco_para);
+		$pedido->data_registro = date('Y-m-d H:i:s');
+		$pedido->save();
+
+		session()->flash('color', 'green');
+		session()->flash('message', 'Pedido realizado!');
+
+
+		echo "<script>window.open('". getenv('PATH_URL') . '/pedidosDelivery/print/' . $pedido->id ."', '_blank');</script>";
+
+		return redirect('/pedidosDelivery/frente');
 	}
 }

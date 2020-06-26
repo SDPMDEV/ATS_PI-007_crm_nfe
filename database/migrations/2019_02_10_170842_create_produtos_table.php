@@ -40,12 +40,16 @@ class CreateProdutosTable extends Migration
             $table->decimal('perc_pis', 10,2)->default(0);
             $table->decimal('perc_cofins', 10,2)->default(0);
             $table->decimal('perc_ipi', 10,2)->default(0);
+            $table->decimal('perc_iss', 10,2)->default(0);
+            $table->string('cListServ', 5);
 
             $table->string('CFOP_saida_estadual', 5);
             $table->string('CFOP_saida_inter_estadual', 5);
 
             $table->string('codigo_anp', 10);
             $table->string('descricao_anp', 95);
+            $table->string('imagem', 100);
+            $table->integer('alerta_vencimento');
 
             $table->timestamps();
         });

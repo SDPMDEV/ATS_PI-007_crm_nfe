@@ -116,8 +116,8 @@
 						<th id="th_acao2_{{$i['codigo']}}" @if($i['produtoNovo'])
 						style="display: none" @else style="display: block"
 						@endif>
-						<a onclick="editProd('{{$i['codigo']}}')" class="btn yellow" href="#tbody">
-							<i class="material-icons">edit</i>
+						<a disabled onclick="editProd('{{$i['codigo']}}')" class="btn yellow" href="#tbody">
+							<i class="material-icons">check</i>
 						</a>
 
 
@@ -177,9 +177,9 @@
 			<h4>Total: <strong id="valorDaNF" class="blue-text">{{$infos['vProd']}}</strong></h4>
 		</div>
 
-		<div class="col s6 right-align">
+		<!-- <div class="col s6 right-align">
 			<button id="salvarNF" class="btn-large green accent-3 disabled">Salvar</button>
-		</div>
+		</div> -->
 	</div>
 
 	<div id="preloader2" style="display: none">

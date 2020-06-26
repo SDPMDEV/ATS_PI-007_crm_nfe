@@ -10,7 +10,7 @@ class EnderecoDelivery extends Model
 		'cliente_id', 'rua', 'numero', 'bairro', 'referencia', 'latitude', 'longitude'
 	];
 
-	public function produto(){
+	public function cliente(){
         return $this->belongsTo(ClienteDelivery::class, 'cliente_id');
     }
 }

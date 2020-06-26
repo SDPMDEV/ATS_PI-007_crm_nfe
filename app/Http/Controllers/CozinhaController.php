@@ -33,6 +33,7 @@ class CozinhaController extends Controller
 
     	foreach($itens as $i){
     		$i->produto;
+            $i->comanda = $i->pedido->comanda;
 
     		$adicionais = "";
     		foreach($i->itensAdicionais as $key => $a){

@@ -1,10 +1,12 @@
 
 
 function printOs(id){
+
   getOsItems(id, function(data){
+    console.log(data)
     let order = JSON.parse(data);
     constroiComprovante(order, function(value){
-      
+
       var html = $('html').find('head').remove();
       $.print(value,{
         addGlobalStyles : true,
@@ -16,14 +18,17 @@ function printOs(id){
 }
 
 function getOsItems(id, retorno){
-  $.post(path+'order/find', 
-    {
-      'id': id,
-      '_token': $("#_token").val()
-     }, 
-    function(data){
-      retorno(data);
-    })
+  $.post(path+'ordemServico/find', 
+  {
+    id: id,
+    _token: $("#_token").val()
+  })
+  .done((s) => {
+    console.log(s)
+  })
+  .fail((e) => {
+    console.log(e)
+  })
 }
 
 function constroiComprovante(order, retorno){
@@ -56,10 +61,10 @@ function constroiComprovante(order, retorno){
 
   var data = new Date();
   var montaData = (data.getDate() <= 9 ? ('0' + data.getDate()) : data.getDate()) +
-   '/' + (data.getMonth() <= 9 ? ('0' + data.getMonth()) : data.getMonth()) + '/' + 
-   data.getFullYear() +
+  '/' + (data.getMonth() <= 9 ? ('0' + data.getMonth()) : data.getMonth()) + '/' + 
+  data.getFullYear() +
   ' ' + (data.getHours() <= 9 ? ('0' + data.getHours()) : data.getHours()) + ':' + 
-	(data.getMinutes() <= 9 ? ('0' + data.getMinutes()) : data.getMinutes());
+  (data.getMinutes() <= 9 ? ('0' + data.getMinutes()) : data.getMinutes());
   html += '<tr> <td align="left">Data: '+
   montaData+'</td></tr>';
 

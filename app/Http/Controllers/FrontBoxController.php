@@ -175,8 +175,8 @@ public function filtro(Request $request){
     ->with('dataInicial', $dataInicial)
     ->with('info', "Lista de vendas período: $dataInicial até $dataFinal")
     ->with('dataFinal', $dataFinal)
+    ->with('frenteCaixa', true)
     ->with('info', "Lista das ultimas 20 vendas")
-
     ->with('title', 'Filtro de Vendas na Frente de Caixa');
 }
 

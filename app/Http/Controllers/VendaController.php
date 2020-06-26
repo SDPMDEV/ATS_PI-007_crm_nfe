@@ -15,7 +15,9 @@ use App\ContaReceber;
 use App\Frete;
 use App\Cliente;
 use App\Helpers\StockMove;
-
+use App\Services\NFeService;
+use NFePHP\DA\NFe\Danfe;
+use Dompdf\Dompdf;
 
 class VendaController extends Controller
 {
@@ -363,6 +365,63 @@ class VendaController extends Controller
 			'quantidade' => 1,
 			'valor' => 2
 		]);
+	}
+
+	public function rederizarDanfe($id){
+		$venda = Venda::find($id);
+		$config = ConfigNota::first();
+
+		$cnpj = str_replace(".", "", $config->cnpj);
+		$cnpj = str_replace("/", "", $cnpj);
+		$cnpj = str_replace("-", "", $cnpj);
+		$cnpj = str_replace(" ", "", $cnpj);
+
+		$nfe_service = new NFeService([
+			"atualizacao" => date('Y-m-d h:i:s'),
+			"tpAmb" => (int)$config->ambiente,
+			"razaosocial" => $config->razao_social,
+			"siglaUF" => $config->UF,
+			"cnpj" => $cnpj,
+			"schemes" => "PL_009_V4",
+			"versao" => "4.00",
+			"tokenIBPT" => "AAAAAAA",
+			"CSC" => getenv('CSC'),
+			"CSCid" => getenv('CSCid')
+		], 55);
+		$nfe = $nfe_service->gerarNFe($id);
+		$xml = $nfe['xml'];
+
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
+
+		try {
+			$danfe = new Danfe($xml);
+			$id = $danfe->monta();
+			$pdf = $danfe->render();
+			header('Content-Type: application/pdf');
+			echo $pdf;
+		} catch (InvalidArgumentException $e) {
+			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+		}  
+
+	}
+
+	public function imprimirPedido($id){
+		$venda = Venda::find($id);
+
+		$p = view('vendas/print')
+		->with('venda', $venda);
+		// return $p;
+
+		$domPdf = new Dompdf(["enable_remote" => true]);
+		$domPdf->loadHtml($p);
+
+		$pdf = ob_get_clean();
+
+		$domPdf->setPaper("A4");
+		$domPdf->render();
+		$domPdf->stream("relatorio de compras.pdf");
+
 	}
 
 }

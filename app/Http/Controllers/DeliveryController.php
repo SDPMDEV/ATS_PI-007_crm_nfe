@@ -549,8 +549,9 @@ public function salvarRegistro(Request $request){
             $session = [
                 'id' => $cliente->id,
                 'nome' => $cliente->nome,
-                'ativo' => true
             ];
+            $cliente->ativo = 1;
+            $cliente->save();
             session(['cliente_log' => $session]);
             session()->flash("message_sucesso", "Bem vindo ". $cliente->nome);
             return redirect('/'); 

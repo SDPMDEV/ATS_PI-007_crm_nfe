@@ -23,6 +23,9 @@
 					<div class="row">
 						<div class="card-content">
 							<div class="col s6">
+								<a target="_blank" href="/ordemServico/imprimir/{{$ordem->id}}" class="btn">
+									<i class="material-icons left">print</i> Imprimir
+								</a>
 								<h5>Status da OS:
 									@if($ordem->estado == 'pd')
 									<strong class="yellow-text">Pendente</strong>
@@ -46,6 +49,8 @@
 									<strong> -- </strong>
 									@endif
 								</h5>
+
+								
 							</div>
 
 							<div class="col s6">

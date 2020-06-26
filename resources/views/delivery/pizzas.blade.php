@@ -34,8 +34,9 @@
 				<h3 class="w3ls-title mb-3">Selecione {{session('tamanho_pizza')['sabores'] == 1 ? 
 					'o' : 'os'}} {{session('tamanho_pizza')['sabores'] == 1 ? 
 				'sabor' : 'sabores'}}</h3>
-
+				@if(getenv("DIVISAO_VALOR_PIZZA") == 0)
 				<p style="color: red">*Prevalecerá o preço do sabor com maior valor</p>
+				@endif
 			</div>
 		</div>
 

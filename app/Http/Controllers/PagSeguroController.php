@@ -486,7 +486,7 @@ class PagSeguroController extends Controller
 			$pedido->forma_pagamento = $request->forma_pagamento;
 			$pedido->observacao = $request->observacao ?? '';
 			$pedido->endereco_id = $request->forma_entrega == 'balcao' ? null : $request->endereco_id;
-			$pedido->valor_total = $total;
+			$pedido->valor_total = $request->total;
 			$pedido->telefone = $request->telefone ?? '';
 			$pedido->troco_para = $request->troco ?? 0;
 			$pedido->data_registro = date('Y-m-d H:i:s');
@@ -533,8 +533,8 @@ class PagSeguroController extends Controller
 				}
 			}
 		}
-
-		return response()->json($arr, 200);
+		if(sizeof($arr) > 0) return response()->json($arr, 200);
+		else return response()->json(false, 401);
 
 	}
 

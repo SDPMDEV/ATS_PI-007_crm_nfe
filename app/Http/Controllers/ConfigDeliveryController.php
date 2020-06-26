@@ -71,6 +71,16 @@ class ConfigDeliveryController extends Controller
 			$result = $config->save();
 		}
 
+		if($request->hasFile('file')){
+    		//unlink anterior
+
+    		$file = $request->file('file');
+
+    		$nomeImagem = "logo.png";
+
+    		$upload = $file->move(public_path('images'), $nomeImagem);
+
+    	}
 		if($result){
 			session()->flash('color', 'blue');
 			session()->flash("message", "Configurado com sucesso!");

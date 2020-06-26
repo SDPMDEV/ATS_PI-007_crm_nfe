@@ -97,10 +97,10 @@
 
 								$total += number_format($maiorValor * $i->quantidade, 2);
 							?>
-								<td data-th="Preço">R${{$maiorValor}}</td>
+								<td data-th="Preço">R${{number_format($maiorValor, 2)}}</td>
 
 							@else
-							<td data-th="Preço">R${{$i->produto->valor}}</td>
+							<td data-th="Preço">R${{number_format($i->produto->valor, 2)}}</td>
 							@endif
 							<td data-th="Quantidade">
 								<input id="qtd_item_{{$i->id}}" type="number" class="qtd form-control text-center" value="{{(int)$i->quantidade}}">
@@ -141,8 +141,8 @@
 					<span class="fa fa-check mr-2"></span> FINALIZAR
 					<strong>R$ {{number_format($geral, 2, ',', '.')}}</strong>
 				</a>
-				<a href="/cardapio" type="button" class="btn btn-warning btn-lg btn-block">
-					<span class="fa fa-bars mr-2"></span>CONTINUAR COMPRANDO</strong>
+				<a href="/cardapio" style="font-size: 15px; color: #fff" type="button" class="btn btn-warning btn-lg btn-block">
+					<span class="fa fa-bars mr-2"></span>CONTINUAR COMPRANDO
 				</a>
 				@else
 				<a href="/cardapio" type="button" class="btn btn-primary btn-lg btn-block">

@@ -157,7 +157,7 @@
 			<li>
 				<div class="collapsible-header"><i class="material-icons black-text">panorama_fish_eye</i>Pedidos do Carrinho/A Finalizar</div>
 				<div class="collapsible-body">
-					@if(sizeof($carrinho) > 0)
+					@if(!empty($carrinho))
 						<a href="/pedidosDelivery/verCarrinhos" class="btn black">
 							Ver carrinhos em aberto
 						</a>

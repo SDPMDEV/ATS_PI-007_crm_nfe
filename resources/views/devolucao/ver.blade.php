@@ -111,13 +111,13 @@
 			</div>
 
 			<div class="row">
-				<div class="col s3">
+				<div class="col s4">
 					<a style="width: 100%;" href="/devolucao/downloadXmlEntrada/{{$devolucao->id}}" class="btn red" target="_blank">
 						Downlaod XML de entrada
 					</a>
 				</div>
 
-				<div class="col s3">
+				<div class="col s4">
 					<a style="width: 100%;" href="/devolucao/downloadXmlDevolucao/{{$devolucao->id}}" class="btn" target="_blank">
 						Downlaod XML de devolução
 					</a>

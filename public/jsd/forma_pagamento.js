@@ -656,8 +656,6 @@ $('#finalizar-venda-cartao').click(() => {
 
 
 
-	
-
 })
 
 function getInstallment(call){
@@ -674,15 +672,18 @@ $("input[name=escolha-cartao]").change(() => {
 	$('#div-cartao-antigo').css('display', 'none');
 	$('#div-pagar').css('display', 'block');
 
-
 	let escolha = JSON.parse($("input[name=escolha-cartao]:checked").val())
 	if(escolha != null){
 		$('#nome').val(escolha.nome_impresso)
 		$('#cpf').val(escolha.cpf)
 		$('#number').val(escolha.numero_cartao)
-		$('#number').focus()
-		$('#cpf').focus()
-		$('#number').focus()
+
+		var keyupEvent= new Event('keyup');
+		document.getElementById('number').dispatchEvent(keyupEvent);
+		document.getElementById('nome').dispatchEvent(keyupEvent);
+		// $('#number').focus().blur();
+		$('#cpf').focus().blur();
+		// $('#number').focus()
 		
 		let numero = escolha.numero_cartao;
 		if(numero.length > 5){
@@ -691,6 +692,9 @@ $("input[name=escolha-cartao]").change(() => {
 		}else{
 		}
 	}else{
+		$('#nome').val('')
+		$('#cpf').val('')
+		$('#number').val('')
 		console.log("nova cartao")
 
 	}

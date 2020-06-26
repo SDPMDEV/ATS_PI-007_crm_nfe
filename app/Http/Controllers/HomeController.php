@@ -94,7 +94,7 @@ class HomeController extends Controller
             date('Y-m-d', strtotime('+1 day'))])
         ->where('status', false)
         ->first(); 
-        return $contas->total;
+        return $contas->total ?? 0;
     }
 
     private function totalDeContaPagarHoje(){
@@ -104,7 +104,7 @@ class HomeController extends Controller
             date('Y-m-d', strtotime('+1 day'))])
         ->where('status', false)
         ->first(); 
-        return $contas->total;
+        return $contas->total ?? 0;
     }
 
 

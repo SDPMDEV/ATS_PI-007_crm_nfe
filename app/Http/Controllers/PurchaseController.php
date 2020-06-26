@@ -10,7 +10,8 @@ use App\Services\NFeEntradaService;
 use App\ConfigNota;
 use App\NaturezaOperacao;
 use NFePHP\DA\NFe\Danfe;
-
+use App\ItemCompra;
+use App\Produto;
 
 class PurchaseController extends Controller
 {
@@ -308,6 +309,82 @@ class PurchaseController extends Controller
         } catch (InvalidArgumentException $e) {
             echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
         }  
+    }
+
+    public function produtosSemValidade(){
+        $produtos = Produto::select('id')->where('alerta_vencimento', '>', 0)->get();
+        $estoque = ItemCompra::where('validade', NULL)
+        ->limit(100)->get();
+
+        $itensSemEstoque = [];
+        foreach($estoque as $e){
+            foreach($produtos as $p){
+                if($p->id == $e->produto_id){
+                    array_push($itensSemEstoque, $e);
+                }
+            }
+        }
+        return view('compraManual/itens_sem_estoque')
+        ->with('itens', $itensSemEstoque)
+        ->with('title', 'Itens sem Estoque');
+    }
+
+    public function salvarValidade(Request $request){
+        $tamanhoArray = $request->tamanho_array;
+        $contErro = 0;
+
+        for($aux = 0; $aux < $tamanhoArray; $aux++){
+
+            $validade = str_replace("/", "-", $request->input('validade_'.$aux));
+            $id = $request->input('id_'.$aux);
+            
+            if(strlen($validade) == 10){ // tamanho data ok
+                $item = ItemCompra::find($id);
+                $dataHoje = strtotime(date('Y-m-d'));
+                $validadeForm = strtotime(\Carbon\Carbon::parse($validade)->format('Y-m-d'));
+                if($validadeForm > $dataHoje){ // confirma data futura
+                    $item->validade = \Carbon\Carbon::parse($validade)->format('Y-m-d');
+                    $item->save();
+                }else{
+                    $contErro++;
+                }
+            }else{
+                $contErro++;
+            }
+        }
+        if($contErro == 0){
+            session()->flash('color', 'green');
+            session()->flash('message', 'Validades inseridas para os itens!');
+        }else{
+            session()->flash('color', 'red');
+            session()->flash('message', 'Erro no formulário para os itens abaixo!');
+        }
+        return redirect('/compras/produtosSemValidade');
+        
+    }
+
+    public function validadeAlerta(){
+        $dataHoje = date('Y-m-d', strtotime("-30 days",strtotime(date('Y-m-d'))));
+        $dataFutura = date('Y-m-d', strtotime("+30 days",strtotime(date('Y-m-d'))));
+        // $produtos = Produto::select('id')->where('alerta_vencimento', '>', 0)->get();
+        $itensCompra = ItemCompra::
+        whereBetween('validade', [$dataHoje, $dataFutura])
+        ->limit(300)->get();
+        $itens = [];
+        foreach($itensCompra as $i){
+            $strValidade = strtotime($i->validade);
+            $strHoje = strtotime(date('Y-m-d'));
+            $dif = $strValidade - $strHoje;
+            $dif = $dif/24/60/60;
+
+            if($dif <= $i->produto->alerta_vencimento){
+                array_push($itens, $i);
+            }
+        }
+
+        return view('compraManual/validade_alerta')
+        ->with('itens', $itens)
+        ->with('title', 'Produtos com validade próxima');
     }
 
 }

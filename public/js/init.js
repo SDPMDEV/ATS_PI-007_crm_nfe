@@ -3,7 +3,14 @@ $(document).ready(function(){
 	
 	$(".button-collapse").sideNav();
 	$(".dropdown-button").dropdown({
-		'hover': true
+		inDuration: 700,
+		outDuration: 700,
+		constrainWidth: false, 
+		hover: false, 
+		gutter: 55, 
+		belowOrigin: false, 
+		alignment: 'left', 
+		stopPropagation: false 
 	});
 	$('.tooltipped').tooltip({delay: 50});
 	$('.modal').modal();

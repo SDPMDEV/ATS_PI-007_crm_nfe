@@ -10,6 +10,7 @@ use App\ItemPedido;
 use App\ItemPizzaPedidoLocal;
 use App\ItemPedidoComplementoLocal;
 use App\ComplementoDelivery;
+use App\Mesa;
 class PedidoRestController extends Controller
 {
     // APP
@@ -36,12 +37,14 @@ class PedidoRestController extends Controller
 		where('status', false)
 		->where('desativado', false)
 		->get();
+
 		return response()->json($this->somaTotal($pedidos), 200);
 		// echo json_encode($this->somaTotal($pedidos));
 	}
 
 	private function somaTotal($pedidos){
 		foreach($pedidos as $p){
+			$p->mesa;
 			$p['soma'] = $p->somaItems();
 		}
 		return $pedidos;
@@ -52,6 +55,7 @@ class PedidoRestController extends Controller
 		if($duplcidade == null){
 			$result = Pedido::create([
 				'comanda' => $request->cod,
+				'mesa_id' => $request->mesa > 0 ? $request->mesa : NULL,
 				'status' => false,
 				'observacao' => '',
 				'desativado' => false,
@@ -106,6 +110,7 @@ class PedidoRestController extends Controller
 					'rua' => '',
 					'numero' => '',
 					'bairro_id' => null,
+					'mesa_id' => $request->novaMesa > 0 ? $request->novaMesa : NULL,
 					'referencia' => '',
 					'telefone' => '', 
 					'nome' => ''
@@ -133,7 +138,6 @@ class PedidoRestController extends Controller
 				where('id', $request->produto)
 				->first();
 				if(count($saboresExtras) > 0){
-					
 
 					foreach($saboresExtras as $sab){
 						$prod = ProdutoDelivery
@@ -147,7 +151,6 @@ class PedidoRestController extends Controller
 
 					}
 
-					
 				}
 
 				$item = ItemPizzaPedidoLocal::create([
@@ -183,5 +186,28 @@ class PedidoRestController extends Controller
 
 	public function apk(){
 		return response()->download("app.apk");
+	}
+
+	public function mesas(){
+		$pedidos = Pedido::
+		where('desativado', false)
+		->where('mesa_id', '!=', NULL)
+		->groupBy('mesa_id')
+		->get();
+
+		$mesas = [];
+
+		foreach($pedidos as $p){
+			// $p->mesa->pedidos;
+			$this->somaTotal($p->mesa->pedidos);
+			$p->mesa->soma = $p->mesa->somaItens();
+			array_push($mesas, $p->mesa);
+		}
+		return response()->json($mesas, 200);
+	}
+
+	public function mesasTodas(){
+		$mesas = Mesa::all();
+		return response()->json($mesas, 200);
 	}
 }

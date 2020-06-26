@@ -9,7 +9,9 @@ use App\ConfigNota;
 use App\Tributacao;
 use App\Rules\EAN13;
 use App\Helpers\StockMove;
-
+use App\CategoriaProdutoDelivery;
+use App\ProdutoDelivery;
+use App\ImagensProdutoDelivery;
 
 class ProductController extends Controller
 {
@@ -40,6 +42,13 @@ class ProductController extends Controller
     }
 
     public function new(){
+        $categoria = Categoria::first();
+        if($categoria == null){
+            //nao tem categoria
+            session()->flash('color', 'red');
+            session()->flash('message', 'Cadastre ao menos uma categoria!');
+            return redirect('/categorias');
+        }
         $anps = Produto::lista_ANP();
         $natureza = Produto::firstNatureza();
 
@@ -50,6 +59,7 @@ class ProductController extends Controller
         }
 
         $categorias = Categoria::all();
+        $categoriasDelivery = CategoriaProdutoDelivery::all();
 
         $listaCSTCSOSN = Produto::listaCSTCSOSN();
         $listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
@@ -73,6 +83,7 @@ class ProductController extends Controller
         ->with('listaCST_IPI', $listaCST_IPI)
         ->with('anps', $anps)
         ->with('config', $config)
+        ->with('categoriasDelivery', $categoriasDelivery)
         ->with('tributacao', $tributacao)
         ->with('natureza', $natureza)
         ->with('produtoJs', true)
@@ -102,9 +113,21 @@ class ProductController extends Controller
         $request->merge([ 'CST_IPI' => $request->input('CST_IPI') ?? '0']);
         $request->merge([ 'codigo_anp' => $request->anp != '' ? $request->anp : '']);
         $request->merge([ 'descricao_anp' => $request->anp != '' ? $descAnp : '']);
+        $request->merge([ 'descricao_anp' => $request->anp != '' ? $descAnp : '']);
+        $request->merge([ 'cListServ' => $request->cListServ ?? '']);
+        $request->merge([ 'alerta_vencimento' => $request->alerta_vencimento ?? '']);
+        $request->merge([ 'imagem' => '' ]);
+        
+
         $this->_validate($request);
 
         $result = $produto->create($request->all());
+        $produto = Produto::find($result->id);
+        $this->salveImagemProduto($request, $produto); // salva a imagem no produto comum
+        if($request->atribuir_delivery){
+            $this->salvarProdutoNoDelivery($request, $produto); 
+        // salva o produto no delivery
+        }
 
         if($result){
             session()->flash('color', 'blue');
@@ -113,7 +136,7 @@ class ProductController extends Controller
             session()->flash('color', 'red');
             session()->flash('message', 'Erro ao cadastrar produto!');
         }
-        
+
         return redirect('/produtos');
     }
 
@@ -134,6 +157,8 @@ class ProductController extends Controller
         $listaCST_IPI = Produto::listaCST_IPI();
 
         $categorias = Categoria::all();
+        $categoriasDelivery = CategoriaProdutoDelivery::all();
+
         $unidadesDeMedida = Produto::unidadesMedida();
         $config = ConfigNota::first();
         $tributacao = Tributacao::first();
@@ -157,9 +182,30 @@ class ProductController extends Controller
         ->with('anps', $anps)
         ->with('unidadesDeMedida', $unidadesDeMedida)
         ->with('categorias', $categorias)
+        ->with('categoriasDelivery', $categoriasDelivery)
         ->with('produtoJs', true)
         ->with('title', 'Editar Produto');
 
+    }
+
+    private function salveImagemProduto($request, $produto){
+        if($request->hasFile('file')){
+            $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+            //unlink anterior
+            if(file_exists($public.'imgs_produtos/'.$produto->imagem) && $produto->imagem != '')
+                unlink($public.'imgs_produtos/'.$produto->imagem);
+
+            $file = $request->file('file');
+
+            $extensao = $file->getClientOriginalExtension();
+            $nomeImagem = md5($file->getClientOriginalName()).".".$extensao;
+
+            $upload = $file->move(public_path('imgs_produtos'), $nomeImagem);
+            $produto->imagem = $nomeImagem;
+            $produto->save();
+        }else{
+
+        }
     }
 
     public function pesquisa(Request $request){
@@ -201,6 +247,7 @@ class ProductController extends Controller
     }
 
     public function update(Request $request){
+        
         $product = new Produto();
 
         $id = $request->input('id');
@@ -208,7 +255,7 @@ class ProductController extends Controller
         ->where('id', $id)->first(); 
 
         $this->_validate($request);
-        
+
         $anps = Produto::lista_ANP();
         $descAnp = '';
         foreach($anps as $key => $a){
@@ -238,32 +285,44 @@ class ProductController extends Controller
         $resp->perc_pis = $request->input('perc_pis');
         $resp->perc_cofins = $request->input('perc_cofins');
         $resp->perc_ipi = $request->input('perc_ipi');
+        $resp->perc_iss = $request->input('perc_iss');
+        $resp->cListServ = $request->input('cListServ');
+
         $resp->CFOP_saida_estadual = $request->input('CFOP_saida_estadual');
         $resp->CFOP_saida_inter_estadual = $request->input('CFOP_saida_inter_estadual');
         $resp->codigo_anp = $request->input('anp') ?? '';
         $resp->descricao_anp = $descAnp;
+        $resp->alerta_vencimento = $request->alerta_vencimento;
 
-        
-        if($request->input('composto')) $resp->composto = 1;
-        if($request->input('valor_livre')) $resp->valor_livre = 1;
+        $resp->composto = $request->composto ? true : false;
+        $resp->valor_livre = $request->valor_livre ? true : false;
 
         $result = $resp->save();
+        $this->salveImagemProduto($request, $resp);
         if($result){
+            $this->updateProdutoNoDelivery($request, $resp);
             session()->flash('color', 'green');
             session()->flash('message', 'Produto editado com sucesso!');
         }else{
             session()->flash('color', 'red');
             session()->flash('message', 'Erro ao editar produto!');
         }
-        
+
         return redirect('/produtos'); 
     }
 
     public function delete($id){
         try{
-            $delete = Produto
+            $produto = Produto
             ::where('id', $id)
-            ->delete();
+            ->first();
+            $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+
+
+            if(file_exists($public.'imgs_produtos/'.$produto->imagem) && $produto->imagem != '')
+                unlink($public.'imgs_produtos/'.$produto->imagem);
+
+            $delete = $produto->delete();
 
             if($delete){
                 session()->flash('color', 'blue');
@@ -292,6 +351,7 @@ class ProductController extends Controller
             'codBarras' => [new EAN13],
             'CFOP_saida_estadual' => 'required',
             'CFOP_saida_inter_estadual' => 'required',
+            'file' => 'max:300',
             // 'CEST' => 'required'
         ];
 
@@ -308,6 +368,7 @@ class ProductController extends Controller
             'perc_ipi.required' => 'O campo %IPI é obrigatório.',
             'CFOP_saida_estadual.required' => 'Campo obrigatório.',
             'CFOP_saida_inter_estadual.required' => 'Campo obrigatório.',
+            'file.max' => 'Arquivo muito grande maximo 300 Kb'
 
         ];
         $this->validate($request, $rules, $messages);
@@ -325,7 +386,7 @@ class ProductController extends Controller
 
     public function getUnidadesMedida(){
         $unidades = Produto::unidadesMedida();
-        
+
         echo json_encode($unidades);
     }
 
@@ -412,7 +473,10 @@ class ProductController extends Controller
             'CFOP_saida_estadual' => $natureza->CFOP_saida_estadual,
             'CFOP_saida_inter_estadual' => $natureza->CFOP_saida_inter_estadual,
             'codigo_anp' => '', 
-            'descricao_anp' => ''
+            'descricao_anp' => '',
+            'cListServ' => '',
+            'imagem' => '',
+            'alerta_vencimento' => NULL
 
         ]);
 
@@ -450,7 +514,10 @@ class ProductController extends Controller
             'CFOP_saida_estadual' => $natureza->CFOP_saida_estadual,
             'CFOP_saida_inter_estadual' => $natureza->CFOP_saida_inter_estadual,
             'codigo_anp' => '', 
-            'descricao_anp' => ''
+            'descricao_anp' => '',
+            'cListServ' => '',
+            'imagem' => '',
+            'alerta_vencimento' => NULL
 
         ]);
 
@@ -458,6 +525,126 @@ class ProductController extends Controller
         $stockMove->pluStock($result->id, $produto['quantidade'], $valorCompra);
 
         echo json_encode($result);  
+    }
+
+    private function salvarProdutoNoDelivery($request, $produto){
+        $this->_validateDelivery($request);
+
+        $categoria = CategoriaProdutoDelivery::
+        where('id', $request->categoria_delivery_id)
+        ->first();
+
+        $valor = 0;
+        if(strpos($categoria->nome, 'izza') !== false){
+            //pizza nao seta valor por aqui
+        }else{
+            $valor = str_replace(",", ".", $request->valor_venda);
+        }
+
+        $produtoDelivery = [
+            'status' => 1 ,
+            'produto_id' => $produto->id,
+            'destaque' => $request->input('destaque') ? true : false,
+            'descricao' => $request->descricao ?? '',
+            'ingredientes' => $request->ingredientes ?? '',
+            'limite_diario' => $request->limite_diario,
+            'categoria_id' => $categoria->id,
+            'valor' => $valor,
+            'valor_anterior' => 0
+        ];
+
+        $result = ProdutoDelivery::create($produtoDelivery);
+        $produtoDelivery = ProdutoDelivery::find($result->id);
+        if($result){
+            $this->salveImagemProdutoDelivery($request, $produtoDelivery);
+        }
+
+    }
+
+    private function updateProdutoNoDelivery($request, $produto){
+        // $this->_validateDelivery($request);
+        $produtoDelivery = $produto->delivery;
+        if($produtoDelivery){
+            $catPizza = false;
+            $categoria = CategoriaProdutoDelivery::
+            where('id', $request->categoria_delivery_id)
+            ->first();
+
+            $valor = 0;
+            if(strpos($categoria->nome, 'izza') !== false){
+
+            }else{
+                $valor = str_replace(",", ".", $request->valor_venda);
+            }
+
+            $produtoDelivery->destaque = $request->input('destaque') ? true : false;
+            $produtoDelivery->descricao = $request->input('descricao') ?? $produtoDelivery->descricao;
+            $produtoDelivery->ingredientes = $request->input('ingredientes') ?? $produtoDelivery->ingredientes;
+            $produtoDelivery->limite_diario = $request->input('limite_diario') ?? $produtoDelivery->limite_diario;
+            $produtoDelivery->categoria_id = $request->input('categoria_id') ?? $produtoDelivery->categoria_id;
+            $produtoDelivery->valor = $request->input('valor') ?? $valor;
+
+            $result = $produtoDelivery->save();
+
+            if($result){
+                $this->salveImagemProdutoDelivery($request, $produtoDelivery);
+            }
+        }
+
+    }
+
+    private function _validateDelivery(Request $request){
+        $rules = [
+            'ingredientes' => 'max:255',
+            'descricao' => 'max:255',
+            'limite_diario' => 'required'
+        ];
+
+        $messages = [
+            'ingredientes.required' => 'O campo ingredientes é obrigatório.',
+            'ingredientes.max' => '255 caracteres maximos permitidos.',
+            'descricao.required' => 'O campo descricao é obrigatório.',
+            'descricao.max' => '255 caracteres maximos permitidos.',
+            'limite_diario.required' => 'O campo limite diário é obrigatório'
+        ];
+
+        $this->validate($request, $rules, $messages);
+    }
+
+    private function salveImagemProdutoDelivery($request, $produtoDelivery){
+        if($request->hasFile('file')){
+            $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+
+            $file = $request->file('file');
+
+            $extensao = $file->getClientOriginalExtension();
+            $nomeImagem = md5($file->getClientOriginalName()).".".$extensao;
+
+            // $upload = $file->move(public_path('imagens_produtos'), $nomeImagem);
+            // if(file_exists($public.'imgs_produtos/'.$nomeImagem)){
+                copy($public.'imgs_produtos/'.$nomeImagem, $public.'imagens_produtos/'.$nomeImagem);
+            // }else{
+            //     $file->move(public_path('imagens_produtos'), $nomeImagem);
+            // }
+
+            if(sizeof($produtoDelivery->galeria) == 0){
+                //cadastrar
+                ImagensProdutoDelivery::create(
+                    [
+                        'produto_id' => $produtoDelivery->id,
+                        'path' => $nomeImagem
+                    ]
+                );
+            }else{
+                //ja tem
+                $galeria = $produtoDelivery->galeria[0];
+                $galeria->path = $nomeImagem;
+                $galeria->save();
+            }
+
+        }else{
+
+        }
     }
 
 }

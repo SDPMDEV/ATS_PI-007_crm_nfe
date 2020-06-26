@@ -11,7 +11,7 @@
 		
 		@endif
 		<h4>{{{ isset($config) ? "Editar": "Cadastrar" }}} Configuração de Delivery</h4>
-		<form method="post" action="/configDelivery/save">
+		<form method="post" action="/configDelivery/save" enctype="multipart/form-data">
 			<input type="hidden" name="id" value="{{{ isset($config->id) ? $config->id : 0 }}}">
 
 			<section class="section-1">
@@ -121,8 +121,8 @@
 					</div>
 
 					<div class="input-field col s3">
-						<input value="{{{ isset($config->tempo_maximo_cancelamento) ? $config->tempo_maximo_cancelamento : old('tempo_maximo_cancelamento') }}}" id="tempo_maximo_cancelamento" name="tempo_maximo_cancelamento" type="text" class="timepicker">
-						<label>Tempo para Cancelamento</label>
+						<input value="{{{ isset($config->tempo_maximo_cancelamento) ? $config->tempo_maximo_cancelamento : old('tempo_maximo_cancelamento') }}}" placeholder="00:15" id="tempo_maximo_cancelamento" name="tempo_maximo_cancelamento" type="text" class="picker">
+						<label>Tempo para Cancelamento HH:mm</label>
 
 						@if($errors->has('tempo_maximo_cancelamento'))
 						<div class="center-align red lighten-2">
@@ -172,6 +172,30 @@
 							<span class="white-text">{{ $errors->first('longitude') }}</span>
 						</div>
 						@endif
+					</div>
+				</div>
+
+				<div class="row">
+					<div class="col s6">
+						<div class="file-field input-field">
+							<div class="btn black">
+								<span>Logo 60x60 .png</span>
+								<input value="{{{ isset($config->logo) ? $config->logo : old('logo') }}}" name="file" accept=".png" type="file">
+							</div>
+							<div class="file-path-wrapper">
+								<input class="file-path validate" type="text">
+							</div>
+
+							@if($errors->has('file'))
+							<div class="center-align red lighten-2">
+								<span class="white-text">{{ $errors->first('file') }}</span>
+							</div>
+							@endif
+						</div>
+					</div>
+					<div class="col s3">
+						<img style="width: 60px; height: 60px;" src="/images/logo.png">
+						<span>Logo</span>
 					</div>
 				</div>
 

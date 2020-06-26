@@ -116,9 +116,9 @@
 					<div class="input-field col s2">
 						<select name="consumidor_final">
 							<option value=""></option>
-							<option @if(isset($cliente) && $cliente->consumidor_final == 1)selected @endif value="1" @if(old('consumidor_final') == 1) selected @endif>SIM</option>
+							<option @if(isset($cliente) && $cliente->consumidor_final == 1) selected @endif value="1" @if(old('consumidor_final') == 1) selected @endif selected>SIM</option>
 							<option @if(isset($cliente) && $cliente->consumidor_final == 0)
-								selected @endif value="0" @if(old('consumidor_final') == 0) selected @endif>NAO</option>
+								selected @endif value="0" @if(old('consumidor_final') == 0)  @endif>NAO</option>
 							</select>
 							<label>Consumidor Final</label>
 
@@ -133,9 +133,9 @@
 							<select name="contribuinte">
 								<option value=""></option>
 								<option @if(isset($cliente) && $cliente->contribuinte == 1)
-									selected @endif value="1">SIM</option>
+									selected @endif value="1" @if(old('contribuinte') == 1) selected @endif selected>SIM</option>
 									<option @if(isset($cliente) && $cliente->contribuinte == 0)
-										selected @endif value="0" >NAO</option>
+										selected @endif value="0" @if(old('contribuinte') == 0)  @endif>NAO</option>
 									</select>
 									<label>Contribuinte</label>
 

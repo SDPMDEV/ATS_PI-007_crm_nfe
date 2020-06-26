@@ -64,13 +64,29 @@ class AppUserController extends Controller
 			$celular = $request->celular;
 			$celular = str_replace(" ", "", $celular);
 			$celular = str_replace("-", "", $celular);
-			if(getenv("AUTENTICACAO_SMS") == 1) $this->sendSms($celular, $cod);
-			if(getenv("AUTENTICACAO_EMAIL") == 1) $this->sendEmailLink($request->email, $cod);
+
 			
 			$request->merge([ 'senha' => md5($request->senha)]);
 			$request->merge([ 'ativo' => false]);
 			$request->merge([ 'token' => $cod]);
-			$result = ClienteDelivery::create($request->all());
+			$res = ClienteDelivery::create($request->all());
+
+			$result = ClienteDelivery::find($res->id);
+			$tokan = null;
+			if(getenv("AUTENTICACAO_SMS") == 1){
+				$this->sendSms($celular, $cod);
+			}else if(getenv("AUTENTICACAO_EMAIL") == 1) {
+				$this->sendEmailLink($request->email, $cod);
+			}else{
+
+				$result->ativo = 1;
+				
+				$r = $result->save();
+				$result = ClienteDelivery::find($result->id);
+
+				$b64 = base64_encode("$result->nome;$result->id;$result->email");
+				$result->novo_token = $b64;		
+			}
 
 			return response()->json($result, 200);
 		}

@@ -7,11 +7,14 @@ use App\Devolucao;
 use App\ItemDevolucao;
 use App\Fornecedor;
 use App\Cidade;
+use App\Produto;
 use App\NaturezaOperacao;
 use App\ConfigNota;
 use NFePHP\DA\NFe\Danfe;
 use NFePHP\DA\NFe\Daevento;
 use App\Services\DevolucaoService;
+use App\Helpers\StockMove;
+
 
 class DevolucaoController extends Controller
 {
@@ -292,7 +295,7 @@ class DevolucaoController extends Controller
 		]);
 
 		//salvar itens
-
+		$stockMove = new StockMove();
 		foreach($data['itens'] as $i){
 			$item = ItemDevolucao::create([
 				'cod' => $i['codigo'],
@@ -306,6 +309,11 @@ class DevolucaoController extends Controller
 				'codBarras' => $i['codBarras'],
 				'devolucao_id' => $devolucao->id
 			]);
+			if(getenv("DEVOLUCAO_ALTERA_ESTOQUE") == 1){
+				$produto = Produto::where('nome', $i['xProd'])->first();
+				$stockMove->downStock(
+					(int) $produto->id, (float) str_replace(",", ".", $i['qCom']));
+			}
 		}
 
 		echo json_encode($data['itens']);
@@ -378,8 +386,20 @@ class DevolucaoController extends Controller
 	public function delete($id){
 		$devolucao = Devolucao::
 		where('id', $id)
-		->delete();
+		->first();
 
+		$stockMove = new StockMove();
+
+		foreach($devolucao->itens as $i){
+
+			if(getenv("DEVOLUCAO_ALTERA_ESTOQUE") == 1){
+				$produto = Produto::where('nome', $i->nome)->first();
+				$stockMove->pluStock(
+					(int) $produto->id, (float) str_replace(",", ".", $i->quantidade));
+			}
+		}
+
+		$devolucao->delete();
 		session()->flash('color', 'blue');
 		session()->flash("message", "Deletado com sucesso!");
 		return redirect('devolucao');

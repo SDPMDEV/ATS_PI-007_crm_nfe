@@ -182,6 +182,11 @@
 			</div>
 		</div>
 		<div class="row">
+
+			<div class="col s2">
+				<a id="btn-danfe" target="_black" style="width: 100%" class="btn-large blue waves-light">Gerar Danfe</a>
+			</div>
+
 			<div class="col s2">
 				<a id="btn-xml" onclick="setarNumero(true)" style="width: 100%" class="btn-large purple waves-light modal-trigger" href="#modal5">Enviar XML</a>
 			</div>
@@ -191,11 +196,11 @@
 			</div>
 
 			<div class="col s2">
-				<a onclick="imprimirCCe()" style="width: 100%" class="btn-large cyan waves-light" href="#!">Imprimir CC-e</a>
+				<a id="btn-imprimir-cce" onclick="imprimirCCe()" style="width: 100%" class="btn-large cyan waves-light" href="#!">Imprimir CC-e</a>
 			</div>
 
 			<div class="col s2">
-				<a onclick="imprimirCancela()" style="width: 100%" class="btn-large red lighten-2 waves-light" href="#!">Imprimir Cancela</a>
+				<a id="btn-imprimir-cancelar" onclick="imprimirCancela()" style="width: 100%" class="btn-large red lighten-2 waves-light" href="#!">Imprimir Cancela</a>
 			</div>
 		</div>
 	</div>

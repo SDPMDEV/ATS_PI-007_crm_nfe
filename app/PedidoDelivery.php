@@ -52,7 +52,7 @@ class PedidoDelivery extends Model
 						if($v > $maiorValor) $maiorValor = $v;
 					}
 					if(getenv("DIVISAO_VALOR_PIZZA") == 1){
-						$maiorValor = number_format(($somaValores/sizeof($isabores)),2);
+						$maiorValor = number_format(($somaValores/sizeof($i->sabores)),2);
 					}
 					$total += $i->quantidade * $maiorValor;
 				}else{

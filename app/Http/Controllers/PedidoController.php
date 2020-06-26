@@ -13,6 +13,8 @@ use App\ComplementoDelivery;
 use App\VendaCaixa;
 use App\ConfigNota;
 use App\BairroDelivery;
+use App\PedidoDelete;
+use App\Mesa;
 use Comtele\Services\TextMessageService;
 use NFePHP\DA\NFe\CupomPedido;
 use NFePHP\DA\NFe\Itens;
@@ -34,8 +36,11 @@ class PedidoController extends Controller{
    where('desativado', false)
    ->get();
 
+   $mesas = Mesa::all();
+
    return view('pedido/list')
    ->with('pedidos', $pedidos)
+   ->with('mesas', $mesas)
    ->with('title', 'Lista de Pedidos');
  }
 
@@ -56,7 +61,8 @@ class PedidoController extends Controller{
     'bairro_id' => null,
     'referencia' => '',
     'telefone' => '',
-    'desativado' => false
+    'desativado' => false,
+    'mesa_id' => $request->mesa_id != 'null' ? $request->mesa_id : null
   ]);
    if($res) {
     session()->flash('color', 'green');
@@ -101,6 +107,19 @@ public function deleteItem($id){
  $item = ItemPedido::
  where('id', $id)
  ->first();
+
+ //armazena item
+
+ PedidoDelete::create(
+  [
+    'pedido_id' => $item->pedido_id,
+    'produto' => $item->nomeDoProduto(),
+    'quantidade' => $item->quantidade,
+    'valor' => $item->valor,
+    'data_insercao' => \Carbon\Carbon::parse($item->created_at)->format('d/m/Y H:i:s')
+  ]
+);
+ //fim armazena item
 
  if($item->delete()){
    session()->flash('color', 'green');
@@ -177,6 +196,7 @@ public function saveItem(Request $request){
         if($prod->id == $produto) $saborDup = true;
       }
     }
+    
     if(!$saborDup){
       $prod = Produto
       ::where('id', $produto)
@@ -313,9 +333,10 @@ private function addAtributes($itens){
         $i->maiorValor = $somaValores/$divide;
       }
 
-      
     }
     $i->produto->valor_venda = $i->valor;
+
+    if($i->maiorValor < $i->valor) $i->maiorValor = $i->valor;
     $i->produto_id = $i->produto->id;
     $i->produto->nome = $i->produto->nome;
     $i->item_pedido = $i->id;
@@ -409,6 +430,9 @@ public function imprimirItens(Request $request){
   $ids = $request->ids;
   $ids = explode(",", $ids);
   $itens = [];
+  
+
+
   foreach($ids as $i){
     if($i != null){
       $item = ItemPedido::find($i);
@@ -417,19 +441,97 @@ public function imprimirItens(Request $request){
       array_push($itens, $item);
     }
   }
+  if(sizeof($itens) > 0){
 
-  $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-  $pathLogo = $public.'imgs/logo.jpg';
-  $cupom = new Itens($itens, $pathLogo);
+    $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+    $pathLogo = $public.'imgs/logo.jpg';
+    $cupom = new Itens($itens, $pathLogo);
 
-  $pdf = $cupom->render();
-  // file_put_contents($public.'pdf/CUPOM_PEDIDO.pdf',$pdf);
-  // return redirect($public.'pdf/CUPOM_PEDIDO.pdf');
+    $pdf = $cupom->render();
+    file_put_contents($public.'pdf/CUPOM_PEDIDO.pdf',$pdf);
+    return redirect($public.'pdf/CUPOM_PEDIDO.pdf');
+  }else{
+    echo "Selecione ao menos um item!";
+  }
 
-  header('Content-Type: application/pdf');
-  echo $pdf;
+  // header('Content-Type: application/pdf');
+  // echo $pdf;
   
 
+}
+
+public function controleComandas(){
+  $comandas = Pedido::
+  limit(30)
+  ->orderBy('id', 'desc')
+  ->get();
+  return view('pedido/controle_comandas')
+  ->with('comandas', $comandas)
+  ->with('mensagem', '*Listando os 30 ultimos registros')
+  ->with('title', 'Controle de Comandas');
+}
+
+public function verDetalhes($id){
+  $pedido = Pedido::find($id);
+  $removidos = PedidoDelete::where('pedido_id', $id)->get();
+
+  return view('pedido/detalhes')
+  ->with('pedido', $pedido)
+  ->with('removidos', $removidos)
+  ->with('title', 'Detalhes comanda ' . $pedido->comanda);
+}
+
+public function filtroComanda(Request $request){
+  if($request->data_inicial == null || $request->data_final == null){
+    return redirect()->back();
+  }
+
+  $data_inicial = $this->parseDate($request->data_inicial);
+  $data_final = $this->parseDate($request->data_final, true);
+  $numero_comanda = $request->numero_comanda;
+
+  if($numero_comanda != null){
+    $comandas = Pedido::
+    whereBetween('created_at', [$data_inicial, 
+      $data_final])
+    ->where('comanda', $numero_comanda)
+    ->get();
+  }else{
+    $comandas = Pedido::
+    whereBetween('created_at', [$data_inicial, 
+      $data_final])
+    ->get();
+  }
+
+  return view('pedido/controle_comandas')
+  ->with('comandas', $comandas)
+  ->with('mensagem', '*Listando os resultados do filtro')
+  ->with('title', 'Controle de Comandas');
+}
+
+private function parseDate($date, $plusDay = false){
+  if($plusDay == false)
+    return date('Y-m-d', strtotime(str_replace("/", "-", $date)));
+  else
+    return date('Y-m-d', strtotime("+1 day",strtotime(str_replace("/", "-", $date))));
+}
+
+public function mesas(){
+  $pedidos = Pedido::
+  where('desativado', false)
+  ->where('mesa_id', '!=', null)
+  ->groupBy('mesa_id')
+  ->get();
+  return view('pedido/mesas')
+  ->with('pedidos', $pedidos)
+  ->with('title', 'Mesas em aberto');
+}
+
+public function verMesa($mesa_id){
+  $mesa = Mesa::find($mesa_id);
+  return view('pedido/verMesa')
+  ->with('mesa', $mesa)
+  ->with('title', 'Comandas da Mesa');
 }
 
 }

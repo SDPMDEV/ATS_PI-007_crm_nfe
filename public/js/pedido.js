@@ -340,6 +340,23 @@ $('#sabores').on('chip.delete', function(e, chip){
     if(t != chip.tag) temp.push(t)
   })
   SABORESESCOLHIDOS = temp;
+  let soma = 0;
+  TODOSSABORES.map((v) => {
+    console.log(v)
+    console.log(SABORESESCOLHIDOS)
+    if(SABORESESCOLHIDOS.includes(v.produto.nome)){
+      if(DIVISAO_VALOR_PIZZA == 0){
+        if(v.tamanhoValor > maiorValorPizza) maiorValorPizza = v.tamanhoValor;
+        $('#valor').val(maiorValorPizza)
+      }else{
+
+        soma += parseFloat(v.tamanhoValor);
+      }
+    }
+  })
+  let calc = (soma + parseFloat(VALOR_PIZZA) )/(SABORESESCOLHIDOS.length + 1);
+  $('#valor').val(calc.toFixed(2));
+  
   $('#sabores_escolhidos').val(SABORESESCOLHIDOS)
   $('#sabores input').css('display', 'block')
 });

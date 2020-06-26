@@ -25,7 +25,7 @@
 
 				</div>
 				<div class="input-field col s3">
-					<input type="text" class="timepicker" name="inicio" value="{{{ isset($funcionamento->inicio_expediente) ? $funcionamento->inicio_expediente : '18:00' }}}">
+					<input type="text" class="picker" id="inicio" name="inicio" value="{{{ isset($funcionamento->inicio_expediente) ? $funcionamento->inicio_expediente : '18:00' }}}">
 					<label>Inicio</label>
 					@if($errors->has('inicio'))
 					<div class="center-align red lighten-2">
@@ -34,7 +34,7 @@
 					@endif
 				</div>
 				<div class="input-field col s3">
-					<input type="text" class="timepicker" name="fim" value="{{{ isset($funcionamento->fim_expediente) ? $funcionamento->fim_expediente : '23:59' }}}">
+					<input type="text" class="picker" id="fim" name="fim" value="{{{ isset($funcionamento->fim_expediente) ? $funcionamento->fim_expediente : '23:59' }}}">
 					<label>Fim</label>
 					@if($errors->has('fim'))
 					<div class="center-align red lighten-2">
@@ -43,7 +43,7 @@
 					@endif
 				</div>
 				<div class="col s2">
-					<button type="submit" class="btn-large">
+					<button type="submit" id="btn-salvar" class="btn-large disabled">
 						@if(isset($funcionamento->id))
 						<span>EDITAR</span>
 						@else
@@ -114,4 +114,5 @@
 		</div>
 	</div>
 </div>
+
 @endsection	

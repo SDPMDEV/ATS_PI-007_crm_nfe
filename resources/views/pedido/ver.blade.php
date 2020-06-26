@@ -2,8 +2,6 @@
 @section('content')
 
 <div class="row">
-
-
 	<div class="col s12">
 		@if(session()->has('message'))
 		<div class="row">
@@ -13,7 +11,12 @@
 		</div>
 		@endif
 
-		<h3>Comanda: {{$pedido->comanda}}</h3>
+		<h3>Comanda: <strong class="red-text">{{$pedido->comanda}}</strong></h3>
+		@if($pedido->mesa_id != NULL)
+		<h3>Mesa: <strong class="red-text">{{$pedido->mesa->nome}}</strong></h3>
+		@else
+		<h3>Mesa: <strong class="red-text">Avulsa</strong></h3>
+		@endif
 		<input type="hidden" id="DIVISAO_VALOR_PIZZA" value="{{getenv('DIVISAO_VALOR_PIZZA')}}" name="">
 		@if($pedido->observacao != '')
 		<h5>Observação: <strong>{{$pedido->observacao}}</strong></h5>
@@ -225,20 +228,6 @@
 
 					<?php 
 					$valorVenda = 0;
-
-				// if(count($i->sabores) > 0){
-				// 	$maiorValor = 0;
-				// 	foreach($i->sabores as $s){
-				// 		$v = $s->maiorValor($s->sabor_id, $i->tamanho_pizza_id);
-				// 		if($v > $maiorValor) $maiorValor = $v;
-				// 	}
-				// 	$valorVenda = $maiorValor;
-				// }else if(isset($i->produto->produto) && $i->produto->produto->valor_venda > 0){
-				// 	$valorVenda = $i->produto->produto->valor_venda;
-				// }else{
-				// 	$valorVenda = $i->produto->valor_venda;
-				// }
-
 
 					$valorVenda = $i->valor;
 

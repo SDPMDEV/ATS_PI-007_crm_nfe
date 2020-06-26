@@ -112,8 +112,9 @@ class DeliveryConfigCategoriaController extends Controller
     	->first();
     	if($request->hasFile('file')){
     		//unlink anterior
-    		if(file_exists('imagens_categorias/'.$anterior->path))
-    			unlink('imagens_categorias/'.$anterior->path);
+            $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+    		if(file_exists($public . 'imagens_categorias/'.$anterior->path))
+    			unlink($public . 'imagens_categorias/'.$anterior->path);
 
     		$file = $request->file('file');
 
@@ -149,8 +150,9 @@ class DeliveryConfigCategoriaController extends Controller
     	::where('id', $id)
     	->first();
 
-    	if(file_exists('imagens_categorias/'.$categoria->path))
-    		unlink('imagens_categorias/'.$categoria->path);
+        $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+    	if(file_exists($public . 'imagens_categorias/'.$categoria->path))
+    		unlink($public . 'imagens_categorias/'.$categoria->path);
     	if($categoria->delete()){
     		session()->flash('color', 'blue');
     		session()->flash('message', 'Registro removido!');

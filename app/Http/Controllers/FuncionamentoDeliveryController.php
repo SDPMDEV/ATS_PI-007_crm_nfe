@@ -28,6 +28,7 @@ class FuncionamentoDeliveryController extends Controller
 		return view('funcionamentoDelivery/index')
 		->with('funcionamentos', $funcionamentos)
 		->with('dias', $dias)
+		->with('controleHorarioJs', true)
 		->with('title', 'Funcionamento de Delivery');
 	}
 
@@ -84,6 +85,7 @@ class FuncionamentoDeliveryController extends Controller
 		return view('funcionamentoDelivery/index')
 		->with('funcionamentos', $funcionamentos)
 		->with('dias', $dias)
+		->with('controleHorarioJs', true)
 		->with('funcionamento', $funcionamento)
 		->with('title', 'Funcionamento de Delivery');
 	}

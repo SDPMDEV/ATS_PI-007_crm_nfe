@@ -84,6 +84,21 @@ class ClienteDeliveryController extends Controller
 		->with('cliente', $cliente);
 	}
 
+	public function delete($id){
+		$cliente = ClienteDelivery::
+		where('id', $id)
+		->first();
+
+		if($cliente->delete()){
+			session()->flash('color', 'green');
+            session()->flash("message", "Cliente removido com sucesso!");
+        }else{
+            session()->flash('color', 'red');
+            session()->flash('message', 'Erro ao remover cliente!');
+        }
+		return redirect('/clientesDelivery');
+	}
+
 	public function update(Request $request){
 		
 		$cliente = ClienteDelivery::
@@ -168,7 +183,7 @@ class ClienteDeliveryController extends Controller
             session()->flash('color', 'red');
             session()->flash('message', 'Erro ao editar endereço!');
         }
-		return redirect('clientesDelivery/enderecos/'.$end->id);
+		return redirect('clientesDelivery/enderecos/'.$end->cliente->id);
 	}
 
 	private function _validate(Request $request, $celularAnterior){

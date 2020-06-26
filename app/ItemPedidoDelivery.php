@@ -66,9 +66,11 @@ public function valorProduto(){
 }
 
 public function nomeDoProduto(){
-    
+
     if(sizeof($this->sabores) == 0){
-        return $this->produto->produto->nome;
+        $nome = $this->produto->produto->nome;
+        if($this->observacao != '') $nome .= " | OBS: " . $this->observacao;
+        return $nome;
     }else{
         $cont = 1;
         $nome = "";
@@ -76,7 +78,23 @@ public function nomeDoProduto(){
             $nome .= $cont."/".count($this->sabores) . " " . $s->produto->produto->nome;
         }
         $nome .= " | Tamanho: " . $this->tamanho->nome;
+
+        if($this->observacao != '') $nome .= " | OBS: " . $this->observacao;
         return $nome;
     }
+}
+
+public static function maisVendidosDaSemana(){
+
+    $dataInicial = date('Y-m-d', strtotime("-7 days"));
+    $dataFinal = date('Y-m-d');
+
+    $c = ItemPedidoDelivery::
+    selectRaw('item_pedido_deliveries.*, sum(item_pedido_deliveries.quantidade) as soma')
+    ->whereBetween('created_at', [$dataInicial, 
+        $dataFinal])
+    ->orderBy('soma', 'asc')
+    ->limit(4);
+    return $c->get();
 }
 }

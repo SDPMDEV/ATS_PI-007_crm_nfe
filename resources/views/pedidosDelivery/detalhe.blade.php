@@ -11,6 +11,11 @@
 			<div class="col s12">
 				<h4>Cliente: <strong class="cyan-text">{{$pedido->cliente->nome}}</strong></h4>
 				<h4>Telefone: <strong class="cyan-text">{{$pedido->telefone}}</strong></h4>
+				@if($pedido->app == 0)
+				<h4><strong class="red-text">Pedido realizado através do WebDelivery</strong></h4>
+				@else
+				<h4><strong class="red-text">Pedido realizado através do App</strong></h4>
+				@endif
 				<h4>Horario: <strong class="cyan-text">{{ \Carbon\Carbon::parse($pedido->data_registro)->format('H:i:s')}}</strong></h4>
 				<h4>Estado Atual: @if($pedido->estado == 'nv')
 					<strong class="blue-text">NOVO</strong>
