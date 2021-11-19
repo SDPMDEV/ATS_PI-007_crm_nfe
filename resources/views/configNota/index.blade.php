@@ -1,468 +1,574 @@
 @extends('default.layout')
 @section('content')
-<div class="row">
-	<div class="col s12">
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-		</div>
-		
-		@endif
 
-		@if(sizeof($errors) > 0)
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 red">
-				<h5 class="center-align white-text">Erro no Formulário</h5>
-			</div>
-		</div>
-		@endif
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 
-		<div class="row">
-			<div class="col s6">
-				<h4>{{{ isset($config) ? "Editar": "Cadastrar" }}} Emitente Fiscal</h4>
-			</div>
-			<div class="col s6">
-				@if(empty($certificado))
-				<p class="red-text center-align">VOCE AINDA NÃO FEZ UPLOAD DO CERTIFICADO ATÉ O MOMENTO</p>
-				<a style="width: 100%" href="/configNF/certificado" class="btn-large blue pulse">
-					<i class="material-icons left">cloud</i>
-				Fazer upload agora</a>
-				@else
-				<a onclick = "if (! confirm('Deseja excluir o certificado')) { return false; }" class="btn red" href="/configNF/deleteCertificado">
-					<i class="material-icons left">close</i>
-				Deletar Certificado</a>
-				@endif
-			</div>
-		</div>
-		<form method="post" action="/configNF/save" enctype="multipart/form-data">
-			<input type="hidden" name="id" value="{{{ isset($config->id) ? $config->id : 0 }}}">
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
 
-			<section class="section-1">
-				<div class="row">
-					<div class="input-field col s7">
-						<input value="{{{ isset($config->razao_social) ? $config->razao_social : old('razao_social') }}}" id="razao_social" name="razao_social" type="text" class="validate upper-input">
-						<label for="razao_social">Razao Social</label>
+				<form method="post" action="/configNF/save">
 
-						@if($errors->has('razao_social'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('razao_social') }}</span>
-						</div>
-						@endif
+					<input type="hidden" name="id" value="{{{ isset($config->id) ? $config->id : 0 }}}">
 
-					</div>
-				</div>
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
 
-				<div class="row">
-					<div class="input-field col s7">
-						<input value="{{{ isset($config->nome_fantasia) ? $config->nome_fantasia : old('nome_fantasia') }}}" id="nome_fantasia" name="nome_fantasia" type="text" class="validate upper-input">
-						<label for="nome_fantasia">Nome Fantasia</label>
-
-						@if($errors->has('nome_fantasia'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('nome_fantasia') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s3">
-						<input value="{{{ isset($config->cnpj) ? $config->cnpj : old('cnpj') }}}" id="cnpj" name="cnpj" type="text" class="validate">
-						<label>CNPJ</label>
-
-						@if($errors->has('cnpj'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('cnpj') }}</span>
-						</div>
-						@endif
-					</div>
-
-					<div class="input-field col s3">
-						<input value="{{{ isset($config->ie) ? $config->ie : old('ie') }}}" id="ie" name="ie" type="text" class="validate">
-						<label>Inscrição Estadual</label>
-
-						@if($errors->has('ie'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('ie') }}</span>
-						</div>
-						@endif
-					</div>
-				</div>
-			</section>
-			<section class="section-2">
-
-				<div class="row">
-					<div class="input-field col s5">
-						<input value="{{{ isset($config->logradouro) ? $config->logradouro : old('logradouro') }}}" id="logradouro" name="logradouro" type="text" class="validate upper-input">
-						<label for="logradouro">Logradouro</label>
-
-						@if($errors->has('logradouro'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('logradouro') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col s2">
-						<input value="{{{ isset($config->numero) ? $config->numero : old('numero') }}}" id="numero" name="numero" type="text" class="validate upper-input">
-						<label for="numero">Numero</label>
-
-						@if($errors->has('numero'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('numero') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s3">
-						<input value="{{{ isset($config->bairro) ? $config->bairro : old('bairro') }}}" id="bairro" name="bairro" type="text" class="validate upper-input">
-						<label for="bairro">Bairro</label>
-
-						@if($errors->has('bairro'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('bairro') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s3">
-						<input value="{{{ isset($config->cep) ? $config->cep : old('cep') }}}" id="cep" name="cep" type="text" class="validate">
-						<label for="cep">CEP</label>
-
-						@if($errors->has('cep'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('cep') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-				<div class="row">
-					<div class="input-field col s3">
-						<input value="{{{ isset($config->municipio) ? $config->municipio : old('municipio') }}}" id="municipio" name="municipio" type="text" class="validate upper-input">
-						<label for="municipio">Municipio</label>
-
-						@if($errors->has('municipio'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('municipio') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col s2">
-						<input  value="{{{ isset($config->codMun) ? $config->codMun : old('codMun') }}}" id="codMun" name="codMun" type="text" class="validate">
-						<label for="codMun">Codigo do Municipio</label>
-
-						@if($errors->has('codMun'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('codMun') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-				
-				<div class="row">
-					
-					<div class="input-field col s2">
-						<!-- <input value="{{{ isset($config->UF) ? $config->UF : old('UF') }}}" id="" name="UF" type="text" class="validate upper-input"> -->
-						<select name="uf">
-							<option>--</option>
-							@foreach($cUF as $key => $u)
-							<option 
-							@if(isset($config))
-							@if($key == $config->cUF)
-							selected
-							@endif
-							@endif
-							value="{{$key}}">{{$key}} - {{$u}}</option>
-							@endforeach
-						</select>
-						
-						<label for="UF">UF</label>
-
-						@if($errors->has('UF'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('UF') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s3">
-						<input value="{{{ isset($config->pais) ? $config->pais : old('pais') }}}" id="pais" name="pais" type="text" class="validate upper-input">
-						<label for="pais">Pais</label>
-
-						@if($errors->has('pais'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('pais') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col s2">
-						<input value="{{{ isset($config->codPais) ? $config->codPais : old('codPais') }}}" id="codPais" name="codPais" type="text" class="validate">
-						<label for="codPais">Codigo do Pais</label>
-
-						@if($errors->has('codPais'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('codPais') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s3">
-						<input value="{{{ isset($config->fone) ? $config->fone : old('fone') }}}" id="telefone" name="fone" type="text" class="validate">
-						<label for="fone">Telefone</label>
-
-						@if($errors->has('fone'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('fone') }}</span>
-						</div>
-						@endif
-
-					</div>
-
-				</div>
-			</section>
-			
-			<section class="section-3">
-
-				<div class="row">
-					<div class="input-field col s8">
-						<select name="CST_CSOSN_padrao">
-							@foreach($listaCSTCSOSN as $key => $l)
-							<option value="{{$key}}"
-							@isset($config)
-							@if($key == $config->CST_CSOSN_padrao)
-							selected
-							@endif
-							@endisset
-							>{{$key}} - {{$l}}</option>
-							@endforeach
-						</select>
-						<label>CST/CSOSN Padrão</label>
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s6">
-						<select name="CST_PIS_padrao">
-							@foreach($listaCSTPISCOFINS as $key => $l)
-							<option value="{{$key}}"
-							@isset($config)
-							@if($key == $config->CST_PIS_padrao)
-							selected
-							@endif
-							@endisset
-							>{{$key}} - {{$l}}</option>
-							@endforeach
-						</select>
-						<label>CST PIS Padrão</label>
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s6">
-						<select name="CST_COFINS_padrao">
-							@foreach($listaCSTPISCOFINS as $key => $l)
-							<option value="{{$key}}"
-							@isset($config)
-							@if($key == $config->CST_COFINS_padrao)
-							selected
-							@endif
-							@endisset
-							>{{$key}} - {{$l}}</option>
-							@endforeach
-						</select>
-						<label>CST COFINS Padrão</label>
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s6">
-						<select name="CST_IPI_padrao">
-							@foreach($listaCSTIPI as $key => $l)
-							<option value="{{$key}}"
-							@isset($config)
-							@if($key == $config->CST_IPI_padrao)
-							selected
-							@endif
-							@endisset
-							>{{$key}} - {{$l}}</option>
-							@endforeach
-						</select>
-						<label>CST IPI Padrão</label>
-
-					</div>
-				</div>
-
-
-				<div class="row">
-					<div class="input-field col s4">
-						
-						<select name="frete_padrao">
-							@foreach($tiposFrete as $key => $t)
-							<option value="{{$key}}"
-							@isset($config)
-							@if($key == $config->frete_padrao)
-							selected
-							@endif
-							@endisset
-							>{{$key}} - {{$t}}</option>
-							@endforeach
-						</select>
-						<label>Frete Padrão</label>
-						
-					</div>
-
-
-					<div class="input-field col s4">
-						
-						<select name="tipo_pagamento_padrao">
-							@foreach($tiposPagamento as $key => $t)
-							<option value="{{$key}}"
-							@isset($config)
-							@if($key == $config->tipo_pagamento_padrao)
-							selected
-							@endif
-							@endisset
-							>{{$key}} - {{$t}}</option>
-							@endforeach
-						</select>
-						<label>Tipo Pagamento Padrão</label>
-						
-					</div>
-
-				</div>
-
-
-				<div class="row">
-					<div class="input-field col s8">
-						
-						<select name="nat_op_padrao">
-							@foreach($naturezas as $n)
-							<option value="{{$n->id}}"
-								@isset($config)
-								@if($n->id == $config->nat_op_padrao)
-								selected
-								@endif
-								@endisset
-								>{{$n->natureza}}</option>
-								@endforeach
-							</select>
-							<label>Natureza de Operação Padrão Frente de Caixa</label>
-
+							<h3 class="card-title">{{{ isset($config) ? "Editar": "Cadastrar" }}} Emitente Fiscal</h3>
 						</div>
 
 					</div>
+					@csrf
 
 					<div class="row">
-						<div class="input-field col s4">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
 
-							<select name="ambiente">
-								<option @if(isset($config)) @if($config->ambiente == 2) selected @endif @endif value="2">2 - Homologação</option>
-								<option @if(isset($config)) @if($config->ambiente == 1) selected @endif @endif value="1">1 - Produção</option>
-							</select>
-							<label>Ambiente</label>
-						</div>
-						<div class="input-field col s2">
+									<div class="row">
+										@if(empty($certificado))
+										<div class="col-lg-12 col-sm-12 col-md-12">
+											<p style="color: red">VOCE AINDA NÃO FEZ UPLOAD DO CERTIFICADO ATÉ O MOMENTO</p>
+										</div>
+										<div class="col-lg-12 col-sm-12 col-md-12">
 
-							<input value="{{{ isset($config->numero_serie_nfe) ? $config->numero_serie_nfe : old('numero_serie_nfe') }}}" id="numero_serie_nfe" name="numero_serie_nfe" type="text" class="validate numero_serie">
-							<label for="numero_serie_nfe">Nº Serie NF-e</label>
+											<a class="btn btn-lg btn-light-info" href="/configNF/certificado">
+												Fazer upload agora
+											</a>
+										</div>
 
-							@if($errors->has('numero_serie_nfe'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('numero_serie_nfe') }}</span>
+										@else
+										<div class="col-lg-12 col-sm-12 col-md-12">
+											<a onclick='swal("Atenção!", "Deseja remover este certificado?", "warning").then((sim) => {if(sim){ location.href="/configNF/deleteCertificado" }else{return false} })' href="#!" id="btn-consulta-cadastro" id="testar" class="btn btn-danger">
+												Remover certificado
+											</a>
+
+											<a style="margin-left: 5px;" type="button" id="testar" class="btn btn-success spinner-white spinner-right">
+												Testar ambiente
+											</a>
+										</div>
+										
+										<div class="card card-custom gutter-b">
+											<div class="card-body">
+												<div class="card-content">
+
+													<h6>Serial Certificado: <strong class="green-text">{{$infoCertificado['serial']}}</strong></h6>
+													<h6>Inicio: <strong class="green-text">{{$infoCertificado['inicio']}}</strong></h6>
+													<h6>Expiração: <strong class="green-text">{{$infoCertificado['expiracao']}}</strong></h6>
+													<h6>IDCTX: <strong class="green-text">{{$infoCertificado['id']}}</strong></h6>
+
+												</div>
+											</div>
+										</div>
+
+										@endif
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-12 col-lg-12">
+											<label class="col-form-label">Razao Social</label>
+											<div class="">
+												<input id="razao_social" type="text" class="form-control @if($errors->has('razao_social')) is-invalid @endif" name="razao_social" value="{{{ isset($config) ? $config->razao_social : old('razao_social') }}}">
+												@if($errors->has('razao_social'))
+												<div class="invalid-feedback">
+													{{ $errors->first('razao_social') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-12 col-lg-12">
+											<label class="col-form-label">Nome Fantasia</label>
+											<div class="">
+												<input id="nome_fantasia" type="text" class="form-control @if($errors->has('nome_fantasia')) is-invalid @endif" name="nome_fantasia" value="{{{ isset($config) ? $config->nome_fantasia : old('nome_fantasia') }}}">
+												@if($errors->has('nome_fantasia'))
+												<div class="invalid-feedback">
+													{{ $errors->first('nome_fantasia') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+
+										<div class="form-group validated col-sm-6 col-lg-6">
+											<label class="col-form-label">CNPJ</label>
+											<div class="">
+												<input id="cnpj" type="text" class="form-control @if($errors->has('cnpj')) is-invalid @endif" name="cnpj" value="{{{ isset($config) ? $config->cnpj : old('cnpj') }}}">
+												@if($errors->has('cnpj'))
+												<div class="invalid-feedback">
+													{{ $errors->first('cnpj') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-6 col-lg-6">
+											<label class="col-form-label">Inscrição Estadual</label>
+											<div class="">
+												<input id="ie" type="text" class="form-control @if($errors->has('ie')) is-invalid @endif" name="ie" value="{{{ isset($config) ? $config->ie : old('ie') }}}">
+												@if($errors->has('ie'))
+												<div class="invalid-feedback">
+													{{ $errors->first('ie') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<hr>
+									<h5>Endereço</h5>
+									<div class="row">
+
+										<div class="form-group validated col-sm-10 col-lg-10">
+											<label class="col-form-label">Logradouro</label>
+											<div class="">
+												<input id="logradouro" type="text" class="form-control @if($errors->has('logradouro')) is-invalid @endif" name="logradouro" value="{{{ isset($config) ? $config->logradouro : old('logradouro') }}}">
+												@if($errors->has('logradouro'))
+												<div class="invalid-feedback">
+													{{ $errors->first('logradouro') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-2 col-lg-2">
+											<label class="col-form-label">Nº</label>
+											<div class="">
+												<input id="numero" type="text" class="form-control @if($errors->has('numero')) is-invalid @endif" name="numero" value="{{{ isset($config) ? $config->numero : old('numero') }}}">
+												@if($errors->has('numero'))
+												<div class="invalid-feedback">
+													{{ $errors->first('numero') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+
+										<div class="form-group validated col-sm-5 col-lg-5">
+											<label class="col-form-label">Bairro</label>
+											<div class="">
+												<input id="bairro" type="text" class="form-control @if($errors->has('bairro')) is-invalid @endif" name="bairro" value="{{{ isset($config) ? $config->bairro : old('bairro') }}}">
+												@if($errors->has('bairro'))
+												<div class="invalid-feedback">
+													{{ $errors->first('bairro') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-5 col-lg-5">
+											<label class="col-form-label">CEP</label>
+											<div class="">
+												<input id="cep" type="text" class="form-control @if($errors->has('cep')) is-invalid @endif" name="cep" value="{{{ isset($config) ? $config->cep : old('cep') }}}">
+												@if($errors->has('cep'))
+												<div class="invalid-feedback">
+													{{ $errors->first('cep') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+
+										<div class="form-group validated col-sm-5 col-lg-5">
+											<label class="col-form-label">Município</label>
+											<div class="">
+												<input id="municipio" type="text" class="form-control @if($errors->has('municipio')) is-invalid @endif" name="municipio" value="{{{ isset($config) ? $config->municipio : old('municipio') }}}">
+												@if($errors->has('municipio'))
+												<div class="invalid-feedback">
+													{{ $errors->first('municipio') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-4 col-lg-4">
+											<label class="col-form-label">Codigo do Municipio</label>
+											<div class="">
+												<input id="codMun" type="text" class="form-control @if($errors->has('codMun')) is-invalid @endif" name="codMun" value="{{{ isset($config) ? $config->codMun : old('codMun') }}}">
+												@if($errors->has('codMun'))
+												<div class="invalid-feedback">
+													{{ $errors->first('codMun') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-3 col-md-3 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">UF</label>
+
+											<select class="custom-select form-control" name="uf">
+												<option value="null">--</option>
+												@foreach($cUF as $key => $u)
+												<option 
+												@if(isset($config))
+												@if($key == $config->cUF)
+												selected
+												@endif
+
+												@else
+												@if($key == old('uf'))
+												selected
+												@endif
+
+												@endif
+												value="{{$key}}">{{$key}} - {{$u}}</option>
+												@endforeach
+											</select>
+											@if($errors->has('uf'))
+											<div class="invalid-feedback">
+												{{ $errors->first('uf') }}
+											</div>
+											@endif
+
+										</div>
+									</div>
+
+									<div class="row">
+
+										<div class="form-group validated col-lg-3 col-md-3 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Pais</label>
+											<div class="">
+												<input id="pais" placeholder="BRASIL" type="text" class="form-control @if($errors->has('pais')) is-invalid @endif" name="pais" value="{{{ isset($config) ? $config->pais : old('pais') }}}">
+												@if($errors->has('pais'))
+												<div class="invalid-feedback">
+													{{ $errors->first('pais') }}
+												</div>
+												@endif
+											</div>
+
+										</div>
+
+										<div class="form-group validated col-lg-3 col-md-3 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Codigo do Pais</label>
+											<div class="">
+												<input id="codPais" type="text" class="form-control @if($errors->has('codPais')) is-invalid @endif" name="codPais" value="{{{ isset($config) ? $config->codPais : old('codPais') }}}">
+												@if($errors->has('codPais'))
+												<div class="invalid-feedback">
+													{{ $errors->first('codPais') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-4 col-md-4 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Telefone</label>
+											<div class="">
+												<input id="telefone" type="text" class="form-control @if($errors->has('fone')) is-invalid @endif" name="fone" value="{{{ isset($config) ? $config->fone : old('fone') }}}">
+												@if($errors->has('fone'))
+												<div class="invalid-feedback">
+													{{ $errors->first('fone') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-12 col-md-12 col-sm-12">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">CST/CSOSN Padrão</label>
+
+											<select class="custom-select form-control" name="CST_CSOSN_padrao">
+												<option value="null">--</option>
+												@foreach($listaCSTCSOSN as $key => $l)
+												<option value="{{$key}}"
+												@isset($config)
+												@if($key == $config->CST_CSOSN_padrao)
+												selected
+												@endif
+												@endisset>{{$key}} - {{$l}}</option>
+												@endforeach
+											</select>
+
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-6 col-md-6 col-sm-6">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">CST/PIS Padrão</label>
+
+											<select class="custom-select form-control" name="CST_PIS_padrao">
+												<option value="null">--</option>
+												@foreach($listaCSTPISCOFINS as $key => $l)
+												<option value="{{$key}}"
+												@isset($config)
+												@if($key == $config->CST_PIS_padrao)
+												selected
+												@endif
+												@endisset
+												>{{$key}} - {{$l}}</option>
+												@endforeach
+											</select>
+
+										</div>
+
+										<div class="form-group validated col-lg-6 col-md-6 col-sm-6">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">CST/COFINS Padrão</label>
+
+											<select class="custom-select form-control" name="CST_COFINS_padrao">
+												<option value="null">--</option>
+												@foreach($listaCSTPISCOFINS as $key => $l)
+												<option value="{{$key}}"
+												@isset($config)
+												@if($key == $config->CST_COFINS_padrao)
+												selected
+												@endif
+												@endisset
+												>{{$key}} - {{$l}}</option>
+												@endforeach
+											</select>
+
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-12 col-md-12 col-sm-12">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">CST/IPI Padrão</label>
+
+											<select class="custom-select form-control" name="CST_IPI_padrao">
+												<option value="null">--</option>
+												@foreach($listaCSTIPI as $key => $l)
+												<option value="{{$key}}"
+												@isset($config)
+												@if($key == $config->CST_IPI_padrao)
+												selected
+												@endif
+												@endisset
+												>{{$key}} - {{$l}}</option>
+												@endforeach
+											</select>
+
+										</div>
+									</div>
+
+
+									<div class="row">
+										<div class="form-group validated col-lg-6 col-md-6 col-sm-6">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Frete Padrão</label>
+
+											<select class="custom-select form-control" name="frete_padrao">
+												@foreach($tiposFrete as $key => $t)
+												<option value="{{$key}}"
+												@isset($config)
+												@if($key == $config->frete_padrao)
+												selected
+												@endif
+												@endisset
+												>{{$key}} - {{$t}}</option>
+												@endforeach
+											</select>
+
+										</div>
+
+										<div class="form-group validated col-lg-6 col-md-6 col-sm-6">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Tipo de pagamento Padrão</label>
+
+											<select class="custom-select form-control" name="tipo_pagamento_padrao">
+												@foreach($tiposPagamento as $key => $t)
+												<option value="{{$key}}"
+												@isset($config)
+												@if($key == $config->tipo_pagamento_padrao)
+												selected
+												@endif
+												@endisset
+												>{{$key}} - {{$t}}</option>
+												@endforeach
+											</select>
+
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-12 col-md-12 col-sm-12">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">
+												Natureza de Operação Padrão Frente de Caixa
+											</label>
+
+											<select class="custom-select form-control" name="nat_op_padrao">
+												@foreach($naturezas as $n)
+												<option value="{{$n->id}}"
+													@isset($config)
+													@if($n->id == $config->nat_op_padrao)
+													selected
+													@endif
+													@endisset
+													>{{$n->natureza}}
+												</option>
+												@endforeach
+											</select>
+
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-4 col-md-4 col-sm-4">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">
+												Ambiente
+											</label>
+
+											<select class="custom-select form-control" name="ambiente">
+												<option @if(isset($config)) @if($config->ambiente == 2) selected @endif @endif value="2">2 - Homologação</option>
+												<option @if(isset($config)) @if($config->ambiente == 1) selected @endif @endif value="1">1 - Produção</option>
+											</select>
+
+										</div>
+
+										<div class="form-group validated col-lg-4 col-md-4 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Nº Serie NF-e</label>
+											<div class="">
+												<input id="numero_serie_nfe" type="text" class="form-control @if($errors->has('numero_serie_nfe')) is-invalid @endif" name="numero_serie_nfe" value="{{{ isset($config) ? $config->numero_serie_nfe : old('numero_serie_nfe') }}}">
+												@if($errors->has('numero_serie_nfe'))
+												<div class="invalid-feedback">
+													{{ $errors->first('numero_serie_nfe') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-4 col-md-4 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Nº Serie NFC-e</label>
+											<div class="">
+												<input id="numero_serie_nfce" type="text" class="form-control @if($errors->has('numero_serie_nfce')) is-invalid @endif" name="numero_serie_nfce" value="{{{ isset($config) ? $config->numero_serie_nfce : old('numero_serie_nfce') }}}">
+												@if($errors->has('numero_serie_nfce'))
+												<div class="invalid-feedback">
+													{{ $errors->first('numero_serie_nfce') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-3 col-md-3 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Ultimo Nº NF-e</label>
+											<div class="">
+												<input id="ultimo_numero_nfe" type="text" class="form-control @if($errors->has('ultimo_numero_nfe')) is-invalid @endif" name="ultimo_numero_nfe" value="{{{ isset($config) ? $config->ultimo_numero_nfe : old('ultimo_numero_nfe') }}}">
+												@if($errors->has('ultimo_numero_nfe'))
+												<div class="invalid-feedback">
+													{{ $errors->first('ultimo_numero_nfe') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-3 col-md-3 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Ultimo Nº NFC-e</label>
+											<div class="">
+												<input id="ultimo_numero_nfce" type="text" class="form-control @if($errors->has('ultimo_numero_nfce')) is-invalid @endif" name="ultimo_numero_nfce" value="{{{ isset($config) ? $config->ultimo_numero_nfce : old('ultimo_numero_nfce') }}}">
+												@if($errors->has('ultimo_numero_nfce'))
+												<div class="invalid-feedback">
+													{{ $errors->first('ultimo_numero_nfce') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-3 col-md-3 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Ultimo Nº CT-e</label>
+											<div class="">
+												<input id="ultimo_numero_cte" type="text" class="form-control @if($errors->has('ultimo_numero_cte')) is-invalid @endif" name="ultimo_numero_cte" value="{{{ isset($config) ? $config->ultimo_numero_cte : old('ultimo_numero_cte') }}}">
+												@if($errors->has('ultimo_numero_cte'))
+												<div class="invalid-feedback">
+													{{ $errors->first('ultimo_numero_cte') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-3 col-md-3 col-sm-10">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Ultimo Nº MDF-e</label>
+											<div class="">
+												<input id="ultimo_numero_mdfe" type="text" class="form-control @if($errors->has('ultimo_numero_mdfe')) is-invalid @endif" name="ultimo_numero_mdfe" value="{{{ isset($config) ? $config->ultimo_numero_mdfe : old('ultimo_numero_mdfe') }}}">
+												@if($errors->has('ultimo_numero_mdfe'))
+												<div class="invalid-feedback">
+													{{ $errors->first('ultimo_numero_mdfe') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-6 col-md-6 col-sm-6">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">CSC</label>
+											<div class="">
+												<input id="csc" type="text" class="form-control @if($errors->has('csc')) is-invalid @endif" name="csc" value="{{{ isset($config) ? $config->csc : old('csc') }}}">
+												@if($errors->has('csc'))
+												<div class="invalid-feedback">
+													{{ $errors->first('csc') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-3 col-md-3 col-sm-3">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">CSCID</label>
+											<div class="">
+												<input id="csc_id" type="text" class="form-control @if($errors->has('csc_id')) is-invalid @endif" name="csc_id" value="{{{ isset($config) ? $config->csc_id : old('csc_id') }}}">
+												@if($errors->has('csc_id'))
+												<div class="invalid-feedback">
+													{{ $errors->first('csc_id') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-3 col-lg-3">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">Certificado A3</label>
+											<div class="col-6">
+												<span class="switch switch-outline switch-primary">
+													<label>
+														<input id="certificado_a3" @if(isset($config->certificado_a3) && $config->certificado_a3) checked @endisset
+														name="certificado_a3" type="checkbox" >
+														<span></span>
+													</label>
+												</span>
+											</div>
+											<p style="color: red">*Em desenvolvimento</p>
+
+										</div>
+
+									</div>
+
+								</div>
 							</div>
-							@endif
-						</div>
-
-						<div class="input-field col s2">
-
-							<input value="{{{ isset($config->numero_serie_nfce) ? $config->numero_serie_nfce : old('numero_serie_nfce') }}}" id="numero_serie_nfce" name="numero_serie_nfce" type="text" class="validate numero_serie">
-							<label for="numero_serie_nfce">Nº Serie NFC-e</label>
-
-							@if($errors->has('numero_serie_nfce'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('numero_serie_nfce') }}</span>
-							</div>
-							@endif
 						</div>
 					</div>
 
-					<div class="row">
-						<div class="input-field col s2">
+					<div class="card-footer">
 
-							<input value="{{{ isset($config->ultimo_numero_nfe) ? $config->ultimo_numero_nfe : old('ultimo_numero_nfe') }}}" id="ultimo_numero_nfe" name="ultimo_numero_nfe" type="text" class="validate">
-							<label for="ultimo_numero_nfe">Ultimo número de NF-e</label>
+						<div class="row">
+							<div class="col-xl-2">
 
-							@if($errors->has('ultimo_numero_nfe'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('ultimo_numero_nfe') }}</span>
 							</div>
-							@endif
-						</div>
-						<div class="input-field col s2">
-
-							<input value="{{{ isset($config->ultimo_numero_nfce) ? $config->ultimo_numero_nfce : old('ultimo_numero_nfce') }}}" id="ultimo_numero_nfce" name="ultimo_numero_nfce" type="text" class="validate">
-							<label for="ultimo_numero_nfce">Ultimo número de NFC-e</label>
-
-							@if($errors->has('ultimo_numero_nfce'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('ultimo_numero_nfce') }}</span>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="/clientes">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
 							</div>
-							@endif
-						</div>
-						<div class="input-field col s2">
-
-							<input value="{{{ isset($config->ultimo_numero_cte) ? $config->ultimo_numero_cte : old('ultimo_numero_cte') }}}" id="ultimo_numero_cte" name="ultimo_numero_cte" type="text" class="validate">
-							<label for="ultimo_numero_cte">Ultimo número de CT-e</label>
-
-							@if($errors->has('ultimo_numero_cte'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('ultimo_numero_cte') }}</span>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Salvar</span>
+								</button>
 							</div>
-							@endif
-						</div>
-						<div class="input-field col s2">
 
-							<input value="{{{ isset($config->ultimo_numero_mdfe) ? $config->ultimo_numero_mdfe : old('ultimo_numero_mdfe') }}}" id="ultimo_numero_mdfe" name="ultimo_numero_mdfe" type="text" class="validate">
-							<label for="ultimo_numero_mdfe">Ultimo número de MDF-e</label>
-
-							@if($errors->has('ultimo_numero_mdfe'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('ultimo_numero_mdfe') }}</span>
-							</div>
-							@endif
 						</div>
 					</div>
-				</section>
-
-				@csrf
-
-				<br>
-				<div class="row">
-					<a class="btn-large red lighten-2" href="/">Cancelar</a>
-					<input type="submit" value="Salvar" class="btn-large green accent-3">
 				</div>
 			</form>
 		</div>
 	</div>
-	@endsection
+</div>
+
+@endsection

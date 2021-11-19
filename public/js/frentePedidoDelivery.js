@@ -16,6 +16,11 @@ $(function () {
 
 });
 
+$('#kt_select2_3').change(() => {
+	let id = $('#kt_select2_3').val()
+	abrirPedido(parseInt(id));
+})
+
 function getClientes(data){
 	$.ajax
 	({

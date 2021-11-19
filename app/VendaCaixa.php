@@ -9,7 +9,7 @@ class VendaCaixa extends Model
 {
 	protected $fillable = [
 		'cliente_id', 'usuario_id', 'valor_total', 'NFcNumero',
-		'natureza_id', 'chave', 'path_xml', 'estado', 'tipo_pagamento', 'forma_pagamento', 'dinheiro_recebido','troco', 'nome', 'cpf', 'observacao', 'desconto', 'acrescimo'
+		'natureza_id', 'chave', 'path_xml', 'estado', 'tipo_pagamento', 'forma_pagamento', 'dinheiro_recebido','troco', 'nome', 'cpf', 'observacao', 'desconto', 'acrescimo', 'pedido_delivery_id', 'tipo_pagamento_1', 'valor_pagamento_1', 'tipo_pagamento_2', 'valor_pagamento_2', 'tipo_pagamento_3', 'valor_pagamento_3'
 	];
 
 	public function itens(){
@@ -20,9 +20,13 @@ class VendaCaixa extends Model
 		return $this->belongsTo(Cliente::class, 'cliente_id');
 	}
 
+	public function pedidoDelivery(){
+		return $this->belongsTo(PedidoDelivery::class, 'pedido_delivery_id');
+	}
+
 	public function natureza(){
-        return $this->belongsTo(NaturezaOperacao::class, 'natureza_id');
-    }
+		return $this->belongsTo(NaturezaOperacao::class, 'natureza_id');
+	}
 
 	public function usuario(){
 		return $this->belongsTo(Usuario::class, 'usuario_id');
@@ -44,6 +48,14 @@ class VendaCaixa extends Model
 			'90' => 'Sem pagamento',
 			'99' => 'Outros',
 		];
+	}
+
+	public static function getTipoPagamento($tipo){
+		if(isset(VendaCaixa::tiposPagamento()[$tipo])){
+			return VendaCaixa::tiposPagamento()[$tipo];
+		}else{
+			return "Não identificado";
+		}
 	}
 
 	public static function lastNFCe(){
@@ -86,6 +98,38 @@ class VendaCaixa extends Model
 		return VendaCaixa::
 		where('valor_total', 'LIKE', "%$valor%")
 		->get();
+	}
+
+	public static function filtroEstado($estado){
+		$c = VendaCaixa::
+		where('estado', $estado)
+		->where('forma_pagamento', '!=', 'conta_crediario');
+		return $c->get();
+	}
+
+	public function multiplo(){
+		$text = '';
+		if($this->valor_pagamento_1 > 0){
+			$text .= $this->tipo_pagamento_1 . ' - R$ ' . number_format($this->valor_pagamento_1, 2);
+		}
+
+		if($this->valor_pagamento_2 > 0){
+			$text .= ' | '.$this->tipo_pagamento_2 . ' - R$ ' . number_format($this->valor_pagamento_2, 2);
+		}
+
+		if($this->valor_pagamento_3 > 0){
+			$text .= ' | '.$this->tipo_pagamento_3 . ' - R$ ' . number_format($this->valor_pagamento_3, 2);
+		}
+		return $text;
+	}
+
+	public static function tiposPagamentoMulti(){
+		return [
+			'DINHEIRO',
+			'CARTÃO DE DÉBITO',
+			'CARTÃO DE CRÉDITO',
+			'VALE REFEIÇÃO'
+		];
 	}
 
 }

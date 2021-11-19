@@ -30,7 +30,7 @@ class AuthKey
         }
 
         if($tkGenerate != $token){
-            return response()->json(null, 401);
+            return response()->json($token, 401);
         }else{
            $request->merge(['cliente' => $spl[1]]);
         }

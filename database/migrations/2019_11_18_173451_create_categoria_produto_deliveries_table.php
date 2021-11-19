@@ -15,7 +15,7 @@ class CreateCategoriaProdutoDeliveriesTable extends Migration
     {
         Schema::create('categoria_produto_deliveries', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('nome', 20);
+            $table->string('nome', 30);
             $table->string('descricao', 120);
 
             $table->string('path', 80);

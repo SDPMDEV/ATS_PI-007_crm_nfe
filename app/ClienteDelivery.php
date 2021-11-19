@@ -11,7 +11,7 @@ class ClienteDelivery extends Model
 	];
 
 	protected $hidden = [
-		'senha', 'token', 'ativo'
+		'senha', 'token', 
 	];
 
 	public function enderecos(){
@@ -23,7 +23,7 @@ class ClienteDelivery extends Model
     }
 
     public function favoritos(){
-        return $this->hasMany('App\ProdutoFavoritoDelivery', 'produto_id', 'id');
+        return $this->hasMany('App\ProdutoFavoritoDelivery', 'cliente_id', 'id');
     }
 
     public function tokens(){

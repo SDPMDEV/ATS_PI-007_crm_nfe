@@ -57,7 +57,7 @@ class DevolucaoService{
 		// $stdIde->indPag = 1; //NÃO EXISTE MAIS NA VERSÃO 4.00 // forma de pagamento
 
 		$stdIde->mod = 55;
-		$stdIde->serie = 1;
+		$stdIde->serie = $config->numero_serie_nfe;
 		$stdIde->nNF = (int)$lastNumero+1;
 		$stdIde->dhEmi = date("Y-m-d\TH:i:sP");
 		$stdIde->dhSaiEnt = date("Y-m-d\TH:i:sP");
@@ -312,7 +312,7 @@ class DevolucaoService{
 
 		if($devolucao->vFrete){
 			$stdICMSTot->vNF = 
-			$this->format(($somaProdutos+$devolucao->vFrete));
+			$this->format(($somaProdutos));
 		} 
 		else $stdICMSTot->vNF = $this->format($somaProdutos-$devolucao->vDesc);
 
@@ -471,13 +471,17 @@ class DevolucaoService{
 
 			$st = new Standardize();
 			$std = $st->toStd($resp);
+			sleep(2);
 
 			if ($std->cStat != 103) {
 
 				return "[$std->cStat] - $std->xMotivo";
 			}
+			sleep(3);
+
 			$recibo = $std->infRec->nRec; 
 			$protocolo = $this->tools->sefazConsultaRecibo($recibo);
+			sleep(3);
 			//return $protocolo;
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 			try {
@@ -507,15 +511,14 @@ class DevolucaoService{
 			$response = $this->tools->sefazConsultaChave($chave);
 			$stdCl = new Standardize($response);
 			$arr = $stdCl->toArray();
-			sleep(1);
+			sleep(2);
 				// return $arr;
 			$xJust = $justificativa;
-
-
+			
 			$nProt = $arr['protNFe']['infProt']['nProt'];
 
 			$response = $this->tools->sefazCancela($chave, $xJust, $nProt);
-			sleep(2);
+			sleep(3);
 			$stdCl = new Standardize($response);
 			$std = $stdCl->toStd();
 			$arr = $stdCl->toArray();

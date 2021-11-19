@@ -344,27 +344,21 @@ class CTeService{
 // // CPF ou CNPJ dos autorizados para download do XML
 // 		$cte->tagautXML($autXML);
 
-		$cte->getErrors();
 
 		try{
-
-		}catch (Exception $e) {
-		}
-
-		if($cte->montaCTe()){
+			$cte->montaCTe();
 			$chave = $cte->chCTe;
 			$xml = $cte->getXML();
-
 			$arr = [
 				'chave' => $chave,
 				'xml' => $xml,
 				'nCte' => $nCte
 			];
-
 			return $arr;
-			// return $cte->getErrors();
-		} else {
-			throw new Exception("Erro ao gerar CTe");
+		}catch(\Exception $e){
+			return [
+				'erros_xml' => true
+			];
 		}
 	}
 
@@ -378,6 +372,8 @@ class CTeService{
 			$resp = $this->tools->sefazEnviaLote([$signXml], $idLote);
 			sleep(1);
 			$st = new Standardize($resp);
+			sleep(2);
+
 			$arr = $st->toArray();
 			$std = $st->toStd();
 
@@ -388,7 +384,7 @@ class CTeService{
 
 			$recibo = $std->infRec->nRec; 
 			$protocolo = $this->tools->sefazConsultaRecibo($recibo);
-			sleep(1);
+			sleep(3);
 			// return $protocolo;
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 			try {
@@ -551,6 +547,7 @@ class CTeService{
 				'nroItemAlterado' => '01'
 			];
 			$response = $this->tools->sefazCCe($chave, $infCorrecao, $nSeqEvento);
+			sleep(2);
 
 			$stdCl = new Standardize($response);
 			$std = $stdCl->toStd();

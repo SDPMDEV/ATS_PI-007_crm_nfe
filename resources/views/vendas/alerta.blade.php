@@ -1,8 +1,9 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
+
+	<div class="card-body">
 		<h5>Para gerar uma venda é necessario ter cadastrado:</h5>
 		<h4>* Emitente fiscal com certificado digital</h4>
 		<h4>* Natureza de operação cadastrado</h4>
@@ -12,27 +13,27 @@
 
 		<div class="row">
 			@if(count($naturezas) == 0)
-			<a href="/naturezaOperacao" class="btn-large">ir para naturezas de operação</a>
+			<a href="/naturezaOperacao" class="btn btn-danger">ir para naturezas de operação</a>
 			@endif
 
 			@if($clientes == 0)
-			<a href="/clientes" class="btn-large">ir para clientes</a>
+			<a href="/clientes" class="btn btn-danger">ir para clientes</a>
 			@endif
 
 			@if($config == null)
-			<a href="/configNF" class="btn-large">ir para emitente fiscal</a>
+			<a href="/configNF" class="btn btn-danger">ir para emitente fiscal</a>
 			@endif
 
 			@if($tributacao == null)
-			<a href="/tributos" class="btn-large">ir para tributação</a>
+			<a href="/tributos" class="btn btn-danger">ir para tributação</a>
 			@endif
 
 			@if($categorias == 0)
-			<a href="/categorias" class="btn-large">ir para categorias</a>
+			<a href="/categorias" class="btn btn-danger">ir para categorias</a>
 			@endif
 
 			@if($produtos == 0)
-			<a href="/produtos" class="btn-large">ir para produtos</a>
+			<a href="/produtos" class="btn btn-danger">ir para produtos</a>
 			@endif
 
 			

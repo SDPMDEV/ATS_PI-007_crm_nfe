@@ -8,38 +8,20 @@ var TODOSSABORES = [];
 var maiorValorPizza = 0;
 var DIVISAO_VALOR_PIZZA = 0;
 var VALOR_PIZZA= 0;
+var PRODUTOS = []
+var PRODUTO = null
+var ADICIONAIS = []
+var PIZZAS = []
+var TAMANHOSTEMP = []
 
 $(function () {
 
 	DIVISAO_VALOR_PIZZA = $('#DIVISAO_VALOR_PIZZA').val();
+	PRODUTOS = JSON.parse($('#produtos').val())
+	ADICIONAIS = JSON.parse($('#adicionais').val())
+	PIZZAS = JSON.parse($('#pizzas').val())
 
 	verificaUnidadeCompra();
-
-
-	getProdutos(function(data){
-		$('#tamanhos-pizza').css('display', 'none');
-		$('input.autocomplete-produto').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-				let v = val.split('-')
-				getProduto(v[0], (data) => {
-
-					console.log(data)
-					if(data.pizza.length > 0){
-						setaTamanhosPizza(data)
-					}else{
-						$('#valor').val(data.valor)
-					}
-
-					Materialize.updateTextFields();
-
-				})
-			},
-			minLength: 1,
-		});
-	});
-
 
 	verificaCategoria()
 
@@ -62,6 +44,317 @@ $(function () {
 	getAdicionais();
 
 });
+
+function selecionaTamanho(call){
+	SABORESESCOLHIDOS = []
+
+	let sel = $('#seleciona_tamanho').val()
+	let tags = [];
+
+	TAMANHOSTEMP.map((v) => {
+		if(sel == v.id){
+			PIZZAS.map((pz) => {
+				pz.pizza.map((tp) => {
+					TAMANHO = v.tamanho_id
+					console.log(TAMANHO)
+
+					if(v.tamanho_id == tp.tamanho_id){
+						console.log(pz)
+						console.log(PRODUTO.produto.nome)
+						MAXIMOSABORES = tp.tamanho.maximo_sabores
+						montaPizzas((html) => {
+							$('#sabores-html').html(html)
+							$('#sabores-html').css('display', 'block')
+						})
+						$('#tamanho_pizza_id').val(tp.tamanho_id)
+						let nome = pz.produto.nome
+						let id = pz.id
+						let valor = tp.valor
+						if(PRODUTO.produto.nome != nome){
+							tags.push({s: nome + ' - R$ ' + valor, value: id})
+						}else{
+							$('#valor').val(valor)
+							maiorValorPizza = VALOR_PIZZA = valor
+
+						}
+
+					}
+				})
+
+			})
+		}
+	})
+	call(tags)
+}
+
+function montaPizzas(call){
+	let html = '';
+	html = '<p class="text-danger">Adicione até '+MAXIMOSABORES+' sabores</p>'
+
+	html += '<div class="row">'
+	SABORESESCOLHIDOS.map((s) => {
+		PIZZAS.map((pz) => {
+			if(s == pz.id){
+				html += '<div class="col-sm-4 col-lg-4 col-6">';
+				html += '<div class="card card-custom bg-success">';
+				html += '<div class="card-header">'
+				html += '<div class="card-title">'
+				html += '<h3 class="card-label">' + pz.produto.nome + '</h3></div>'
+				html += '<div class="card-toolbar">'
+				html += '<a class="btn btn-sm btn-light-danger mr-1" onclick="deleteSabor('+pz.id+')">'
+
+				html += '<i class="la la-times"></i></a>'
+				html += '</div></div></div></div>';
+			}
+		})
+	})
+	html += '</div>'
+	call(html)
+}
+
+function somaValor(){
+
+	totaliza((res) => {
+		totalizaAdicional((resAd) => {
+			let quantidade = $('#quantidade').val();
+			console.log(res)
+			console.log(resAd)
+			console.log("setando", maskMoney((res + resAd) * quantidade))
+			$('#valor').val(maskMoney((res + resAd) * quantidade))
+		})
+	})
+}
+
+function totaliza(call){
+
+	if(maiorValorPizza){
+		let soma = parseFloat(maiorValorPizza);
+		console.log(soma)
+		SABORESESCOLHIDOS.map((sb) => {
+			PIZZAS.map((pz) => {
+				if(sb == pz.id){
+
+					pz.pizza.map((pt) => {
+						if(pt.tamanho_id == TAMANHO){
+							console.log(pt)
+							if(DIVISAO_VALOR_PIZZA == 0){
+								if(pt.valor > maiorValorPizza){ 
+									maiorValorPizza = pt.valor;
+								}
+							}else{
+								soma += parseFloat(pt.valor)
+							}
+						}
+					})
+				}
+			})
+		})
+
+		if(DIVISAO_VALOR_PIZZA == 1){
+			console.log(soma)
+			let calc = soma/(SABORESESCOLHIDOS.length + 1);
+			call(calc)
+		}else{
+			call(maiorValorPizza)
+		}
+
+	}else{
+		let valor = parseFloat($('#valor').val())
+		call(valor);
+	}
+}
+
+function totalizaAdicional(call){
+	let soma = 0;
+
+	ADICIONAISESCOLHIDOS.map((a) => {
+		ADICIONAIS.map((ad) => {
+			if(ad.id == a){
+				soma += parseFloat(ad.valor)
+			}
+		})
+	})
+	call(soma)
+}
+
+function maskMoney(v){
+	return v.toFixed(2);
+}
+
+function deleteSabor(id){
+	percorreDelete(id, (sabores) => {
+		SABORESESCOLHIDOS = sabores;
+		montaPizzas((html) => {
+			console.log(html)
+			$('#sabores-html').html(html)
+			$('#sabores-html').css('display', 'block')
+		})
+	})
+}
+
+$('#btn-add-sabor').click(() => {
+	let sabor = $('#sabores').val();
+	console.log(sabor)
+	console.log(VALOR_PIZZA)
+	console.log(TAMANHO)
+	$('#quantidade').val(1)
+	validaSaborNaoAdicionado(sabor, (res) => {
+		if(!res){
+			SABORESESCOLHIDOS.push(sabor)
+
+			montaPizzas((html) => {
+				$('#sabores-html').html(html)
+				$('#sabores-html').css('display', 'block')
+			})
+
+			somaValor();
+			$('#sabores_escolhidos').val(SABORESESCOLHIDOS)
+		}else{
+			swal("Alerta", "Este sabor já esta adicionado, ou máximo de sabores escolhidos!!", "warning")
+		}
+	})
+})
+
+function validaSaborNaoAdicionado(sabor, call){
+	let retorno = false;
+	if(SABORESESCOLHIDOS.length+1 >= MAXIMOSABORES) retorno = true
+		SABORESESCOLHIDOS.map((s) => {
+			if(s == sabor){
+				retorno = true;
+			}
+		})
+	call(retorno)
+}
+
+$('#kt_select2_1').change(() => {
+
+	let id = $('#kt_select2_1').val()
+	$('#sabores-html').html('')
+	PRODUTOS.map((p) => {
+		if(id == p.id){
+			PRODUTO = p
+			if(p.pizza.length > 0){
+				setaTamanhosPizza(p)
+			}else{
+				console.log(p)
+				$('#valor').val(p.produto.valor_venda)
+				$('#sabores-pizza').css('display', 'none')
+				$('#tamanhos-pizza').css('display', 'none')
+				$('#btn-add-sabor').css('display', 'none')
+
+			}
+		}
+	})
+})
+
+$('#btn-add-adicional').click(() => {
+	let adicional = $('#kt_select2_2').val();
+	validaAdicionalNaoAdicionado(adicional, (res) => {
+		if(!res){
+			ADICIONAISESCOLHIDOS.push(adicional)
+			$('#adicioanis_escolhidos').val(ADICIONAISESCOLHIDOS)
+			montaAdicionais((html) => {
+
+				$('#adicioanais-html').html(html)
+				$('#adicioanais-html').css('display', 'block')
+
+			})
+			somaValor();
+		}else{
+			swal("Alerta", "Esta adicional já esta escolhido!!", "warning")
+		}
+	})
+})
+
+function validaAdicionalNaoAdicionado(adicional, call){
+	let retorno = false;
+
+	ADICIONAISESCOLHIDOS.map((a) => {
+		if(a == adicional){
+			retorno = true;
+		}
+	})
+	call(retorno)
+}
+
+function deleteAdicional(id){
+	percorreDeleteAdicional(id, (adicionais) => {
+		ADICIONAISESCOLHIDOS = adicionais;
+		montaPizzas((html) => {
+			console.log(html)
+			$('#adicioanais-html').html(html)
+			$('#adicioanais-html').css('display', 'block')
+		})
+	})
+}
+
+function percorreDeleteAdicional(id, call){
+	let temp = []
+	ADICIONAISESCOLHIDOS.map((s) => {
+		if(s != id){
+			temp.push(s)
+		}
+	})
+	call(temp)
+}
+
+function montaAdicionais(call){
+	let html = '';
+
+	html += '<div class="row">'
+	ADICIONAISESCOLHIDOS.map((s) => {
+		ADICIONAIS.map((a) => {
+			if(s == a.id){
+				console.log(a)
+				html += '<div class="col-sm-4 col-lg-4 col-6">';
+				html += '<div class="card card-custom bg-info">';
+				html += '<div class="card-header">'
+				html += '<div class="card-title">'
+				html += '<h4 class="card-label">' + a.nome + ' R$ ' + a.valor + '</h4></div>'
+				html += '<div class="card-toolbar">'
+				html += '<a class="btn btn-sm btn-light-danger mr-1" onclick="deleteAdicional('+a.id+')">'
+
+				html += '<i class="la la-times"></i></a>'
+				html += '</div></div></div></div>';
+			}
+		})
+	})
+	html += '</div>'
+	call(html)
+}
+
+function setaTamanhosPizza(data){
+	let tags = [];
+
+	data.pizza.map((v) => {
+		TAMANHOSTEMP.push(v)
+		tags.push({s: v.tamanho.nome + ' - R$ ' + v.valor, value: v.id})
+	});
+
+	$('#seleciona_tamanho').html('')
+	$('#sabores').html("<option value="+0+">Selecione o tamanho</option>")
+	$('#seleciona_tamanho').append("<option value="+0+">Selecione o tamanho</option>")
+
+	tags.map((r) => {
+		$('#seleciona_tamanho').append("<option value="+r.value+">"+r.s+"</option>")
+	})
+
+	$('#tamanhos-pizza').css('display', 'block');
+	$('#sabores-pizza').css('display', 'block');
+	$('#btn-add-sabor').css('display', 'block');
+}
+
+$('#seleciona_tamanho').change(() => {
+
+	selecionaTamanho((op) => {
+		$('#sabores').html('')
+		console.log(op)
+		op.map((r) => {
+			$('#sabores').append("<option value="+r.value+">"+r.s+"</option>")
+		})
+
+	})
+})
 
 $('input.autocomplete-produto').on('keyup', () => {
 	$('#tamanhos-pizza').css('display', 'none');
@@ -261,20 +554,7 @@ function getAdicionais(){
 //   'Google': null
 // },
 
-function setaTamanhosPizza(data){
-	let tags = [];
 
-	data.pizza.map((v) => {
-		tags.push({tag: v.tamanho.nome + ' - R$ ' + v.valor, item: v})
-	});
-	$('#tamanhos').material_chip({
-		data: tags,
-	});
-
-	$('#tamanhos-pizza').css('display', 'block');
-	$('#sabores-pizza').css('display', 'block');
-
-}
 
 
 $('#sabores').on('chip.add', function(e, chip){

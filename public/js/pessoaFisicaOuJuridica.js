@@ -1,36 +1,37 @@
 
-$(function(){
-	if($('#pessoaFisica').is(':checked')){
-		$('#cpf_cnpj').mask('000.000.000-00', {reverse: true});
+$(function () {
+	if ($('#pessoaFisica').is(':checked')) {
+		$('#cpf_cnpj').mask('000.000.000-00', { reverse: true });
 		$('#lbl_cpf_cnpj').html('CPF');
 		$('#lbl_ie_rg').html('RG');
 
-		$('#sintegra').css('display', 'none')
-	}else{
-		$('#cpf_cnpj').mask('00.000.000/0000-00', {reverse: true});
+		$('#btn-consulta-cadastro').css('display', 'none')
+	} else {
+		$('#cpf_cnpj').mask('00.000.000/0000-00', { reverse: true });
 		$('#lbl_cpf_cnpj').html('CNPJ');
 		$('#lbl_ie_rg').html('IE');
-		$('#sintegra').css('display', 'block');
+		$('#btn-consulta-cadastro').css('display', 'block');
 
 	}
-	
+
 });
-$('#pessoaFisica').click(function(){
+
+$('#pessoaFisica').click(function () {
 	$('#lbl_cpf_cnpj').html('CPF');
 	$('#lbl_ie_rg').html('RG');
-	$('#cpf_cnpj').mask('000.000.000-00', {reverse: true});
-	$('#sintegra').css('display', 'none')
+	$('#cpf_cnpj').mask('000.000.000-00', { reverse: true });
+	$('#btn-consulta-cadastro').css('display', 'none')
 
 })
 
-$('#pessoaJuridica').click(function(){
+$('#pessoaJuridica').click(function () {
 	$('#lbl_cpf_cnpj').html('CNPJ');
 	$('#lbl_ie_rg').html('IE');
-	$('#cpf_cnpj').mask('00.000.000/0000-00', {reverse: true});
-	$('#sintegra').css('display', 'block');
+	$('#cpf_cnpj').mask('00.000.000/0000-00', { reverse: true });
+	$('#btn-consulta-cadastro').css('display', 'block');
 });
 
-function consultaCadastro(){
+function consultaCadastro() {
 	let cnpj = $('#cpf_cnpj').val();
 	let uf = $('#sigla_uf').val();
 	cnpj = cnpj.replace('.', '');
@@ -38,8 +39,8 @@ function consultaCadastro(){
 	cnpj = cnpj.replace('-', '');
 	cnpj = cnpj.replace('/', '');
 
-	if(cnpj.length == 14 && uf.length != '--'){
-		$('#preloader1').css('display', 'block')
+	if (cnpj.length == 14 && uf.length != '--') {
+		$('#btn-consulta-cadastro').addClass('spinner')
 
 		$.ajax
 		({
@@ -52,10 +53,11 @@ function consultaCadastro(){
 
 			dataType: 'json',
 
-			success: function(e){
-				$('#preloader1').css('display', 'none')
+			success: function (e) {
+				$('#btn-consulta-cadastro').removeClass('spinner')
+
 				console.log(e)
-				if(e.infCons.infCad){
+				if (e.infCons.infCad) {
 					let info = e.infCons.infCad;
 					console.log(info)
 
@@ -68,25 +70,37 @@ function consultaCadastro(){
 					$('#bairro').val(info.ender.xBairro)
 					let cep = info.ender.CEP;
 					$('#cep').val(cep.substring(0, 5) + '-' + cep.substring(5, 9))
-					Materialize.updateTextFields();
+
 					findNomeCidade(info.ender.xMun, (res) => {
 						let jsCidade = JSON.parse(res);
 						console.log(jsCidade)
-						if(jsCidade){
-							console.log(jsCidade.id +" - "+jsCidade.nome)
-							$('#autocomplete-cidade').val(jsCidade.id +" - "+jsCidade.nome)
+						if (jsCidade) {
+							console.log(jsCidade.id + " - " + jsCidade.nome)
+							$('#kt_select2_1').val(jsCidade.id).change();
 
-							Materialize.updateTextFields();
 						}
 					})
-					
-				}else{
-					alert(e.infCons.xMotivo)
+
+				} else {
+					swal("Erro", e.infCons.xMotivo, "error")
+
 				}
-			}, error: function(e){
+			}, error: function (e) {
 				console.log(e)
-				$('#preloader1').css('display', 'none')
-				alert('CNJ e/ou UF inválido(s)')
+				if(e.status == 403){
+					swal("Erro", e.responseJSON, "error")
+				}else if(e.status == 401){
+					swal("Erro", e.responseJSON, "error")
+				}else{
+					try{
+						swal("Erro", e.responseText, "error")
+					}catch{
+						swal("Erro", "Verifique o console", "error")
+					}
+				}
+
+				$('#btn-consulta-cadastro').removeClass('spinner')
+
 
 			}
 
@@ -94,8 +108,8 @@ function consultaCadastro(){
 	}
 }
 
-function findNomeCidade(nomeCidade, call){
-	$.get(path + '/cidades/findNome/' + nomeCidade )
+function findNomeCidade(nomeCidade, call) {
+	$.get(path + '/cidades/findNome/' + nomeCidade)
 	.done((success) => {
 		call(success)
 	})

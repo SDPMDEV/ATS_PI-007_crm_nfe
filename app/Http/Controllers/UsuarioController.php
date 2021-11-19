@@ -36,6 +36,16 @@ class UsuarioController extends Controller
 	}
 
 	public function save(Request $request){
+
+		$login = $request->login;
+		$temp = Usuario::where('login', $login)
+		->first();
+
+		if($temp != null && $temp->login == $login){
+			session()->flash('mensagem_erro', 'Login já existente!');
+			return redirect('/usuarios');
+		}
+
 		$result = Usuario::create([
 			'nome' => $request->nome,
 			'login' => $request->login,
@@ -49,15 +59,14 @@ class UsuarioController extends Controller
 			'acesso_estoque' => $request->acesso_estoque ? true : false,
 			'acesso_compra' => $request->acesso_compra ? true : false,
 			'acesso_fiscal' => $request->acesso_fiscal ? true : false,
-			'ativo' => true
+			'ativo' => true,
+			'venda_nao_fiscal' => $request->venda_nao_fiscal ? true : false
 		]);
 
 		if($result){
-			session()->flash('color', 'blue');
-			session()->flash("message", "Usuário salvo!");
+			session()->flash("mensagem_sucesso", "Usuário salvo!");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao criar usuário!');
+			session()->flash('mensagem_erro', 'Erro ao criar usuário!');
 		}
 
 		return redirect('/usuarios');
@@ -71,7 +80,10 @@ class UsuarioController extends Controller
 
 		$usr->nome = $request->nome;
 		$usr->login = $request->login;
-		$usr->senha = md5($request->senha);
+		if($request->senha){
+			$usr->senha = md5($request->senha);
+		}
+		
 		$usr->adm = $request->adm ? true : false;
 		$usr->acesso_cliente = $request->acesso_cliente ? true : false;
 		$usr->acesso_fornecedor = $request->acesso_fornecedor ? true : false;
@@ -81,14 +93,13 @@ class UsuarioController extends Controller
 		$usr->acesso_estoque = $request->acesso_estoque ? true : false;
 		$usr->acesso_compra = $request->acesso_compra ? true : false;
 		$usr->acesso_fiscal = $request->acesso_fiscal ? true : false;
+		$usr->venda_nao_fiscal = $request->venda_nao_fiscal ? true : false;
 
 		$result = $usr->save();
 		if($result){
-			session()->flash('color', 'blue');
-			session()->flash("message", "Usuário atualizado!");
+			session()->flash("mensagem_sucesso", "Usuário atualizado!");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao atualizar usuário!');
+			session()->flash('mensagem_erro', 'Erro ao atualizar usuário!');
 		}
 
 		return redirect('/usuarios');
@@ -104,6 +115,20 @@ class UsuarioController extends Controller
 		->with('usuarioJs', true)
 		->with('usuario', $usuario)
 		->with('title', 'Cadastrar Usuarios');
+	}
+
+	public function delete($id){
+		$usuario = Usuario::
+		where('id', $id)
+		->first();
+
+		if($usuario->delete()){
+			session()->flash("mensagem_sucesso", "Usuário removido!");
+		}else{
+			session()->flash('mensagem_erro', 'Erro ao remover usuário!');
+		}
+
+		return redirect('/usuarios');
 	}
 
 

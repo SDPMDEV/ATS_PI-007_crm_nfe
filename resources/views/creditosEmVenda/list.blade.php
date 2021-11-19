@@ -1,161 +1,181 @@
 @extends('default.layout')
 @section('content')
 
-<style type="text/css">
-.dismiss{
+<div class="card card-custom gutter-b">
 
-}
-</style>
-<div class="row">
-	<div class="col s12">
 
-		<h4>Conta Crediário</h4>
-		
+	<div class="card-body">
 
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-		</div>
-		@endif
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
 
-		<form method="get" action="/vendasEmCredito/filtro">
+			<input type="hidden" id="_token" value="{{ csrf_token() }}">
+			<form method="get" action="/vendasEmCredito/filtro">
+				<div class="row align-items-center">
+
+					<div class="form-group col-lg-3 col-md-4 col-sm-6">
+						<label class="col-form-label">Cliente</label>
+						<div class="">
+							<div class="input-group">
+								<input type="text" name="cliente" class="form-control" readonly value="{{{ isset($cliente) ? $cliente : '' }}}" />
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Data Inicial</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="data_inicial" class="form-control" readonly value="{{{ isset($dataInicial) ? $dataInicial : '' }}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Data Final</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="data_final" class="form-control" readonly value="{{{isset($dataFinal) ? $dataFinal : ''}}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Estado</label>
+						<div class="">
+							<div class="input-group date">
+								<select class="custom-select form-control" id="estado" name="status">
+									<option @if(isset($status) && $status == 'todos') selected @endif value="todos">TODOS</option>
+									<option @if(isset($status) && $status == 'pago') selected @endif value="pago">PAGO</option>
+									<option @if(isset($status) && $status == 'pendente') selected @endif value="pendente">PENDENTE</option>
+								</select>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-lg-2 col-xl-2 mt-2 mt-lg-0">
+						<button style="margin-top: 15px;" class="btn btn-light-primary px-6 font-weight-bold">Pesquisa</button>
+					</div>
+				</div>
+			</form>
+			<br>
+			<h4>Conta Crédito</h4>
+
 			<div class="row">
-				<div class="col s4 input-field">
-					<input value="{{{ isset($cliente) ? $cliente : '' }}}" type="text" class="validate" name="cliente">
-					<label>Cliente</label>
-				</div>
-				
-				<div class="col s2 input-field">
-					<input value="{{{ isset($dataInicial) ? $dataInicial : '' }}}" type="text" class="datepicker" name="data_inicial">
-					<label>Data Inicial</label>
-				</div>
-				<div class="col s2 input-field">
-					<input value="{{{ isset($dataFinal) ? $dataFinal : '' }}}" type="text" class="datepicker" name="data_final">
-					<label>Data Final</label>
-				</div>
-
-				<div class="col s2 input-field">
-					<select name="status">
-						<option @if(isset($status) && $status == 'todos') selected @endif value="todos">TODOS</option>
-						<option @if(isset($status) && $status == 'pago') selected @endif value="pago">PAGO</option>
-						<option @if(isset($status) && $status == 'pendente') selected @endif value="pendente">PENDENTE</option>
-					</select>
-					<label>Estado</label>
-				</div>
-
-				<div class="col s2">
-					<button type="submit" class="btn-large black">
-						<i class="material-icons">search</i>
-					</button>
+				<div class="col-lg-3 col-xl-3 col-6">
+					<button style="width: 100%" class="btn btn-success disabled" id="btn-receber" onclick="receber()">
+						<i class="la la-money"></i>
+					Receber Conta(s) <strong id="total-select">R$ 0,00</strong></button>
 				</div>
 			</div>
-		</form>
 
-		<div class="row">
-			<div class="col s3">
-				<button class="btn green accent-4 disabled" id="btn-receber" onclick="receber()">
-					<i class="material-icons left">monetization_on</i>
-				Receber Conta(s)</button>
+			<div class="row">
+				<div class="col-xl-12">
+
+					<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+
+						<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+							<thead class="datatable-head">
+								<tr class="datatable-row" style="left: 0px;">
+									<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 70px;"></span></th>
+									<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 70px;">Código</span></th>
+									<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 300px;">Cliente</span></th>
+									<th data-field="Country" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Venda</span></th>
+									<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Valor</span></th>
+
+									<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Data</span></th>
+									<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Status</span></th>
+
+									<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 150px;">Ações</span></th>
+								</tr>
+							</thead>
+
+							<tbody id="body" class="datatable-body">
+
+								<?php 
+								$soma = 0;
+								?>
+								@foreach($vendas as $v)
+								<tr class="datatable-row">
+									<td id="checkbox">
+
+										@if(!$v->status)
+										<p style="width: 70px;">
+											<input type="checkbox" class="check" id="test_{{$v->venda_id}}" />
+											<label for="test_{{$v->venda_id}}"></label>
+										</p>
+										@else
+
+										<p style="width: 70px;">
+
+										</p>
+
+										@endif
+
+									</td>
+									<td class="datatable-cell">
+										<span class="codigo" style="width: 70px;" id="id">
+											{{ $v->venda_id }}
+										</span>
+									</td>
+									<td class="datatable-cell">
+										<span class="codigo" style="width: 300px;">
+											{{ $v->cliente->razao_social }}
+										</span>
+									</td>
+									<td class="datatable-cell"><span class="codigo" style="width: 100px;">{{ $v->venda->id }}</span>
+									</td>
+
+									<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="valor">{{ number_format($v->venda->valor_total, 2) }}</span>
+									</td>
+									<td class="datatable-cell"><span class="codigo" style="width: 100px;">{{ \Carbon\Carbon::parse($v->created_at)->format('d/m/Y H:i')}}</span>
+									</td>
+									<td class="datatable-cell">
+										<span class="codigo" style="width: 100px;">
+											@if($v->status == true)
+											<span class="label label-xl label-inline label-light-success">Pago</span>
+
+											@else
+											<span class="label label-xl label-inline label-light-danger">Pendente</span>
+
+											@endif
+										</span>
+									</td>
+									<td class="datatable-cell"><span class="codigo" style="width: 150px;">
+										<a target="_blank" class="btn btn-info" title="CUPOM NAO FISCAL" href="/nfce/imprimirNaoFiscalCredito/{{$v->id}}">
+											<i class="la la-print"></i>
+										</a>
+
+										<a class="btn btn-danger" title="REMOVER" onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/vendasEmCredito/delete/{{$v->id}}" }else{return false} })' href="#!">
+											<i class="la la-trash"></i>
+										</a>
+									</td>
+
+
+								</tr>
+								<?php 
+								$soma += $v->venda->valor_total;
+								?>
+								@endforeach
+
+							</tbody>
+						</table>
+					</div>
+				</div>
 			</div>
-			<div class="col s5">
-				<h5>Total a Selecionado: <strong class="orange-text" id="total-select">R$ 0,00</strong></h5>
-			</div>
+
+
 		</div>
-		
-		<div class="row">
-			<div class="col s12 m12 l12">
-				<label>Numero de registros: {{count($vendas)}}</label>					
-			</div>
-			
-			<p class="red-text">* Marque as contas e clique no botão para receber</p>
-			<table class="striped">
-				<thead>
-					<tr>
-						<th></th>
-						<th>Código</th>
-						<th>Cliente</th>
-						<th>Venda</th>
-						<th>Valor</th>
-						<th>Data</th>
-						<th>Status</th>
-						<th>Ações</th>
-
-					</tr>
-				</thead>
-
-				<tbody class="body">
-					<?php 
-					$soma = 0;
-					?>
-					@foreach($vendas as $v)
-					<tr>
-						<td id="checkbox">
-							@if(!$v->status)
-							<p>
-								<input type="checkbox" class="check" id="test_{{$v->id}}" />
-								<label for="test_{{$v->id}}"></label>
-							</p>
-							@endif
-						</td>
-						<th id="id">{{ $v->id }}</th>
-						<th>{{ $v->cliente->razao_social }}</th>
-						<th>{{ $v->venda->id }}</th>
-						<th id="valor">{{ number_format($v->venda->valor_total, 2, ',', '.') }}</th>
-
-						<th>{{ \Carbon\Carbon::parse($v->created_at)->format('d/m/Y H:i')}}</th>
-						
-						<th>
-							@if($v->status == true)
-							<i class="material-icons green-text">brightness_1</i>
-							@else
-							<i class="material-icons red-text">brightness_1</i>
-							@endif
-						</th>
-
-						<th>
-							<a target="_blank" title="CUPOM NAO FISCAL" href="/nfce/imprimirNaoFiscalCredito/{{$v->id}}">
-								<i class="material-icons blue-text">print</i>
-							</a>
-
-							<a title="REMOVER" href="/vendasEmCredito/delete/{{$v->id}}">
-								<i class="material-icons red-text">delete</i>
-							</a>
-						</th>
-					</tr>
-
-					<?php 
-					$soma += $v->venda->valor_total;
-					?>
-					@endforeach
-					<tr class="green lighten-3 red-text">
-						<th colspan="4">SOMATÓRIO</th>
-						<th>{{ number_format($soma, 2, ',', '.') }}</th>
-						<th colspan="2"></th>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<br>
-
-		<input type="hidden" id="creditos" value="{{json_encode($somaCareditos)}}">
-
-		@if(count($vendas) > 0)
-		<div class="row">
-			<h4 class="center-align">Graficos</h4>
-			<div class="col s6">
-				<div style="height: 400px; width: 100%;" id="pizza"></div>
-				
-			</div>
-			<div class="col s6">
-				<div style="height: 400px; width: 100%;" id="coluna"></div>
-				
-			</div>
-		</div>
-		@endif
 	</div>
 </div>
-
 
 @endsection	

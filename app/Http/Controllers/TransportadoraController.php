@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Transportadora;
+use App\Cliente;
+use App\Cidade;
 
 class TransportadoraController extends Controller
 {
@@ -25,9 +27,14 @@ class TransportadoraController extends Controller
 	}
 
 	public function new(){
+
+        $estados = Cliente::estados();
+        $cidades = Cidade::all();
 		return view('transportadora/register')
 		->with('pessoaFisicaOuJuridica', true)
-		->with('cidadeJs', true)
+        ->with('cidadeJs', true)
+        ->with('estados', $estados)
+		->with('cidades', $cidades)
 		->with('title', 'Cadastrar Transportadora');
 	}
 
@@ -43,11 +50,9 @@ class TransportadoraController extends Controller
 		$result = $transp->create($request->all());
 
 		if($result){
-			session()->flash('color', 'blue');
-			session()->flash("message", "Transportadora cadastrada com sucesso!");
+			session()->flash("mensagem_sucesso", "Transportadora cadastrada com sucesso!");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao cadastrar transportadora!');
+			session()->flash('mensagem_erro', 'Erro ao cadastrar transportadora!');
 		}
 
 		return redirect('/transportadoras');
@@ -59,15 +64,21 @@ class TransportadoraController extends Controller
         $resp = $transp
         ->where('id', $id)->first();  
 
+        $estados = Cliente::estados();
+        $cidades = Cidade::all();
         return view('transportadora/register')
         ->with('pessoaFisicaOuJuridica', true)
         ->with('cidadeJs', true)
         ->with('transp', $resp)
+        ->with('estados', $estados)
+        ->with('cidades', $cidades)
         ->with('title', 'Editar Transportadora');
 
     }
 
     public function update(Request $request){
+        $this->_validate($request);
+
     	$transp = new Transportadora();
 
     	$id = $request->input('id');
@@ -88,11 +99,9 @@ class TransportadoraController extends Controller
 
     	$result = $resp->save();
     	if($result){
-    		session()->flash('color', 'green');
-    		session()->flash('message', 'Transportadora editado com sucesso!');
+    		session()->flash('mensagem_sucesso', 'Transportadora editado com sucesso!');
     	}else{
-    		session()->flash('color', 'red');
-    		session()->flash('message', 'Erro ao editar transportadora!');
+    		session()->flash('mensagem_erro', 'Erro ao editar transportadora!');
     	}
 
     	return redirect('/transportadoras'); 
@@ -103,11 +112,9 @@ class TransportadoraController extends Controller
     	::where('id', $id)
     	->delete();
     	if($delete){
-    		session()->flash('color', 'blue');
-    		session()->flash('message', 'Registro removido!');
+    		session()->flash('mensagem_sucesso', 'Registro removido!');
     	}else{
-    		session()->flash('color', 'red');
-    		session()->flash('message', 'Erro!');
+    		session()->flash('mensagem_erro', 'Erro!');
     	}
     	return redirect('/transportadoras');
     }
@@ -118,7 +125,7 @@ class TransportadoraController extends Controller
     		'razao_social' => 'required|max:50',
     		'cnpj_cpf' => 'required',
     		'logradouro' => 'required|max:80',
-    		'cidade' => 'required|min:5',
+    		'cidade' => 'required',
     	];
 
     	$messages = [
@@ -130,7 +137,6 @@ class TransportadoraController extends Controller
     		'logradouro.max' => '80 caracteres maximos permitidos.',
 
     		'cidade.required' => 'O campo Cidade é obrigatório.',
-    		'cidade.min' => 'Clique sobre a cidade desejada.',
 
     	];
     	$this->validate($request, $rules, $messages);

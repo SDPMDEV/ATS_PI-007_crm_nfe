@@ -326,13 +326,19 @@ class MDFeService{
 		$std->CNPJ = str_replace(" ", "", $emitente->cnpj);
 		$mdfex->tagautXML($std);
 
-		$xml = $mdfex->getXML();
-		header("Content-type: text/xml");
+		try{
+			$xml = $mdfex->getXML();
+			header("Content-type: text/xml");
 
-		return [
-			'xml' => $xml,
-			'numero' => $mdfeLast+1
-		];
+			return [
+				'xml' => $xml,
+				'numero' => $mdfeLast+1
+			];
+		}catch(\Exception $e){
+			return [
+				'erros_xml' => $mdfex->getErrors()
+			];
+		}
 
 
 	}
@@ -353,13 +359,26 @@ class MDFeService{
 			$std = $st->toStd($resp);
 
 
-			sleep(2);
+			sleep(3);
 
 			$resp = $this->tools->sefazConsultaRecibo($std->infRec->nRec);
 			$std = $st->toStd($resp);
-			// return $std;
+			sleep(1);
+
+			if(!isset($std->protMDFe)){
+				return [
+					'erro' => true, 
+					'message' => 'Tente enviar novamente em minutos!', 
+					'cStat' => '999'
+				];
+			}
+
 			$chave = $std->protMDFe->infProt->chMDFe;
 			$cStat = $std->protMDFe->infProt->cStat;
+
+			
+
+
 			if($cStat == '100'){
 				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 				file_put_contents($public.'xml_mdfe/'.$chave.'.xml', $signXml);
@@ -445,7 +464,7 @@ class MDFeService{
 			
 			$chave = $chave;
 			$resp = $this->tools->sefazCancela($chave, $xJust, $nProt);
-
+			sleep(2);
 			$st = new Standardize();
 			$std = $st->toStd($resp);
 			return $std;

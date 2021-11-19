@@ -371,6 +371,10 @@
 <script type="text/javascript" src="/js/print.js"></script>
 @endif
 
+@if(isset($testeJs))
+<script type="text/javascript" src="/js/teste.js"></script>
+@endif
+
 @if(isset($mapJs))
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDqDmzire4loEp5mlUxhz6VCdT0rzgN56U"
 async defer></script>

@@ -7,6 +7,9 @@ use App\CreditoVenda;
 use App\Venda;
 use App\NaturezaOperacao;
 use App\ConfigNota;
+use App\Produto;
+use App\Cliente;
+use App\Transportadora;
 
 class CreditoVendaController extends Controller
 {
@@ -42,25 +45,32 @@ class CreditoVendaController extends Controller
 		$cliente = '';
 		$clienteDiferente = false;
 		foreach($arr as $a){
+
 			$credito = CreditoVenda::
-			where('id', (int)$a)
+			where('venda_id', (int)$a)
 			->first();
-			$credito['valor'] = $credito->venda->valor_total;
-			$credito['usuario'] = $credito->venda->usuario->nome;
-			$credito['data'] = $credito->venda->data_registro;
+
+			if($credito != null){
+				$credito['valor'] = $credito->venda->valor_total;
+				$credito['usuario'] = $credito->venda->usuario->nome;
+				$credito['data'] = $credito->venda->data_registro;
 
 
-			array_push($temp, $credito);
-			if($cliente == ''){
-				$cliente = $credito->cliente->razao_social;
-			}else{
-				if($cliente != $credito->cliente->razao_social){
-					$clienteDiferente = true;
+				array_push($temp, $credito);
+				if($cliente == ''){
+					$cliente = $credito->cliente->razao_social;
+				}else{
+					if($cliente != $credito->cliente->razao_social){
+						$clienteDiferente = true;
+					}
 				}
 			}
 
 		}
 		
+		if(sizeof($temp) == 0){
+			return redirect()->back();
+		}
 		return view("creditosEmVenda/finalizar")
 		->with('vendas', $temp)
 		->with('arr', $vArr)
@@ -78,7 +88,7 @@ class CreditoVendaController extends Controller
 		$itens = [];
 		foreach($arr as $a){
 			$credito = CreditoVenda::
-			where('id', (int)$a)
+			where('venda_id', (int)$a)
 			->first();
 
 			foreach($credito->venda->itens as $i){
@@ -90,17 +100,23 @@ class CreditoVendaController extends Controller
 		
 		$lastNF = Venda::lastNF();
 		$naturezas = NaturezaOperacao::all();
+		$transportadoras = Transportadora::all();
 
 		$tiposPagamento = Venda::tiposPagamento();
 		$config = ConfigNota::first();
+		$clientes = Cliente::all();
+		$produtos = Produto::all();
 
 		return view("vendas/register")
 		->with('naturezas', $naturezas)
 		->with('vendaJs', true)
 		->with('itens', $itens)
+		->with('clientes', $clientes)
+		->with('transportadoras', $transportadoras)
+		->with('produtos', $produtos)
 		->with('config', $config)
 		->with('tiposPagamento', $tiposPagamento)
-		->with('lastNF', $lastNF->NfNumero ?? 'Nulo')
+		->with('lastNF', $lastNF)
 		->with('cliente', $credito->venda->cliente)
 		->with('title', "Gerar NFe para vendas de crédito");
 	}
@@ -111,15 +127,15 @@ class CreditoVendaController extends Controller
 
 		foreach($arr as $a){
 			$credito = CreditoVenda::
-			where('id', (int)$a)
+			where('venda_id', (int)$a)
 			->first();
 
 			$credito->status = true;
 			$credito->save();
 
 		}	
-		session()->flash('color', 'blue');
-		session()->flash("message", "Contas recebidas com sucesso.");
+
+		session()->flash("mensagem_sucesso", "Contas recebidas com sucesso.");
 
 		return redirect('/vendasEmCredito');
 	}
@@ -217,8 +233,7 @@ class CreditoVendaController extends Controller
 		where('id', $id)
 		->delete();
 
-		session()->flash('color', 'blue');
-		session()->flash("message", "Venda removida.");
+		session()->flash("mensagem_sucesso", "Venda removida.");
 
 		return redirect('/vendasEmCredito');
 	}

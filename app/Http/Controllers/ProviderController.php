@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Fornecedor;
 use App\Cidade;
+use App\Cliente;
 
 class ProviderController extends Controller
 {
@@ -30,9 +31,14 @@ class ProviderController extends Controller
     }
 
     public function new(){
+        $cidades = Cidade::all();
+        $estados = Cliente::estados();
+
         return view('fornecedores/register')
         ->with('pessoaFisicaOuJuridica', true)
         ->with('cidadeJs', true)
+        ->with('cidades', $cidades)
+        ->with('estados', $estados)
         ->with('title', 'Cadastrar Fornecedor');
     }
 
@@ -51,11 +57,11 @@ class ProviderController extends Controller
         $result = $provider->create($request->all());
 
         if($result){
-            session()->flash('color', 'blue');
-            session()->flash("message", "Fornecedor cadastrado com sucesso!");
+
+            session()->flash("mensagem_sucesso", "Fornecedor cadastrado com sucesso!");
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao cadastrar fornecedor!');
+
+            session()->flash('mensagem_erro', 'Erro ao cadastrar fornecedor!');
         }
         
         return redirect('/fornecedores');
@@ -67,10 +73,15 @@ class ProviderController extends Controller
         $resp = $provider
         ->where('id', $id)->first();  
 
+        $cidades = Cidade::all();
+        $estados = Cliente::estados();
+
         return view('fornecedores/register')
         ->with('cidadeJs', true)
         ->with('pessoaFisicaOuJuridica', true)
         ->with('forn', $resp)
+        ->with('cidades', $cidades)
+        ->with('estados', $estados)
         ->with('title', 'Editar Fornecedor');
 
     }
@@ -106,11 +117,9 @@ class ProviderController extends Controller
 
         $result = $resp->save();
         if($result){
-            session()->flash('color', 'green');
-            session()->flash('message', 'Fornecedor editado com sucesso!');
+            session()->flash('mensagem_sucesso', 'Fornecedor editado com sucesso!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao editar fornecedor!');
+            session()->flash('mensagem_erro', 'Erro ao editar fornecedor!');
         }
         
         return redirect('/fornecedores'); 
@@ -136,11 +145,9 @@ class ProviderController extends Controller
             ::where('id', $id)
             ->delete();
             if($delete){
-                session()->flash('color', 'blue');
-                session()->flash('message', 'Registro removido!');
+                session()->flash('mensagem_sucesso', 'Registro removido!');
             }else{
-                session()->flash('color', 'red');
-                session()->flash('message', 'Erro!');
+                session()->flash('mensagem_erro', 'Erro!');
             }
             return redirect('/fornecedores');
         }catch(\Exception $e){

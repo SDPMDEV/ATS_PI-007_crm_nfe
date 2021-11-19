@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\ConfigNota;
-use App\Services\NFeService;
+use App\Services\NFService;
 use App\Venda;
 use App\ContaReceber;
 use App\Certificado;
@@ -42,7 +42,7 @@ class NotaFiscalController extends Controller
 		$cnpj = str_replace("-", "", $cnpj);
 		$cnpj = str_replace(" ", "", $cnpj);
 
-		$nfe_service = new NFeService([
+		$nfe_service = new NFService([
 			"atualizacao" => date('Y-m-d h:i:s'),
 			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
@@ -51,31 +51,35 @@ class NotaFiscalController extends Controller
 			"schemes" => "PL_009_V4",
 			"versao" => "4.00",
 			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => getenv('CSCid')
-		], 55);
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
+		]);
 
 		if($venda->estado == 'REJEITADO' || $venda->estado == 'DISPONIVEL'){
 			header('Content-type: text/html; charset=UTF-8');
 
 			$nfe = $nfe_service->gerarNFe($vendaId);
+			if(!isset($nfe['erros_xml'])){
 			// file_put_contents('xml/teste2.xml', $nfe['xml']);
 			// return response()->json($nfe, 200);
-			$signed = $nfe_service->sign($nfe['xml']);
-			$resultado = $nfe_service->transmitir($signed, $nfe['chave']);
+				$signed = $nfe_service->sign($nfe['xml']);
+				$resultado = $nfe_service->transmitir($signed, $nfe['chave']);
 
-			if(substr($resultado, 0, 4) != 'Erro'){
-				$venda->chave = $nfe['chave'];
-				$venda->path_xml = $nfe['chave'] . '.xml';
-				$venda->estado = 'APROVADO';
+				if(substr($resultado, 0, 4) != 'Erro'){
+					$venda->chave = $nfe['chave'];
+					$venda->path_xml = $nfe['chave'] . '.xml';
+					$venda->estado = 'APROVADO';
 
-				$venda->NfNumero = $nfe['nNf'];
-				$venda->save();
+					$venda->NfNumero = $nfe['nNf'];
+					$venda->save();
+				}else{
+					$venda->estado = 'REJEITADO';
+					$venda->save();
+				}
+				echo json_encode($resultado);
 			}else{
-				$venda->estado = 'REJEITADO';
-				$venda->save();
+				return response()->json($nfe['erros_xml'], 401);
 			}
-			echo json_encode($resultado);
 
 		}else{
 			echo json_encode("Apro");
@@ -93,7 +97,7 @@ class NotaFiscalController extends Controller
 		$cnpj = str_replace(" ", "", $cnpj);
 
 
-		$nfe_service = new NFeService([
+		$nfe_service = new NFService([
 			"atualizacao" => date('Y-m-d h:i:s'),
 			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
@@ -102,9 +106,9 @@ class NotaFiscalController extends Controller
 			"schemes" => "PL_009_V4",
 			"versao" => "4.00",
 			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => getenv('CSCid')
-		], 55);
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
+		]);
 
 		// echo json_encode($request->justificativa);
 		$result = $nfe_service->inutilizar($request->nInicio, $request->nFinal, 
@@ -117,27 +121,35 @@ class NotaFiscalController extends Controller
 	public function consultaCadastro(Request $request){
 
 		$config = ConfigNota::first();
+		$certificado = Certificado::first();
+
+		if($config == null || $certificado == null){
+			return response()->json("Configure o emitente para buscar", 403);
+		}
 
 		$cnpj = str_replace(".", "", $config->cnpj);
 		$cnpj = str_replace("/", "", $cnpj);
 		$cnpj = str_replace("-", "", $cnpj);
 		$cnpj = str_replace(" ", "", $cnpj);
-
-		$nfe_service = new NFeService([
-			"atualizacao" => date('Y-m-d h:i:s'),
-			"tpAmb" => (int)$config->ambiente,
-			"razaosocial" => $config->razao_social,
-			"siglaUF" => $config->UF,
-			"cnpj" => $cnpj,
-			"schemes" => "PL_009_V4",
-			"versao" => "4.00",
-			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => getenv('CSCid')
-		], 55);
-		$cnpj = $request->cnpj;
-		$uf = $request->uf;
-		$nfe_service->consultaCadastro($cnpj, $uf);
+		try{
+			$nfe_service = new NFService([
+				"atualizacao" => date('Y-m-d h:i:s'),
+				"tpAmb" => (int)$config->ambiente,
+				"razaosocial" => $config->razao_social,
+				"siglaUF" => $config->UF,
+				"cnpj" => $cnpj,
+				"schemes" => "PL_009_V4",
+				"versao" => "4.00",
+				"tokenIBPT" => "AAAAAAA",
+				"CSC" => $config->csc,
+				"CSCid" => $config->csc_id
+			]);
+			$cnpj = $request->cnpj;
+			$uf = $request->uf;
+			$nfe_service->consultaCadastro($cnpj, $uf);
+		}catch(\Exception $e){
+			return response()->json($e->getMessage(), 401);
+		}
 	}
 
 	public function imprimir($id){
@@ -146,20 +158,24 @@ class NotaFiscalController extends Controller
 		->first();
 
 		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		if(file_exists($public.'xml_nfe/'.$venda->chave.'.xml')){
+			$xml = file_get_contents($public.'xml_nfe/'.$venda->chave.'.xml');
+			$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
 
-		$xml = file_get_contents($public.'xml_nfe/'.$venda->chave.'.xml');
-		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
-		// $docxml = FilesFolders::readFile($xml);
-
-		try {
-			$danfe = new Danfe($xml);
-			$id = $danfe->monta($logo);
-			$pdf = $danfe->render();
-			header('Content-Type: application/pdf');
-			echo $pdf;
-		} catch (InvalidArgumentException $e) {
-			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
-		}  
+			try {
+				$danfe = new Danfe($xml);
+				$id = $danfe->monta($logo);
+				$pdf = $danfe->render();
+			// header('Content-Type: application/pdf');
+			// echo $pdf;
+				return response($pdf)
+				->header('Content-Type', 'application/pdf');
+			} catch (InvalidArgumentException $e) {
+				echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+			}  
+		}else{
+			echo "Arquivo XML não encontrado!!";
+		}
 	}
 
 	public function escpos($id){
@@ -185,21 +201,26 @@ class NotaFiscalController extends Controller
 		if($venda->sequencia_cce > 0){
 
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+			if(file_exists($public.'xml_nfe_correcao/'.$venda->chave.'.xml')){
+				$xml = file_get_contents($public.'xml_nfe_correcao/'.$venda->chave.'.xml');
+				$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
 
-			$xml = file_get_contents($public.'xml_nfe_correcao/'.$venda->chave.'.xml');
-			$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
+				$dadosEmitente = $this->getEmitente();
 
-			$dadosEmitente = $this->getEmitente();
-
-			try {
-				$daevento = new Daevento($xml, $dadosEmitente);
-				$daevento->debugMode(true);
-				$pdf = $daevento->render($logo);
-				header('Content-Type: application/pdf');
-				echo $pdf;
-			} catch (InvalidArgumentException $e) {
-				echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
-			}  
+				try {
+					$daevento = new Daevento($xml, $dadosEmitente);
+					$daevento->debugMode(true);
+					$pdf = $daevento->render($logo);
+				// header('Content-Type: application/pdf');
+				// echo $pdf;
+					return response($pdf)
+					->header('Content-Type', 'application/pdf');
+				} catch (InvalidArgumentException $e) {
+					echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+				}  
+			}else{
+				echo "Arquivo XML não encontrado!!";
+			}
 		}else{
 			echo "<center><h1>Este documento não possui evento de correção!<h1></center>";
 		}
@@ -211,19 +232,25 @@ class NotaFiscalController extends Controller
 		->first();
 
 		if($venda->estado == 'CANCELADO'){
-
-			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-
-			$xml = file_get_contents($public.'xml_nfe_cancelada/'.$venda->chave.'.xml');
-			$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
-
-			$dadosEmitente = $this->getEmitente();
 			try {
-				$daevento = new Daevento($xml, $dadosEmitente);
-				$daevento->debugMode(true);
-				$pdf = $daevento->render($logo);
-				header('Content-Type: application/pdf');
-				echo $pdf;
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+				if(file_exists($public.'xml_nfe_cancelada/'.$venda->chave.'.xml')){
+					$xml = file_get_contents($public.'xml_nfe_cancelada/'.$venda->chave.'.xml');
+
+					$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
+
+					$dadosEmitente = $this->getEmitente();
+
+					$daevento = new Daevento($xml, $dadosEmitente);
+					$daevento->debugMode(true);
+					$pdf = $daevento->render($logo);
+				// header('Content-Type: application/pdf');
+				// echo $pdf;
+					return response($pdf)
+					->header('Content-Type', 'application/pdf');
+				}else{
+					echo "Arquivo XML não encontrado!!";
+				}
 			} catch (InvalidArgumentException $e) {
 				echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
 			}  
@@ -257,7 +284,7 @@ class NotaFiscalController extends Controller
 		$cnpj = str_replace("-", "", $cnpj);
 		$cnpj = str_replace(" ", "", $cnpj);
 
-		$nfe_service = new NFeService([
+		$nfe_service = new NFService([
 			"atualizacao" => date('Y-m-d h:i:s'),
 			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
@@ -266,13 +293,15 @@ class NotaFiscalController extends Controller
 			"schemes" => "PL_009_V4",
 			"versao" => "4.00",
 			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => getenv('CSCid')
-		], 55);
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
+		]);
 
 
 		$nfe = $nfe_service->cancelar($request->id, $request->justificativa);
-		if($this->isJson($nfe)){
+
+		if(!isset($nfe['erro'])){
+
 			$venda = Venda::
 			where('id', $request->id)
 			->first();
@@ -280,9 +309,12 @@ class NotaFiscalController extends Controller
 			$venda->save();
 
 			$this->removerDuplicadas($venda);
+			return response()->json($nfe, 200);
+
+		}else{
+			return response()->json($nfe['data'], $nfe['status']);
 		}
 		
-		echo json_encode($nfe);
 	}
 
 	private function isJson($string) {
@@ -307,7 +339,7 @@ class NotaFiscalController extends Controller
 		$cnpj = str_replace("-", "", $cnpj);
 		$cnpj = str_replace(" ", "", $cnpj);
 
-		$nfe_service = new NFeService([
+		$nfe_service = new NFService([
 			"atualizacao" => date('Y-m-d h:i:s'),
 			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
@@ -316,9 +348,9 @@ class NotaFiscalController extends Controller
 			"schemes" => "PL_009_V4",
 			"versao" => "4.00",
 			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => getenv('CSCid')
-		], 55);
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
+		]);
 
 
 		$nfe = $nfe_service->cartaCorrecao($request->id, $request->correcao);
@@ -333,7 +365,7 @@ class NotaFiscalController extends Controller
 		$cnpj = str_replace("/", "", $cnpj);
 		$cnpj = str_replace("-", "", $cnpj);
 		$cnpj = str_replace(" ", "", $cnpj);
-		$nfe_service = new NFeService([
+		$nfe_service = new NFService([
 			"atualizacao" => date('Y-m-d h:i:s'),
 			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
@@ -342,9 +374,9 @@ class NotaFiscalController extends Controller
 			"schemes" => "PL_009_V4",
 			"versao" => "4.00",
 			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => getenv('CSCid')
-		], 55);
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
+		]);
 		$c = $nfe_service->consultar($request->id);
 		echo json_encode($c);
 	}
@@ -375,7 +407,8 @@ class NotaFiscalController extends Controller
 
 				$m->from($emailEnvio, $nomeEmpresa);
 				$m->subject('Envio de XML NF ' . $venda->NfNumero);
-				$m->attach($public.'xml_nfe/'.$venda->path_xml);
+				
+				$m->attach($public.'xml_nfe/'.$venda->chave.'.xml');
 				$m->attach($public.'pdf/DANFE.pdf');
 				$m->to($email);
 			});

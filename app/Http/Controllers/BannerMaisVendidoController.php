@@ -8,6 +8,7 @@ use App\ProdutoDelivery;
 
 class BannerMaisVendidoController extends Controller
 {
+
 	public function __construct(){
 		$this->middleware(function ($request, $next) {
 			$value = session('user_logged');
@@ -23,12 +24,14 @@ class BannerMaisVendidoController extends Controller
 
 		return view('bannerMaisVendido/list')
 		->with('banners', $banners)
-		->with('title', 'Banner Topo');
+		->with('title', 'Banner Mais vendidos');
 	}
 
 	public function new(){
+		$produtos = ProdutoDelivery::all();
 		return view('bannerMaisVendido/register')
 		->with('bannerJs', true)
+		->with('produtos', $produtos)
 		->with('title', 'Cadastrar Banner mais Vendido');
 	}
 
@@ -44,6 +47,7 @@ class BannerMaisVendidoController extends Controller
 		$request->merge([ 'path' => $nomeImagem ]);
 		$request->merge([ 'ativo' => $request->status ? true : false ]);
 
+
 		$produto = $request->input('produto');
 		$produto = explode("-", $produto);
 		$produto = $produto[0];
@@ -51,22 +55,24 @@ class BannerMaisVendidoController extends Controller
 		$produto = ProdutoDelivery::find($produto);
 		if($produto != null){
 			$request->merge([ 'produto_delivery_id' => $produto->id]);
+		}else{
+			$request->merge([ 'produto_delivery_id' => null]);
 		}
 
 		$upload = $file->move(public_path('banner_mais_vendido'), $nomeImagem);
 
 		if(!$upload){
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao realizar upload da imagem.');
+
+			session()->flash('mensagem_erro', 'Erro ao realizar upload da imagem.');
 		}else{
 
 			$result = BannerMaisVendido::create($request->all());
 			if($result){
-				session()->flash('color', 'green');
-				session()->flash("message", "Banner cadastrada com sucesso.");
+
+				session()->flash("mensagem_sucesso", "Banner cadastrada com sucesso.");
 			}else{
-				session()->flash('color', 'red');
-				session()->flash('message', 'Erro ao cadastrar banner.');
+
+				session()->flash('mensagem_erro', 'Erro ao cadastrar banner.');
 			}
 		}
 		
@@ -76,9 +82,11 @@ class BannerMaisVendidoController extends Controller
 	public function edit($id){
 
 		$resp = BannerMaisVendido::find($id);  
+		$produtos = ProdutoDelivery::all();
 
 		return view('bannerMaisVendido/register')
 		->with('banner', $resp)
+		->with('produtos', $produtos)
 		->with('bannerJs', true)
 		->with('title', 'Editar Banner de Topo');
 
@@ -90,11 +98,10 @@ class BannerMaisVendidoController extends Controller
 		if(file_exists($public . 'banner_mais_vendido/'.$banner->path))
 			unlink($public . 'banner_mais_vendido/'.$banner->path);
 		if($banner->delete()){
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Registro removido!');
+			session()->flash('mensagem_sucesso', 'Registro removido!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/bannerMaisVendido');
 	}
@@ -156,11 +163,10 @@ class BannerMaisVendidoController extends Controller
 
 		$result = $resp->save();
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Banner editado com sucesso!');
+
+			session()->flash('mensagem_sucesso', 'Banner editado com sucesso!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao editar banner!');
+			session()->flash('mensagem_erro', 'Erro ao editar banner!');
 		}
 
 		return redirect('/bannerMaisVendido'); 

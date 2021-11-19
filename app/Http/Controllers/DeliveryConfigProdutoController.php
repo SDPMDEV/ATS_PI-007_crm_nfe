@@ -8,6 +8,8 @@ use App\CategoriaProdutoDelivery;
 use App\ImagensProdutoDelivery;
 use App\TamanhoPizza;
 use App\ProdutoPizza;
+use App\Produto;
+use App\ClienteDelivery;
 
 class DeliveryConfigProdutoController extends Controller
 {
@@ -30,71 +32,86 @@ class DeliveryConfigProdutoController extends Controller
       ->with('title', 'Produtos de Delivery');
   }
 
-  public function new(){
+  public function pesquisa(Request $request){
+    $pesquisa = $request->pesquisa;
+    $produtos = ProdutoDelivery::
+    select('produto_deliveries.*')
+    ->join('produtos', 'produto_deliveries.produto_id', '=', 'produtos.id')
+    ->where('produtos.nome', 'LIKE', "%$pesquisa%")
+    ->paginate(40);
+
+    return view('produtoDelivery/list')
+    ->with('produtos', $produtos)
+    ->with('produtoJs', true)
+    ->with('links', true)
+    ->with('title', 'Produtos de Delivery');
+}
+
+public function new(){
+    $produtos = Produto::orderBy('nome')->get();
     $tamanhos = TamanhoPizza::all();
     $categorias = CategoriaProdutoDelivery::all();
     return view('produtoDelivery/register')
     ->with('title', 'Cadastrar Produto para Delivery')
     ->with('categorias', $categorias)
+    ->with('produtos', $produtos)
     ->with('tamanhos', $tamanhos)
     ->with('produtoJs', true);
 }
 
 public function save(Request $request){
 
-  $this->_validate($request);
-  $produto = $request->input('produto');
-  $produto = explode("-", $produto);
-  $produto = $produto[0];
+    $produto = $request->input('produto');
 
-  $catPizza = false;
-  $categoria = CategoriaProdutoDelivery::
-  where('id', $request->categoria_id)
-  ->first();
+    $catPizza = false;
+    $categoria = CategoriaProdutoDelivery::
+    where('id', $request->categoria_id)
+    ->first();
 
-  $request->merge([ 'status' => $request->input('status') ? true : false ]);
-  $request->merge([ 'destaque' => $request->input('destaque') ? true : false ]);
-  $request->merge([ 'ingredientes' => $request->input('ingredientes') ?? '']);
-  $request->merge([ 'descricao' => $request->input('descricao') ?? '']);
-  $request->merge([ 'produto_id' => $produto]);
+    $request->merge([ 'status' => $request->input('status') ? true : false ]);
+    $request->merge([ 'destaque' => $request->input('destaque') ? true : false ]);
+    $request->merge([ 'ingredientes' => $request->input('ingredientes') ?? '']);
+    $request->merge([ 'descricao' => $request->input('descricao') ?? '']);
+    $request->merge([ 'produto_id' => $produto]);
 
 
-  if(strpos(strtolower($categoria->nome), 'izza') !== false){
-    $request->merge([ 'valor' => 0]);
-    $request->merge([ 'valor_anterior' => 0]);
+    if(strpos(strtolower($categoria->nome), 'izza') !== false){
+        $request->merge([ 'valor' => 0]);
+        $request->merge([ 'valor_anterior' => 0]);
 
-}else{
-    $request->merge([ 'valor' => str_replace(",", ".", $request->valor)]);
-    $request->merge([ 'valor_anterior' => str_replace(",", ".", $request->valor_anterior ?? 0)]);
-}
-
-
-
-$result = ProdutoDelivery::create($request->all());
-
-if(strpos(strtolower($categoria->nome), 'izza') !== false){
-    $tamanhosPizza = TamanhoPizza::all();
-
-    foreach($tamanhosPizza as $t){
-        $res = ProdutoPizza::create([
-            'produto_id' => $result->id,
-            'tamanho_id' => $t->id,
-            'valor' => str_replace(",", ".", $request->input('valor_'.$t->nome))
-        ]);
+    }else{
+        $request->merge([ 'valor' => str_replace(",", ".", $request->valor)]);
+        $request->merge([ 'valor_anterior' => str_replace(",", ".", $request->valor_anterior ?? 0)]);
     }
 
-}
+    $this->_validate($request);
 
 
-if($result){
-    session()->flash('color', 'blue');
-    session()->flash("message", "Produto cadastrado com sucesso!");
-}else{
-    session()->flash('color', 'red');
-    session()->flash('message', 'Erro ao cadastrar produto!');
-}
+    $result = ProdutoDelivery::create($request->all());
 
-return redirect('/deliveryProduto');
+    if(strpos(strtolower($categoria->nome), 'izza') !== false){
+        $tamanhosPizza = TamanhoPizza::all();
+
+        foreach($tamanhosPizza as $t){
+            $res = ProdutoPizza::create([
+                'produto_id' => $result->id,
+                'tamanho_id' => $t->id,
+                'valor' => str_replace(",", ".", $request->input('valor_'.$t->nome))
+            ]);
+        }
+
+    }
+
+
+    if($result){
+
+        session()->flash("mensagem_sucesso", "Produto cadastrado com sucesso!");
+    }else{
+
+        session()->flash('mensagem_erro', 'Erro ao cadastrar produto!');
+    }
+
+    return redirect('/deliveryProduto');
 
 
 }
@@ -114,11 +131,11 @@ public function saveImagem(Request $request){
     $result = ImagensProdutoDelivery::create($request->all());
 
     if($result){
-        session()->flash('color', 'blue');
-        session()->flash("message", "Imagem cadastrada com sucesso!");
+
+        session()->flash("mensagem_sucesso", "Imagem cadastrada com sucesso!");
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro ao cadastrar produto!');
+
+        session()->flash('mensagem_erro', 'Erro ao cadastrar produto!');
     }
 
     return redirect('/deliveryProduto/galeria/'.$produtoDeliveryId );
@@ -131,6 +148,8 @@ public function edit($id){
     $tamanhos = TamanhoPizza::all();
     $produto = new ProdutoDelivery();
     $categorias = CategoriaProdutoDelivery::all();
+    $produtos = Produto::orderBy('nome')->get();
+    
     $resp = $produto
     ->where('id', $id)->first();  
 
@@ -138,6 +157,7 @@ public function edit($id){
     ->with('produto', $resp)
     ->with('categorias', $categorias)
     ->with('tamanhos', $tamanhos)
+    ->with('produtos', $produtos)
     ->with('produtoJs', true)
     ->with('title', 'Editar Produto de Delivery');
 
@@ -281,6 +301,8 @@ public function deleteImagem($id){
 
 
 private function _validate(Request $request, $fileExist = true){
+
+
     $catPizza = false;
     $categoria = CategoriaProdutoDelivery::
     where('id', $request->categoria_id)
@@ -289,16 +311,19 @@ private function _validate(Request $request, $fileExist = true){
     if(strpos(strtolower($categoria->nome), 'izza') !== false){
         $catPizza = true;
     }
+
     $rules = [
-        'produto' => $request->id > 0 ? '' : 'required|min:5',
+        'produto' => $request->id > 0 ? '' : 'required',
         'ingredientes' => 'max:255',
         'descricao' => 'max:255',
         'valor' => $catPizza ? 'required' : '',
-        'limite_diario' => 'required'
+        'limite_diario' => 'required',
+        'categoria_id' => 'required'
     ];
 
     $messages = [
         'produto.required' => 'O campo produto é obrigatório.',
+        'categoria_id.required' => 'Selecione uma categoria.',
         'produto.min' => 'Selecione um produto.',
         'ingredientes.required' => 'O campo ingredientes é obrigatório.',
         'ingredientes.max' => '255 caracteres maximos permitidos.',
@@ -313,7 +338,7 @@ private function _validate(Request $request, $fileExist = true){
 
         foreach($tamanhosPizza as $t){
             $rules['valor_'.$t->nome] = 'required';
-            $messages['valor_'.$t->nome.'.required'] = 'Campo obrigatório.';
+            $messages['valor_'.$t->nome.'.required'] = 'Campo obrigatório ' . $t->nome;
         }
     }
 
@@ -325,11 +350,14 @@ public function push($id){
     where('id', $id)
     ->first();
 
+    $clientes = ClienteDelivery::orderBy('nome')->get();
+
     return view('push/new')
     ->with('pushJs', true)
     ->with('titulo', $this->randomTitles())
+    ->with('clientes', $clientes)
     ->with('mensagem', $this->randomMensagem($produto))
-    ->with('imagem', $produto->galeria[0]->path)
+    ->with('imagem', isset($produto->galeria[0]) ? $produto->galeria[0]->path : '')
     ->with('referencia', $produto->id)
     ->with('title', 'Nova Push');
 }
@@ -352,6 +380,6 @@ private function randomMensagem($produto){
         'Peca já o seu '.$produto->produto->nome. ' o melhor :)',
         'Promoção de hoje '. $produto->produto->nome. ' venha conferir'
     ];
-    return $messages[rand(0,4)];
+    return $messages[rand(0,3)];
 }
 }

@@ -10,6 +10,7 @@ use App\FuncionarioOs;
 use App\Funcionario;
 use App\RelatorioOs;
 use App\Servico;
+use App\Cliente;
 use App\ConfigNota;
 use App\Helpers\StockMove;
 use \Carbon\Carbon;
@@ -27,55 +28,69 @@ class OrderController extends Controller
     }
 
     public function index(){
-      $orders = OrdemServico::
-      orderBy('id', 'desc')
-      ->paginate(20);
-      return view('os/list')
-      ->with('orders', $orders)
-      ->with('print', true)
-      ->with('links', true)
-      ->with('title', 'Orders de Serviço');
-  }
+        $orders = OrdemServico::
+        orderBy('id', 'desc')
+        ->paginate(20);
+        return view('os/list')
+        ->with('orders', $orders)
+        ->with('print', true)
+        ->with('links', true)
+        ->with('title', 'Orders de Serviço');
+    }
 
-  public function new(){
-    return view('os/register')
-    ->with('client', true)
-    ->with('estados', EstadoOs::values())
-    ->with('title', 'Nova Ordem de Serviço');
-}
+    public function new(){
+        $clientes = Cliente::orderBy('razao_social')->get();
+        return view('os/register')
+        ->with('client', true)
+        ->with('clientes', $clientes)
+        ->with('estados', EstadoOs::values())
+        ->with('title', 'Nova Ordem de Serviço');
+    }
 
-public function save(Request $request){
-   $this->_validate($request);
+    public function delete($id){
+        $ordem = OrdemServico::find($id);
+        if($ordem->delete()){
+            session()->flash("mensagem_sucesso", "Ordem de serviço removida!");
+        }else{
+            session()->flash("mensagem_erro", "Erro ao remover!");
+        }
+        return redirect("/ordemServico");
 
-   $order = new OrdemServico();
-   $request->merge([ 'valor' =>str_replace(",", ".", $request->input('valor'))]);
+    }
 
-   $cliente = $request->input('cliente');
-   $cliente = explode("-", $cliente);
-   $cliente = $cliente[0];
+    public function save(Request $request){
+     $this->_validate($request);
 
-   $result = $order->create([
-    'descricao' => $request->input('descricao'),
-    'usuario_id' => get_id_user(),
-    'cliente_id' => $cliente
-]);
+     $order = new OrdemServico();
+     $request->merge([ 'valor' =>str_replace(",", ".", $request->input('valor'))]);
+
+     $cliente = $request->input('cliente');
+     $cliente = explode("-", $cliente);
+     $cliente = $cliente[0];
+
+     $result = $order->create([
+        'descricao' => $request->input('descricao'),
+        'usuario_id' => get_id_user(),
+        'cliente_id' => $cliente
+    ]);
 
 
-   if($result){
-    session()->flash('color', 'blue');
-    session()->flash("message", "OS gerada!");
-}else{
-    session()->flash('color', 'red');
-    session()->flash('message', 'Erro ao gerar OS!');
-}
+     if($result){
+        session()->flash("mensagem_sucesso", "OS gerada!");
+    }else{
+        session()->flash('mensagem_erro', 'Erro ao gerar OS!');
+    }
 
-return redirect("/ordemServico/servicosordem/$result->id");
+    return redirect("/ordemServico/servicosordem/$result->id");
 }
 
 public function servicosordem($ordemId){
     $ordem = OrdemServico::
     where('id', $ordemId)
     ->first();
+
+    $servicos = Servico::all();
+    $funcionarios = Funcionario::all();
 
     $temServicos = count(Servico::all()) > 0;
     $temFuncionarios = count(Funcionario::all()) > 0;
@@ -84,6 +99,8 @@ public function servicosordem($ordemId){
     ->with('ordem', $ordem)
     ->with('relatorioJs', true)
     ->with('funcionario', true)
+    ->with('servicos', $servicos)
+    ->with('funcionarios', $funcionarios)
     ->with('temServicos', $temServicos)
     ->with('temFuncionarios', $temFuncionarios)
     ->with('title', 'Novo serviço para OS')
@@ -119,11 +136,9 @@ public function addServico(Request $request){
     $ordem->save();
 
     if($result){
-        session()->flash('color', 'blue');
-        session()->flash("message", "Serviço adicionado!");
+        session()->flash("mensagem_sucesso", "Serviço adicionado!");
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro ao adicionar!');
+        session()->flash('mensagem_erro', 'Erro ao adicionar!');
     }
 
     return redirect("/ordemServico/servicosordem/$request->ordem_servico_id");
@@ -148,11 +163,9 @@ public function deleteServico($id){
 
     $delete = $obj->delete();
     if($delete){
-        session()->flash('color', 'blue');
-        session()->flash('message', 'Registro removido!');
+        session()->flash('mensagem_sucesso', 'Serviço removido!');
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro!');
+        session()->flash('mensagem_erro', 'Erro!');
     }
     
     return redirect("/ordemServico/servicosordem/$id");
@@ -177,7 +190,7 @@ public function editRelatorio($id){
     return view('os/addRelatorio')
     ->with('ordem', $ordem)
     ->with('relatorio', $relatorio)
-    ->with('title', 'Novo Relatório');
+    ->with('title', 'Editar Relatório');
 }
 
 public function alterarEstado($id){
@@ -199,11 +212,9 @@ public function alterarEstadoPost(Request $request){
     $result = $ordem->save();
 
     if($result){
-        session()->flash('color', 'blue');
-        session()->flash('message', 'Estado Alterado!');
+        session()->flash('mensagem_sucesso', 'Estado Alterado!');
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro!');
+        session()->flash('mensagem_erro', 'Erro!');
     }
     
     return redirect("/ordemServico/servicosordem/$request->id");
@@ -256,11 +267,9 @@ public function saveRelatorio(Request $request){
     ]);
 
     if($result){
-        session()->flash('color', 'blue');
-        session()->flash("message", "Relatorio adicionado!");
+        session()->flash("mensagem_sucesso", "Relatorio adicionado!");
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro ao adicionar!');
+        session()->flash('mensagem_erro', 'Erro ao adicionar!');
     }
 
     return redirect("/ordemServico/servicosordem/$request->ordemId");
@@ -277,11 +286,9 @@ public function updateRelatorio(Request $request){
     $resp->texto = $request->input('texto');
     $result = $resp->save();
     if($result){
-        session()->flash('color', 'blue');
-        session()->flash("message", "Relatorio editado!");
+        session()->flash("mensagem_sucesso", "Relatorio editado!");
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro ao editar!');
+        session()->flash('mensagem_erro', 'Erro ao editar!');
     }
 
     return redirect("/ordemServico/servicosordem/$request->ordemId");
@@ -295,11 +302,9 @@ public function deleteRelatorio($id){
     $id = $obj->ordemServico->id;
     $delete = $obj->delete();
     if($delete){
-        session()->flash('color', 'blue');
-        session()->flash('message', 'Relatório removido!');
+        session()->flash('mensagem_sucesso', 'Relatório removido!');
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro!');
+        session()->flash('mensagem_erro', 'Erro!');
     }
     
     return redirect("/ordemServico/servicosordem/$id");
@@ -307,13 +312,12 @@ public function deleteRelatorio($id){
 
 private function _validate(Request $request){
     $rules = [
-        'cliente' => 'required|min:5',
+        'cliente' => 'required',
         'descricao' => 'required',
     ];
 
     $messages = [
         'cliente.required' => 'O campo cliente é obrigatório.',
-        'cliente.min' => 'Clique sobre o cliente desejado.',
         'descricao.required' => 'O campo descrição é obrigatório.'
     ];
 
@@ -322,13 +326,12 @@ private function _validate(Request $request){
 
 private function _validateServicoOs(Request $request){
     $rules = [
-        'servico' => 'required|min:5',
+        'servico' => 'required',
         'quantidade' => 'required',
     ];
 
     $messages = [
         'servico.required' => 'O campo serviço é obrigatório.',
-        'servico.min' => 'Clique sobre o serviço desejado.',
         'quantidade.required' => 'O campo quantidade é obrigatório.'
     ];
 
@@ -337,13 +340,12 @@ private function _validateServicoOs(Request $request){
 
 private function _validateFuncionario(Request $request){
     $rules = [
-        'funcionario' => 'required|min:5',
+        'funcionario' => 'required',
         'funcao' => 'required',
     ];
 
     $messages = [
         'funcionario.required' => 'O campo funcionario é obrigatório.',
-        'funcionario.min' => 'Clique sobre o funcionario desejado.',
         'funcao.required' => 'O campo função é obrigatório.'
     ];
 
@@ -449,6 +451,10 @@ public function imprimir($id){
     $ordem = OrdemServico::find($id);
     $config = ConfigNota::first();
 
+    if($config == null){
+        return redirect('/configNF');
+    }
+
     return view('os/print')
     ->with('ordem', $ordem)
     ->with('config', $config)
@@ -471,9 +477,7 @@ public function saveFuncionario(Request $request){
     where('id', $request->input('ordem_servico_id'))
     ->first();
 
-    $funcionarioObj = Funcionario::
-    where('id', $funcionario)
-    ->first();
+    $funcionarioObj = Funcionario::find($funcionario);
 
     $result = $funcionarioOs->create([
         'funcao' => $request->input('funcao'),
@@ -483,11 +487,9 @@ public function saveFuncionario(Request $request){
     ]);
 
     if($result){
-        session()->flash('color', 'blue');
-        session()->flash("message", "Funcionario adicionado!");
+        session()->flash("mensagem_sucesso", "Funcionario adicionado!");
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro ao adicionar!');
+        session()->flash('mensagem_erro', 'Erro ao adicionar!');
     }
 
     return redirect("/ordemServico/servicosordem/$request->ordem_servico_id");
@@ -508,11 +510,9 @@ public function deleteFuncionario($id){
 
     $delete = $obj->delete();
     if($delete){
-        session()->flash('color', 'blue');
-        session()->flash('message', 'Registro removido!');
+        session()->flash('mensagem_sucesso', 'Registro removido!');
     }else{
-        session()->flash('color', 'red');
-        session()->flash('message', 'Erro!');
+        session()->flash('mensagem_erro', 'Erro!');
     }
     
     return redirect("/ordemServico/servicosordem/$id");
@@ -526,8 +526,7 @@ public function alterarStatusServico($servicoId){
     $servicoOs->status = !$servicoOs->status;
     $servicoOs->save();
 
-    session()->flash('color', 'blue');
-    session()->flash('message', 'Status de serviço alterado!');
+    session()->flash('mensagem_sucesso', 'Status de serviço alterado!');
     return redirect("/ordemServico/servicosordem/".$servicoOs->servico->id);
 }
 

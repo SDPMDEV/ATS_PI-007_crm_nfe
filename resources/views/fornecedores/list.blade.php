@@ -1,73 +1,122 @@
 @extends('default.layout')
 @section('content')
 
-	<div class="row">
-		<div class="col s12">
+<div class="card card-custom gutter-b">
 
-			<h4>Lista de Fornecedores</h4>
+	<div class="card-body">
+		<div class="">
+			<div class="col-sm-12 col-lg-4 col-md-6 col-xl-4">
 
-			@if(session()->has('message'))
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-			@endif
-
-			<div class="row"></div>
-			<div class="row">
-				<a href="/fornecedores/new" class="btn green accent-3">
-			      	<i class="material-icons left">add</i>	
-			      	Novo Fornecedor		
+				<a href="/fornecedores/new" class="btn btn-lg btn-success">
+					<i class="fa fa-plus"></i>Novo Fornecedor
 				</a>
 			</div>
+		</div>
+		<br>
+
+
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
 
 			
-
+			<br>
+			<h4>Lista de Fornecedores</h4>
+			<label>Total de registros: {{count($fornecedores)}}</label>
 			<div class="row">
-				<div class="col s12 m12 l12">
-					<label>Numero de registros: {{count($fornecedores)}}</label>					
+
+				@foreach($fornecedores as $c)
+
+
+				<div class="col-sm-12 col-lg-6 col-md-6 col-xl-4">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+							<div class="card-title">
+								<h3 style="width: 230px; font-size: 12px; height: 10px;" class="card-title">{{$c->id}} - {{substr($c->razao_social, 0, 30)}}
+								</h3>
+							</div>
+
+							<div class="card-toolbar">
+								<div class="dropdown dropdown-inline" data-toggle="tooltip" title="" data-placement="left" data-original-title="Ações">
+									<a href="#" class="btn btn-hover-light-primary btn-sm btn-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<i class="fa fa-ellipsis-h"></i>
+									</a>
+									<div class="dropdown-menu p-0 m-0 dropdown-menu-md dropdown-menu-right">
+										<!--begin::Navigation-->
+										<ul class="navi navi-hover">
+											<li class="navi-header font-weight-bold py-4">
+												<span class="font-size-lg">Ações:</span>
+											</li>
+											<li class="navi-separator mb-3 opacity-70"></li>
+											<li class="navi-item">
+												<a href="/fornecedores/edit/{{$c->id}}" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-primary">Editar</span>
+													</span>
+												</a>
+											</li>
+											<li class="navi-item">
+												<a onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/fornecedores/delete/{{ $c->id }}" }else{return false} })' href="#!" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-danger">Excluir</span>
+													</span>
+												</a>
+											</li>
+
+
+										</ul>
+										<!--end::Navigation-->
+									</div>
+								</div>
+
+							</div>
+
+							<div class="card-body">
+
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">CNPJ/CPF:</span>
+									<a target="_blank" class="kt-widget__data text-success">{{ $c->cpf_cnpj }}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">IE/RG:</span>
+									<a class="kt-widget__data text-success">{{$c->ie_rg}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Cidade:</span>
+									<a class="kt-widget__data text-success">{{$c->cidade->nome}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">UF:</span>
+									<a class="kt-widget__data text-success">{{$c->cidade->uf}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Telefone:</span>
+									<a class="kt-widget__data text-success">{{$c->telefone}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Email:</span>
+									<a class="kt-widget__data text-success">{{$c->email}}</a>
+								</div>
+
+							</div>
+
+						</div>
+
+					</div>
+
 				</div>
-				<table class="">
-					<thead>
-						<tr>
-							<th>Código</th>
-							<th>Razão Social</th>
-							<th>CPF/CNPJ</th>
-							<th>Rua</th>
-							<th>Número</th>
-							<th>Bairro</th>
-							<th>Telefone</th>
-							<th>Celular</th>
-							<th>Email</th>
-							<th>Ações</th>
-						</tr>
-					</thead>
 
-					<tbody>
-						@foreach($fornecedores as $p)
-						<tr>
-							<th>{{ $p->id }}</th>
-							<th>{{ $p->razao_social }}</th>
-							<th>{{ $p->cpf_cnpj }}</th>
-							<th>{{ $p->rua }}</th>
-							<th>{{ $p->numero }}</th>
-							<th>{{ $p->bairro }}</th>
-							<th>{{ $p->telefone }}</th>
-							<th>{{ $p->celular }}</th>
-							<th>{{ $p->email }}</th>
+				@endforeach
 
-							<th>
-								<a href="/fornecedores/edit/{{ $p->id }}">
-	      							<i class="material-icons left">edit</i>					
-								</a>
-								<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/fornecedores/delete/{{ $p->id }}">
-	      							<i class="material-icons left red-text">delete</i>					
-								</a>
-							</th>
-						</tr>
-						@endforeach
-					</tbody>
-				</table>
+			</div>
+
+			<div class="d-flex justify-content-between align-items-center flex-wrap">
+				<div class="d-flex flex-wrap py-2 mr-3">
+					@if(isset($links))
+					{{$fornecedores->links()}}
+					@endif
+				</div>
 			</div>
 		</div>
 	</div>
-@endsection	
+</div>
+
+@endsection

@@ -7,15 +7,11 @@ use App\ItemCompra;
 use App\Produto;
 use App\ContaPagar;
 use App\ContaReceber;
-
+use App\Estoque;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
+
     public function boot()
     {
         $alertas = [];
@@ -24,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
             array_push($alertas, 
                 [
                     'msg' => 'Existe itens em estoque sem cadastro de data de validade!',
-                    'icon' => 'view_module',
+                    'titulo' => 'Alerta validade',
                     'link' => '/compras/produtosSemValidade'
                 ]
             );
@@ -35,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
             array_push($alertas, 
                 [
                     'msg' => 'Existe Produtos com validade próxima!',
-                    'icon' => 'sim_card_alert',
+                    'titulo' => 'Validade próxima',
                     'link' => '/compras/validadeAlerta'
                 ]
             );
@@ -48,11 +44,12 @@ class AppServiceProvider extends ServiceProvider
             array_push($alertas, 
                 [
                     'msg' => 'Contas a pagar R$'.number_format($somaContas, 2),
-                    'icon' => 'money_off',
+                    'titulo' => 'Alerta contas',
                     'link' => '/contasPagar/filtro?fornecedor=&data_inicial='.$dataHoje.'&data_final='.$dataFutura.'&status=todos'
                 ]
             );
         }
+
 
         $somaContas = $this->verificaContasReceber();
         if($somaContas > 0) {
@@ -61,15 +58,47 @@ class AppServiceProvider extends ServiceProvider
             array_push($alertas, 
                 [
                     'msg' => 'Contas a receber R$'.number_format($somaContas, 2),
-                    'icon' => 'attach_money',
+                    'titulo' => 'Receber',
                     'link' => '/contasReceber/filtro?cliente=&data_inicial='.$dataHoje.'&data_final='.$dataFutura.'&status=todos'
                 ]
             );
         }
 
-        view()->composer('*',function($view) use($alertas){
-            $view->with('alertas', $alertas);
-        });
+        if (\Schema::hasTable('produtos')){
+
+            $produtos = Produto::all();
+            $contDesfalque = 0;
+            foreach($produtos as $p){
+                if($p->estoque_minimo > 0){
+                    $estoque = Estoque::where('produto_id', $p->id)->first();
+                    $temp = null;
+                    if($estoque == null){
+                        $contDesfalque++;
+                    }else{
+                        $contDesfalque++;
+                    }
+
+                }
+            }
+
+            if($contDesfalque > 0){
+                array_push($alertas, 
+                    [
+                        'msg' => 'Produtos com estoque minimo: ' . $contDesfalque,
+                        'titulo' => 'Alerta estoque',
+                        'link' => '/relatorios/filtroEstoqueMinimo'
+                    ]
+                );
+            }
+
+            $rotaAtiva = $this->rotaAtiva();
+
+            view()->composer('*',function($view) use($alertas, $rotaAtiva){
+                $view->with('alertas', $alertas);
+                $view->with('rotaAtiva', $rotaAtiva);
+            });
+        }
+
     }
 
     /**
@@ -80,6 +109,26 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         //
+    }
+
+    private function rotaAtiva(){
+        if (isset($_SERVER['REQUEST_URI'])){ 
+            $uri = substr($_SERVER['REQUEST_URI'], 1, strlen($_SERVER['REQUEST_URI']));
+            $rotaDeCadastros = [
+                'categorias', 'produtos', 'clientes', 'fornecedores', 'transportadoras', 'funcionarios',
+                'categoriasServico', 'servicos', 'categoriasConta', 'veiculos', 'usuarios'
+            ];
+
+            $rotaDeEntradas = [
+                'compraFiscal', 'compraManual', 'compras', 'cotacao'
+            ];
+
+            if(in_array($uri, $rotaDeCadastros)) return 'cadastros';
+            if(in_array($uri, $rotaDeEntradas)) return 'entradas';
+
+        }else{
+            return "";
+        }
     }
 
     private function verificaItensSemValidade(){
@@ -125,31 +174,31 @@ class AppServiceProvider extends ServiceProvider
 
     private function verificaContasPagar(){
         if (\Schema::hasTable('conta_pagars')){
-           $dataHoje = date('Y-m-d', strtotime("-". getenv('ALERTA_CONTAS_DIAS') ." days",strtotime(date('Y-m-d'))));
-           $dataFutura = date('Y-m-d', strtotime("+". getenv('ALERTA_CONTAS_DIAS') ." days",strtotime(date('Y-m-d'))));
+         $dataHoje = date('Y-m-d', strtotime("-". getenv('ALERTA_CONTAS_DIAS') ." days",strtotime(date('Y-m-d'))));
+         $dataFutura = date('Y-m-d', strtotime("+". getenv('ALERTA_CONTAS_DIAS') ." days",strtotime(date('Y-m-d'))));
 
-           $somaContas = ContaPagar::
-           selectRaw('sum(valor_integral) as valor')
-           ->whereBetween('data_vencimento', [$dataHoje, $dataFutura])
-           ->where('status', 0)
-           ->first();
+         $somaContas = ContaPagar::
+         selectRaw('sum(valor_integral) as valor')
+         ->whereBetween('data_vencimento', [$dataHoje, $dataFutura])
+         ->where('status', 0)
+         ->first();
 
-           return $somaContas->valor ?? 0;
-       }
-   }
+         return $somaContas->valor ?? 0;
+     }
+ }
 
-   private function verificaContasReceber(){
+ private function verificaContasReceber(){
     if (\Schema::hasTable('conta_recebers')){
-       $dataHoje = date('Y-m-d', strtotime("-". getenv('ALERTA_CONTAS_DIAS') ." days",strtotime(date('Y-m-d'))));
-       $dataFutura = date('Y-m-d', strtotime("+". getenv('ALERTA_CONTAS_DIAS') ." days",strtotime(date('Y-m-d'))));
+     $dataHoje = date('Y-m-d', strtotime("-". getenv('ALERTA_CONTAS_DIAS') ." days",strtotime(date('Y-m-d'))));
+     $dataFutura = date('Y-m-d', strtotime("+". getenv('ALERTA_CONTAS_DIAS') ." days",strtotime(date('Y-m-d'))));
 
-       $somaContas = ContaReceber::
-       selectRaw('sum(valor_integral) as valor')
-       ->whereBetween('data_vencimento', [$dataHoje, $dataFutura])
-       ->where('status', 0)
-       ->first();
+     $somaContas = ContaReceber::
+     selectRaw('sum(valor_integral) as valor')
+     ->whereBetween('data_vencimento', [$dataHoje, $dataFutura])
+     ->where('status', 0)
+     ->first();
 
-       return $somaContas->valor ?? 0;
-   }
+     return $somaContas->valor ?? 0;
+ }
 }
 }

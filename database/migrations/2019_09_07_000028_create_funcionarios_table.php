@@ -25,6 +25,12 @@ class CreateFuncionariosTable extends Migration
             $table->string('celular', 20)->default("00 00000 0000");
             $table->string('email', 40)->default("null");
             $table->date('data_registro');
+
+            $table->decimal('percentual_comissao', 6, 2)->default(0);
+
+            $table->integer('usuario_id')->nullable()->unsigned();
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

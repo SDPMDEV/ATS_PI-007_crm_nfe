@@ -1,79 +1,72 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
 
-		<h4>Adicionais para categoria <strong>{{$categoria->nome}}</strong></h4>
 
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-		</div>
-		
-		@endif
+	<div class="card-body">
+		<div class="">
 
-		<form method="post" action="/deliveryCategoria/saveAditional">
-			@csrf
-			<div class="row">
+			<form method="post" action="/deliveryCategoria/saveAditional">
+				@csrf
 				<input type="hidden" id="categoria" name="categoria" value="{{$categoria->id}}">
-				<div class="input-field col s5">
-					<i class="material-icons prefix">add_box</i>
-					<input autocomplete="off" type="text" name="adicional" id="autocomplete-adicional" class="autocomplete-adicional">
-					<label for="autocomplete-adicional">Adicional</label>
-					@if($errors->has('adicional'))
-					<div class="center-align red lighten-2">
-						<span class="white-text">{{ $errors->first('adicional') }}</span>
+				<div class="row align-items-center">
+					<div class="form-group validated col-sm-6 col-lg-6 col-10">
+						<label class="col-form-label" id="">Cliente</label><br>
+						<select class="form-control select2" style="width: 100%" id="kt_select2_3" name="adicional">
+							@foreach($adicionais as $a)
+							<option value="{{$a->id}}">{{$a->nome()}} - R$ {{$a->valor}}</option>
+							@endforeach
+						</select>
 					</div>
-					@endif
+					<div class="col-lg-1 col-md-4 col-sm-6 col-2">
+						<button href="#!" style="margin-top: 10px;" class="btn btn-light-success px-6 font-weight-bold">
+							<i class="la la-plus"></i>
+						</button>
+
+					</div>
+				</div>
+			</form>
+
+		</div>
+		<br>
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
+			<br>
+			<h3>Adicionais para categoria <strong class="text-info">{{$categoria->nome}}</strong></h3>
+			<label>Numero de registros: {{count($categoria->adicionais)}}</label>					
+
+			<div class="row">
+
+				@foreach($categoria->adicionais as $c)
+
+
+				<div class="col-sm-12 col-lg-6 col-md-6 col-xl-4">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title" style="font-size: 12px;">{{ $c->complemento->id }} - {{ $c->complemento->nome() }}
+							</h3>
+							<div class="card-toolbar">
+
+
+								<a class="btn btn-icon btn-circle btn-sm btn-light-danger mr-1" onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/deliveryCategoria/removeAditional/{{ $c->id }}" }else{return false} })' href="#!">
+									<i class="la la-trash"></i>				
+								</a>
+								
+
+							</div>
+						</div>
+
+					</div>
+
 				</div>
 
-				<div class="col s2">
-					<button type="submit" class="btn-large green accent-3">
-						<i class="material-icons">add</i>
-					</button>
-				</div>
+				@endforeach
 
 			</div>
-			
-		</form>
-
-		
-
-
-		<div class="row">
-			<div class="col s10">
-				<label>Numero de registros: {{count($categoria->adicionais)}}</label>					
-			</div>
-			<table class="col s10">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Nome</th>
-						<th>Ações</th>
-					</tr>
-				</thead>
-
-				<tbody>
-					@foreach($categoria->adicionais as $c)
-					<tr>
-						<th>{{ $c->complemento->id }}</th>
-						<th>{{ $c->complemento->nome }}</th>
-
-
-						<th>
-							
-							<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/deliveryCategoria/removeAditional/{{ $c->id }}">
-								<i class="material-icons left red-text">delete</i>					
-							</a>
-						</th>
-					</tr>
-					@endforeach
-				</tbody>
-			</table>
 		</div>
 	</div>
 </div>
+
+
 @endsection	

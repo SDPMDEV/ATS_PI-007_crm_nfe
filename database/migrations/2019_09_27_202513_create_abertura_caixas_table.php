@@ -21,6 +21,7 @@ class CreateAberturaCaixasTable extends Migration
 
             $table->timestamp('data_registro')->useCurrent();
             $table->decimal('valor', 10,2);
+            $table->integer('ultima_venda')->default(0);
             $table->timestamps();
         });
     }

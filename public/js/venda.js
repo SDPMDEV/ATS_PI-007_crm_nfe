@@ -6,7 +6,43 @@ var TOTALQTD = 0;
 var CLIENTE = null;
 var receberContas = [];
 
+var PRODUTOS = []
+var CLIENTES = []
+
+function convertData(data){
+	let d = data.split('-');
+	return d[2] + '/' + d[1] + '/' + d[0];
+}
 $(function () {
+
+	PRODUTOS = JSON.parse($('#produtos').val())
+
+	if($('#venda_edit').val()){
+		VENDA = JSON.parse($('#venda_edit').val())
+		VENDA.itens.map((rs) => {
+			addItemTable(rs.produto.id, rs.produto.nome, rs.quantidade, rs.valor);
+		})
+		let t = montaTabela();
+		$('#prod tbody').html(t)
+
+		if(!VENDA.frete){
+			$('#frete').val('9').change();
+		}else{
+			$('#frete').val(VENDA.frete.tipo).change();
+		}
+		
+		CLIENTE = VENDA.cliente;
+		if(VENDA.duplicatas.length > 0){
+			VENDA.duplicatas.map((rs) => {
+				addpagamento(convertData(rs.data_vencimento), rs.valor_integral)
+			})
+		}else{
+			addpagamento(convertData(VENDA.created_at.substring(0,10)), VENDA.valor_total)
+		}
+		habilitaBtnSalarVenda();
+	}else{
+		CLIENTES = JSON.parse($('#clientes').val())
+	}
 
 	let itensDeCredito = $('#itens_credito').val();
 	let cli = $('#cliente_crediario').val();
@@ -19,7 +55,7 @@ $(function () {
 			addItemDeCredito(v)
 			receberContas.push(v.id);
 			if(v.id != anterior)
-			obs += v.id + ",";
+				obs += v.id + ",";
 			anterior = v.id;
 		})
 		obs = obs.substring(0, obs.length - 1)
@@ -28,92 +64,75 @@ $(function () {
 
 	if(cli){
 		CLIENTE = JSON.parse(cli);
+		setCliente(CLIENTE)
 		console.log(CLIENTE)
 	}
 
 	$("#formaPagamento option.teste").attr('disabled', 'false');
-	getClientes(function(data){
-		$('input.autocomplete-cliente').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-				var cliente = $('#autocomplete-cliente').val().split('-');
-				getCliente(cliente[0], (d) => {
-					console.log(d)
-					
-					$('#cliente').css('display', 'block');
-					$('#razao_social').html(d.razao_social)
-					$('#nome_fantasia').html(d.nome_fantasia)
-					$('#logradouro').html(d.rua)
-					$('#numero').html(d.numero)
 
-					$('#cnpj').html(d.cpf_cnpj)
-					$('#ie').html(d.ie_rg)
-					$('#fone').html(d.telefone)
-					$('#cidade').html(d.cidade.nome)
-					$('#limite').html(d.limite_venda)
-					console.log("limite: " + d.limite_venda)
-					CLIENTE = d;
-					if(d.limite_venda <= 0){
-						$('#col-credito').css('display', 'none');
-						$('#sem_crediario').css('display','block');
-					}else{
-						$('#col-credito').css('display', 'block');
-						$('#sem_crediario').css('display','none');
-					}
-					habilitaBtnSalarVenda();
-				})
-			},
-			minLength: 1,
-		});
-	});
-
-
-	getTransportadoras(function(data){
-		$('input.autocomplete-transportadora').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-				var transportadora = $('#autocomplete-transportadora').val().split('-');
-				console.log(transportadora)
-				getTransportadora(transportadora[0], (d) => {
-					console.log(d)
-					if(d){
-						$('#transp-selecionada').css('display', 'block');
-						$('#razao_social_transp').html(d.razao_social)
-						$('#logradouro_transp').html(d.logradouro)
-						$('#cnpj_transp').html(d.cnpj_cpf)
-						$('#cidade_transp').html(d.cidade.nome)
-					}
-					
-
-				})
-			},
-			minLength: 1,
-		});
-	});
-
-	getProdutos(function(data){
-		$('input.autocomplete-produto').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-				$('#preloader1').css('display', 'block');
-				var prod = $('#autocomplete-produto').val().split('-');
-				console.log(prod)
-				getProduto(prod[0], (d) => {
-					console.log(d)
-					$('#valor').val(d.valor_venda)
-					$('#quantidade').val('1,000')
-					$('#preloader1').css('display', 'none');
-					calcSubtotal();
-
-				})
-			},
-			minLength: 1,
-		});
-	});
 });
+
+function setCliente(cli){
+	$('#kt_select2_3').val(cli.id).change()
+	CLIENTES.map((d) => {
+		if(d.id == cli.id){ 
+
+			$('#div-cliente').css('display', 'block');
+			$('#razao_social').html(d.razao_social)
+			$('#nome_fantasia').html(d.nome_fantasia)
+			$('#logradouro').html(d.rua)
+			$('#numero').html(d.numero)
+
+			$('#cnpj').html(d.cpf_cnpj)
+			$('#ie').html(d.ie_rg)
+			$('#fone').html(d.telefone)
+			$('#cidade').html(d.cidade.nome + " (" + d.cidade.uf + ")")
+			$('#limite').html(d.limite_venda)
+			console.log("limite: " + d.limite_venda)
+			CLIENTE = d;
+			if(d.limite_venda <= 0){
+				$('#col-credito').css('display', 'none');
+				$('#sem_crediario').css('display','block');
+			}else{
+				$('#col-credito').css('display', 'block');
+				$('#sem_crediario').css('display','none');
+			}
+			habilitaBtnSalarVenda();
+		}
+
+	})
+}
+
+$('#kt_select2_3').change(() => {
+	let id = $('#kt_select2_3').val()
+	CLIENTES.map((d) => {
+		if(d.id == id){ 
+
+			$('#div-cliente').css('display', 'block');
+			$('#razao_social').html(d.razao_social)
+			$('#nome_fantasia').html(d.nome_fantasia)
+			$('#logradouro').html(d.rua)
+			$('#numero').html(d.numero)
+
+			$('#cnpj').html(d.cpf_cnpj)
+			$('#ie').html(d.ie_rg)
+			$('#fone').html(d.telefone)
+			$('#cidade').html(d.cidade.nome + " (" + d.cidade.uf + ")")
+			$('#limite').html(d.limite_venda)
+			console.log("limite: " + d.limite_venda)
+			CLIENTE = d;
+			if(d.limite_venda <= 0){
+				$('#col-credito').css('display', 'none');
+				$('#sem_crediario').css('display','block');
+			}else{
+				$('#col-credito').css('display', 'block');
+				$('#sem_crediario').css('display','none');
+			}
+			habilitaBtnSalarVenda();
+		}
+
+	})
+})
 
 function addItemDeCredito(item){
 
@@ -125,22 +144,55 @@ function addItemDeCredito(item){
 	addItemTable(codigo, nome, quantidade, valor);
 }
 
+$('#kt_select2_1').change(() => {
+	let produto_id = $('#kt_select2_1').val()
+	let lista_id = $('#lista_id').val()
+
+	PRODUTOS.map((p) => {
+		if(produto_id == p.id){
+
+			$('#quantidade').val('1')
+			if(lista_id == 0){
+				$('#valor').val(p.valor_venda)
+			}else{
+
+				p.lista_preco.map((l) => {
+
+					if(lista_id == l.lista_id){
+						$('#valor').val(l.valor)
+					}
+				})
+			}
+			calcSubtotal();
+		}
+	})
+})
 
 $('#addProd').click(() => {
-	let prod = $('#autocomplete-produto').val().split('-');
-	let codigo = prod[0];
-	let nome = prod[1];
-	let quantidade = $('#quantidade').val();
-	let valor = $('#valor').val();
-	if(codigo.length > 0 && nome.length > 0 && quantidade.length > 0 
-		&& parseFloat(quantidade.replace(',','.')) && 
-		valor.length > 0 && parseFloat(valor.replace(',','.')) > 0) {
-		if(valor.length > 6) valor = valor.replace(".", "");
-	valor = valor.replace(",", ".");
-	addItemTable(codigo, nome, quantidade, valor);
-}else{
-	Materialize.toast('Informe corretamente os campos para continuar!', 4000)
-}
+	let p_id = $('#kt_select2_1').val();
+	PRODUTOS.map((p) => {
+		if(p_id == p.id){
+			let quantidade = $('#quantidade').val();
+
+			if(p.gerenciar_estoque == 1 && (!p.estoque || p.estoque.quantidade < quantidade)){
+				swal("Cuidado", "Estoque insuficiente!", "warning")
+			}else{
+				let codigo = p.id;
+				let nome = p.nome;
+				let valor = $('#valor').val();
+				console.log(codigo)
+				console.log(nome)
+				if(codigo != null && nome.length > 0 && quantidade > 0 && parseFloat(valor.replace(',','.')) > 0) {
+					valor = valor.replace(",", ".");
+
+					addItemTable(codigo, nome, quantidade, valor);
+				}else{
+					swal("Erro", "Informe corretamente os campos para continuar!", "error")
+				}
+			}
+		}
+	})
+	
 })
 
 function formatReal(v)
@@ -153,10 +205,9 @@ function atualizaTotal(){
 	$('#soma-quantidade').html(TOTALQTD);
 }
 
-function verificaProdutoIncluso(){
+function verificaProdutoIncluso(cod){
 	if(ITENS.length == 0) return false;
 	if($('#prod tbody tr').length == 0) return false;
-	let cod = $('#autocomplete-produto').val().split('-')[0];
 	let duplicidade = false;
 
 	ITENS.map((v) => {
@@ -175,15 +226,42 @@ function verificaProdutoIncluso(){
 function montaTabela(){
 	let t = ""; 
 	ITENS.map((v) => {
-		t += "<tr>";
-		t += "<td>"+v.id+"</td>";
-		t += "<td class='cod'>"+v.codigo+"</td>";
-		t += "<td>"+v.nome+"</td>";
-		t += "<td>"+v.quantidade+"</td>";
-		t += "<td>"+v.valor+"</td>";
-		t += "<td>"+formatReal(v.valor.replace(',','.')*v.quantidade.replace(',','.'))+"</td>";
-		t += "<td><a href='#prod tbody' onclick='deleteItem("+v.id+")'>"
-		t += "<i class=' material-icons red-text'>delete</i></a></td>";
+
+		t += '<tr class="datatable-row" style="left: 0px;">'
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 70px;">'
+		t += v.id + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 70px;">'
+		t += v.codigo + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 300px;">'
+		t += v.nome + '</span>'
+		t += '</td>'
+
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 100px;">'
+		t += v.quantidade + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 100px;">'
+		t += v.valor + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 100px;">'
+		t += formatReal(v.valor.replace(',','.')*v.quantidade.replace(',','.')) + '</span>'
+		t += '</td>'
+
+
+		t += "<td><a href='#prod tbody' class='btn btn-danger' onclick='deleteItem("+v.id+")'>"
+		t += "<i class='la la-trash'></i></a></td>";
 		t+= "</tr>";
 	});
 	return t
@@ -202,7 +280,7 @@ function refatoreItens(){
 }
 
 function maskMoney(v){
-	return v.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+	return v.toFixed(2);
 }
 
 $('#valor').on('keyup', () => {
@@ -213,12 +291,13 @@ function calcSubtotal(){
 	let quantidade = $('#quantidade').val();
 	let valor = $('#valor').val();
 	let subtotal = parseFloat(valor.replace(',','.'))*(quantidade.replace(',','.'));
+	console.log(subtotal)
 	let sub = maskMoney(subtotal)
 	$('#subtotal').val(sub)
 }
 
 function addItemTable(codigo, nome, quantidade, valor){
-	if(!verificaProdutoIncluso()) {
+	if(!verificaProdutoIncluso(codigo)) {
 		limparDadosFatura();
 		TOTAL += parseFloat(valor.replace(',','.'))*(quantidade.replace(',','.'));
 		TOTAL = parseFloat(TOTAL.toFixed(2));
@@ -230,11 +309,11 @@ function addItemTable(codigo, nome, quantidade, valor){
 	$('#prod tbody').html("");
 	refatoreItens();
 
-	
 	atualizaTotal();
 	limparCamposFormProd();
 	let t = montaTabela();
 	$('#prod tbody').html(t)
+	$('#kt_select2_1').val('null').change();
 }
 }
 
@@ -376,7 +455,7 @@ $('#add-pag').click(() => {
 	else desconto = desconto.replace(",", ".");
 
 	if(!verificaValorMaiorQueTotal()){
-		let data = $('#data').val();
+		let data = $('#kt_datepicker_3').val();
 		let valor = $('#valor_parcela').val();
 		let cifrao = valor.substring(0, 2);
 		if(cifrao == 'R$') valor = valor.substring(3, valor.length)
@@ -391,7 +470,8 @@ $('#add-pag').click(() => {
 					})
 				}
 			}else{
-				Materialize.toast('Informe corretamente os campos para continuar!', 4000)
+				swal("Erro", "Informe corretamente os campos para continuar!", "error")
+
 			}
 		}
 	})
@@ -417,13 +497,13 @@ function verificaValorMaiorQueTotal(data){
 
 
 	if(valorParcela <= 0){
-		Materialize.toast('Valor deve ser maior que 0!', 4000)
+		swal("Erro", "Valor deve ser maior que 0!", "error")
 		retorno = true;
 
 	}
 
 	else if(valorParcela > (TOTAL - parseFloat(desconto))){
-		Materialize.toast('Valor da parcela maior que o total da venda!', 4000)
+		swal("Erro", "Valor da parcela maior que o total da venda!", "error")
 		retorno = true;
 		
 	}
@@ -452,17 +532,18 @@ function verificaValorMaiorQueTotal(data){
 			//Valida Parcela maior que 1000
 
 			if(parcelaMaisSoma > (TOTAL - parseFloat(desconto))){
-				Materialize.toast('Valor ultrapassaou o total!', 4000)
+				swal("Erro", "Valor ultrapassaou o total!", "error")
 				retorno = true;
 			}
 			else if(parcelaMaisSoma == (TOTAL  - parseFloat(desconto)) && (FATURA.length+1) < parseInt(qtdParcelas)){
-				Materialize.toast('Respeite a quantidade de parcelas pré definido!', 4000)
+				swal("Erro", "Respeite a quantidade de parcelas pré definido!", "error")
 				retorno = true;
 				
 			}
 			else if(parcelaMaisSoma < (TOTAL  - parseFloat(desconto)) && 
 				(FATURA.length+1) == parseInt(qtdParcelas)){
-				Materialize.toast('Somátoria incorreta!', 4000)
+
+				swal("Erro", "Somátoria incorreta!", "error")
 			let dif = (TOTAL - parseFloat(desconto)) - v;
 			$('#valor_parcela').val(formatReal(dif))
 			retorno = true;
@@ -528,8 +609,8 @@ function verificaValor(){
 }
 
 function addpagamento(data, valor){
-	let result = verificaProdutoIncluso();
-	if(!result){
+
+	if(ITENS.length > 0){
 		if(valor.length > 6){
 			valor = valor.replace(".", "");
 		}
@@ -540,10 +621,23 @@ function addpagamento(data, valor){
 			$('#fatura tbody').html(""); // apagar linhas da tabela
 			let t = ""; 
 			FATURA.map((v) => {
-				t += "<tr>";
-				t += "<td class='numero'>"+v.numero+"</td>";
-				t += "<td>"+v.data+"</td>";
-				t += "<td>"+v.valor.replace(',','.')+"</td>";
+
+				t += '<tr class="datatable-row" style="left: 0px;">'
+				t += '<td class="datatable-cell">'
+				t += '<span class="codigo" style="width: 120px;">'
+				t += v.numero + '</span>'
+				t += '</td>'
+
+				t += '<td class="datatable-cell">'
+				t += '<span class="codigo" style="width: 120px;">'
+				t += v.data + '</span>'
+				t += '</td>'
+
+				t += '<td class="datatable-cell">'
+				t += '<span class="codigo" style="width: 120px;">'
+				t += v.valor.replace(',','.') + '</span>'
+				t += '</td>'
+
 				t+= "</tr>";
 			});
 
@@ -556,7 +650,7 @@ function addpagamento(data, valor){
 
 	function limparDadosFatura(){
 		$('#fatura tbody').html('')
-		$("#data").val("");
+		$("#kt_datepicker_3").val("");
 		$("#valor_parcela").val("");
 		$('#add-pag').removeClass("disabled");
 		FATURA = [];
@@ -579,49 +673,50 @@ function addpagamento(data, valor){
 
 
 	function habilitaBtnSalarVenda(){
+		console.log(CLIENTE)
 		let desconto = $('#desconto').val();
 		if(desconto.length == 0) desconto = 0;
 		else desconto = desconto.replace(',', '.');
 		
-		if(ITENS.length > 0 && FATURA.length > 0 && 
-			(TOTAL - parseFloat(desconto)) > 0 && CLIENTE != null){
+		if(ITENS.length > 0 && FATURA.length > 0 && (TOTAL - parseFloat(desconto)) > 0 && CLIENTE != null){
 			$('#salvar-venda').removeClass('disabled')
-	}
-}
-
-function verificaLimite(call){
-	$.ajax
-	({
-		type: 'GET',
-		data: {
-			id: parseInt(CLIENTE.id),
-		},
-		url: path + 'clientes/verificaLimite',
-		dataType: 'json',
-		success: function(e){
-			call(e.limite_venda)
-		}, error: function(e){
-			call(false)
-			$('#preloader2').css('display', 'none');
+			$('#salvar-orcamento').removeClass('disabled')
 		}
-	});
-}
-
-function validaFrete(call){
-	let tipoFrete = $('#frete').val();
-	if(tipoFrete != '9'){
-		let placa = $('#placa').val();
-		let valor = $('#valor_frete').val();
-		if(placa.length == 8 && valor.length > 0 && 
-			parseFloat(valor.replace(",", ".")) >= 0 && 
-			$('#uf_placa').val() != '--'){
-			call(true);
-	}else{
-		call(false);
 	}
-}else{
-	call(true);
-}
+
+	function verificaLimite(call){
+		$.ajax
+		({
+			type: 'GET',
+			data: {
+				id: parseInt(CLIENTE.id),
+			},
+			url: path + 'clientes/verificaLimite',
+			dataType: 'json',
+			success: function(e){
+				call(e.limite_venda)
+			}, error: function(e){
+				call(false)
+				$('#preloader2').css('display', 'none');
+			}
+		});
+	}
+
+	function validaFrete(call){
+		let tipoFrete = $('#frete').val();
+		if(tipoFrete != '9'){
+			let placa = $('#placa').val();
+			let valor = $('#valor_frete').val();
+			if(placa.length == 8 && valor.length > 0 && 
+				parseFloat(valor.replace(",", ".")) >= 0 && 
+				$('#uf_placa').val() != '--'){
+				call(true);
+		}else{
+			call(false);
+		}
+	}else{
+		call(true);
+	}
 }
 
 $('#frete').change(() => {
@@ -668,42 +763,197 @@ $('#formaPagamento').change(() => {
 	if(desconto.length == 0) desconto = 0;
 
 	$("#qtdParcelas").attr("disabled", true);
-	$("#data").attr("disabled", true);
+	$("#kt_datepicker_3").attr("disabled", true);
 	$("#valor_parcela").attr("disabled", true);
 	$("#qtdParcelas").val('1');
 	if($('#formaPagamento').val() == 'a_vista'){
 		$("#qtdParcelas").val(1)
 		$('#valor_parcela').val(formatReal((TOTAL - parseFloat(desconto))));
-		$('#data').val(data);
+		$('#kt_datepicker_3').val(data);
 	}else if($('#formaPagamento').val() == '30_dias'){
 		$("#qtdParcelas").val(1)
 		$('#valor_parcela').val(formatReal((TOTAL - parseFloat(desconto))));
-		$('#data').val(data30);
+		$('#kt_datepicker_3').val(data30);
 	}else if($('#formaPagamento').val() == 'personalizado'){
 		$("#qtdParcelas").removeAttr("disabled");
-		$("#data").removeAttr("disabled");
+		$("#kt_datepicker_3").removeAttr("disabled");
 		$("#valor_parcela").removeAttr("disabled");
-		$("#data").val("");
+		$("#kt_datepicker_3").val("");
 		$("#qtdParcelas").val(1)
 		$("#valor_parcela").val(formatReal(TOTAL - parseFloat(desconto)));
 	}
 	else if($('#formaPagamento').val() == 'conta_crediario'){
 
 		if(CLIENTE == null || CLIENTE.limite <= 0){
-			Materialize.toast('Limite do cliente deve ser maior que Zero!', 4000)
+			swal("Erro", "Limite do cliente deve ser maior que Zero!", "error")
 
 		}else{
 
 			$("#qtdParcelas").val(1);
-			$("#data").val(data);
+			$("#kt_datepicker_3").val(data);
 			$("#valor_parcela").val(formatReal(TOTAL - parseFloat(desconto)));
 		}
 	}
 })
 
+function atualizarVenda(btnClick){
+	verificaLimite((limite) => {
+
+		if(limite){
+
+			validaFrete((validaFrete) => {
+				if(validaFrete){
+					$('#preloader2').css('display', 'block');
+
+					let vol = {
+						'especie': $('#especie').val(),
+						'numeracaoVol': $('#numeracaoVol').val(),
+						'qtdVol': $('#qtdVol').val(),
+						'pesoL': $('#pesoL').val(),
+						'pesoB': $('#pesoB').val(),
+					}
+
+					var transportadora = $('#kt_select2_2').val();
+					transportadora = transportadora == 'null' ? null : transportadora;
+
+					let js = {
+						venda_id: VENDA.id,
+						cliente: parseInt(CLIENTE.id),
+						transportadora: transportadora,
+						formaPagamento: $('#formaPagamento').val(),
+						tipoPagamento: $('#tipoPagamento').val(),
+						naturezaOp: parseInt($('#natureza').val()),
+						frete: $('#frete').val(),
+						placaVeiculo: $('#placa').val(),
+						ufPlaca: $('#uf_placa').val(),
+						valorFrete: $('#valor_frete').val(),
+						itens: ITENS,
+						fatura: FATURA,
+						volume: vol,
+						receberContas: receberContas,
+						total: TOTAL,
+						observacao: $('#obs').val(),
+						desconto: $('#desconto').val() ? $('#desconto').val() : 0,
+						btn: btnClick
+					}
+					let token = $('#_token').val();
+					console.log(js)
+					$.ajax
+					({
+						type: 'POST',
+						data: {
+							venda: js,
+							_token: token
+						},
+						url: path + 'vendas/atualizar',
+						dataType: 'json',
+						success: function(e){
+							console.log(e)
+							$('#preloader2').css('display', 'none');
+							sucesso(e)
+
+						}, error: function(e){
+							console.log(e)
+							$('#preloader2').css('display', 'none');
+						}
+					});
+
+					if(btnClick == 'cp_fiscal'){
+					// eviar NF
+				}
+			}else{
+
+				swal('Erro', 'Informe placa e valor de frete!', 'error')
+			}
+		})
+		}else{
+			swal('Erro', 'Erro limite!', 'error')
+
+		}
+	})
+}
 
 
 function salvarVenda(btnClick) {
+
+	verificaLimite((limite) => {
+
+		if(limite){
+
+			validaFrete((validaFrete) => {
+				if(validaFrete){
+					// $('#preloader2').css('display', 'block');
+
+					let vol = {
+						'especie': $('#especie').val(),
+						'numeracaoVol': $('#numeracaoVol').val(),
+						'qtdVol': $('#qtdVol').val(),
+						'pesoL': $('#pesoL').val(),
+						'pesoB': $('#pesoB').val(),
+					}
+
+					var transportadora = $('#kt_select2_2').val();
+					transportadora = transportadora == 'null' ? null : transportadora;
+
+					let js = {
+						cliente: parseInt(CLIENTE.id),
+						transportadora: transportadora,
+						formaPagamento: $('#formaPagamento').val(),
+						tipoPagamento: $('#tipoPagamento').val(),
+						naturezaOp: parseInt($('#natureza').val()),
+						frete: $('#frete').val(),
+						placaVeiculo: $('#placa').val(),
+						ufPlaca: $('#uf_placa').val(),
+						valorFrete: $('#valor_frete').val(),
+						itens: ITENS,
+						fatura: FATURA,
+						volume: vol,
+						receberContas: receberContas,
+						total: TOTAL,
+						observacao: $('#obs').val(),
+						desconto: $('#desconto').val() ? $('#desconto').val() : 0,
+						btn: btnClick
+					}
+					let token = $('#_token').val();
+					console.log(js)
+
+					console.log(path + 'vendas/salvar')
+					$.ajax
+					({
+						type: 'POST',
+						data: {
+							venda: js,
+							_token: token
+						},
+						url: path + 'vendas/salvar',
+						dataType: 'json',
+						success: function(e){
+							// $('#preloader2').css('display', 'none');
+							sucesso(e)
+							console.log(e)
+
+						}, error: function(e){
+							console.log(e)
+							// $('#preloader2').css('display', 'none');
+						}
+					});
+
+					if(btnClick == 'cp_fiscal'){
+					// eviar NF
+				}
+			}else{
+				swal("Erro", "Informe placa e valor de frete!", "error")
+			}
+		})
+		}else{
+			swal("Erro", "Erro limite!", "error")
+
+		}
+	})
+
+}
+
+function salvarOrcamento() {
 
 	verificaLimite((limite) => {
 
@@ -724,12 +974,8 @@ function salvarVenda(btnClick) {
 
 
 
-					var transportadora = $('#autocomplete-transportadora').val().split('-');
-					if($('#autocomplete-transportadora').val().length > 0 && transportadora.length > 0){
-						transportadora = transportadora[0]
-					}else{
-						transportadora = null;
-					}
+					var transportadora = $('#kt_select2_2').val();
+					transportadora = transportadora == 'null' ? null : transportadora;
 					let js = {
 						cliente: parseInt(CLIENTE.id),
 						transportadora: transportadora,
@@ -746,8 +992,7 @@ function salvarVenda(btnClick) {
 						receberContas: receberContas,
 						total: TOTAL,
 						observacao: $('#obs').val(),
-						desconto: $('#desconto').val(),
-						btn: btnClick
+						desconto: $('#desconto').val() ? $('#desconto').val() : 0
 					}
 					let token = $('#_token').val();
 					console.log(js)
@@ -758,11 +1003,11 @@ function salvarVenda(btnClick) {
 							venda: js,
 							_token: token
 						},
-						url: path + 'vendas/salvar',
+						url: path + 'orcamentoVenda/salvar',
 						dataType: 'json',
 						success: function(e){
 							$('#preloader2').css('display', 'none');
-							sucesso(e)
+							sucesso2(e)
 
 						}, error: function(e){
 							console.log(e)
@@ -774,12 +1019,11 @@ function salvarVenda(btnClick) {
 					// eviar NF
 				}
 			}else{
-				Materialize.toast('Informe placa e valor de frete!', 4000)
+				swal("Erro", "Informe placa e valor de frete!", "error")
 			}
 		})
 		}else{
-
-			Materialize.toast('Erro Limite!', 4000)
+			swal("Erro", "Erro Limite!", "error")
 
 		}
 	})
@@ -794,5 +1038,15 @@ function sucesso(){
 		location.href = path+'vendas/lista';
 	}, 4000)
 }
+
+function sucesso2(){
+	$('#content').css('display', 'none');
+	$('#anime').css('display', 'block');
+	setTimeout(() => {
+		location.href = path+'orcamentoVenda';
+	}, 4000)
+}
+
+
 
 

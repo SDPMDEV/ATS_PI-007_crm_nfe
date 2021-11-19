@@ -55,11 +55,11 @@ class MercadoConfigController extends Controller
 		}
 
 		if($result){
-			session()->flash('color', 'blue');
-			session()->flash("message", "Configurado com sucesso!");
+
+			session()->flash("mensagem_sucesso", "Configurado com sucesso!");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao configurar!');
+
+			session()->flash('mensagem_erro', 'Erro ao configurar!');
 		}
 
 		return redirect('/configMercado');

@@ -1,113 +1,171 @@
 @extends('default.layout')
 @section('content')
-<div class="row">
-	<div class="col s12">
-		<h4>{{{ isset($conta) ? "Editar": "Cadastrar" }}} Conta a Receber</h4>
 
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-		</div>
-		@endif
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 
-		<form method="post" action="{{{ isset($conta) ? '/contasReceber/update': '/contasReceber/save' }}}" enctype="multipart/form-data">
-			<input type="hidden" name="id" value="{{{ isset($conta->id) ? $conta->id : 0 }}}">
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
 
-			<section class="section-2">
+				<form method="post" action="{{{ isset($conta) ? '/contasReceber/update': '/contasReceber/save' }}}" enctype="multipart/form-data">
 
-				<div class="row">
-					<div class="col s6 input-field">
-						<input value="{{{ isset($conta->referencia) ? $conta->referencia : old('referencia') }}}" type="text" name="referencia">
-						<label>Referencia</label>
-						@if($errors->has('referencia'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('referencia') }}</span>
+
+					<input type="hidden" name="id" value="{{{ isset($conta) ? $conta->id : 0 }}}">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">{{{ isset($conta) ? "Editar": "Cadastrar" }}} Conta a Receber</h3>
 						</div>
-						@endif
+
+					</div>
+					@csrf
+
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
+
+									<div class="row">
+										<div class="form-group validated col-sm-6 col-lg-6">
+											<label class="col-form-label">Referencia</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('referencia')) is-invalid @endif" name="referencia" value="{{{ isset($conta) ? $conta->referencia : old('referencia') }}}">
+												@if($errors->has('referencia'))
+												<div class="invalid-feedback">
+													{{ $errors->first('referencia') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+									<div class="row">
+										<div class="form-group validated col-lg-4 col-md-4 col-sm-6">
+											<label class="col-form-label">Categoria</label>
+
+											<select class="custom-select form-control" id="categoria_id" name="categoria_id">
+												@foreach($categorias as $cat)
+												<option value="{{$cat->id}}" @isset($conta)
+													@if($cat->id == $conta->categoria_id)
+													selected
+													@endif
+													@endisset >{{$cat->nome}}
+												</option>
+
+												@endforeach
+
+											</select>
+
+										</div>
+
+										<div class="form-group col-lg-4 col-md-9 col-sm-12">
+											<label class="col-form-label">Data de vencimento</label>
+											<div class="">
+												<div class="input-group date">
+													<input type="text" name="vencimento" class="form-control @if($errors->has('vencimento')) is-invalid @endif" readonly value="{{{ isset($conta) ? \Carbon\Carbon::parse($conta->data_vencimento)->format('d/m/Y') : old('vencimento') }}}" id="kt_datepicker_3" />
+													<div class="input-group-append">
+														<span class="input-group-text">
+															<i class="la la-calendar"></i>
+														</span>
+													</div>
+												</div>
+												@if($errors->has('vencimento'))
+												<div class="center-align red lighten-2">
+													<span class="white-text">{{ $errors->first('vencimento') }}</span>
+												</div>
+												@endif
+
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-4 col-md-4 col-sm-6">
+											<label class="col-form-label">Valor</label>
+
+											<input type="text" class="form-control @if($errors->has('valor')) is-invalid @endif money" name="valor" value="{{{ isset($conta) ? $conta->valor_integral : old('valor') }}}">
+											@if($errors->has('valor'))
+											<div class="invalid-feedback">
+												{{ $errors->first('valor') }}
+											</div>
+											@endif
+
+										</div>
+
+										@if(!isset($conta))
+										<div class="form-group col-lg-4 col-md-9 col-sm-12">
+											<label class="col-form-label">Conta Recebida</label>
+											
+											<div class="col-lg-12 col-xl-12">
+												<span class="switch switch-outline switch-success">
+													<label>
+														<input @if(isset($conta) && $conta->status) checked 
+														@endif type="checkbox" id="pago" name="status" type="checkbox" id="status">
+														<span></span>
+													</label>
+												</span>
+
+											</div>
+
+										</div>
+										@endif
+									</div>
+
+									@if(!isset($conta))
+									<div class="row">
+
+										
+
+										<div class="form-group validated col-lg-4 col-md-4 col-sm-6">
+											<label class="col-form-label">Salvar até este mês (opcional) </label>
+
+											<input placeholder="mm/aa" type="text" class="form-control @if($errors->has('recorrencia')) is-invalid @endif" id="recorrencia" name="recorrencia" >
+											@if($errors->has('recorrencia'))
+											<div class="invalid-feedback">
+												{{ $errors->first('recorrencia') }}
+											</div>
+											@endif
+											<p style="color: red; margin-top: 5px;"> *Este campo deve ser preenchido se ouver recorrência para este registro
+										</p>
+										</div>
+										
+
+
+									</div>
+
+									@endif
+								</div>
+
+							</div>
+						</div>
 					</div>
 				</div>
-
-				<div class="row">
-					<div class="input-field col s3">
-
-						<select name="categoria_id">
-							@foreach($categorias as $cat)
-							<option value="{{$cat->id}}" @isset($conta)
-								@if($cat->id == $conta->categoria_id)
-								selected
-								@endif
-								@endisset >{{$cat->nome}}</option>
-
-								@endforeach
-							</select>
-							<label>Categoria</label>
-							@if($errors->has('categoria_id'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('categoria_id') }}</span>
-							</div>
-							@endif
-
-						</div>
-						<div class="col s3 input-field">
-							<input value="{{{ isset($conta->data_vencimento) ? \Carbon\Carbon::parse($conta->data_vencimento)->format('d/m/Y') : old('data_vencimento') }}}" type="text" name="vencimento" class="datepicker">
-							<label>Data de Vencimento</label>
-							@if($errors->has('vencimento'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('vencimento') }}</span>
-							</div>
-							@endif
-						</div>
-					</div>
+				<div class="card-footer">
 
 					<div class="row">
+						<div class="col-xl-2">
 
-						<div class="col s3 input-field">
-							<input value="{{{ isset($conta->valor_integral) ? $conta->valor_integral : old('valor_integral') }}}" type="text" id="valor" name="valor" class="text">
-							<label>Valor</label>
-							@if($errors->has('valor'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('valor') }}</span>
-							</div>
-							@endif
 						</div>
-						@if(!isset($conta))
-						<div class="col s3"><br>
-							<p>
-								<input 
-								@if(isset($conta) && $conta->status) checked 
-								@endif type="checkbox" id="pago" name="status" />
-								<label for="pago">Conta Recebida</label>
-							</p>
+						<div class="col-lg-3 col-sm-6 col-md-4">
+							<a style="width: 100%" class="btn btn-danger" href="/contasReceber">
+								<i class="la la-close"></i>
+								<span class="">Cancelar</span>
+							</a>
 						</div>
-						@endif
-						
+						<div class="col-lg-3 col-sm-6 col-md-4">
+							<button style="width: 100%" type="submit" class="btn btn-success">
+								<i class="la la-check"></i>
+								<span class="">Salvar</span>
+							</button>
+						</div>
+
 					</div>
-
-					@if(!isset($conta))
-					<div class="row">
-						
-						<div class="col s3 input-field">
-							<input placeholder="mm/yy" type="text" id="recorrencia" name="recorrencia" class="text">
-							<label>Salvar até este mês (opcional) </label>
-						</div><br>
-						<p class="red-text"> *Este campo deve ser preenchido se ouver recorrencia para este registro
-						</p>
-					</div>
-					@endif
-
-					<input type="hidden" name="_token" value="{{ csrf_token() }}">
-
-				</section>
-
-
-				<br>
-				<div class="row">
-					<a class="btn-large red lighten-2" href="/contasReceber">Cancelar</a>
-					<input type="submit" value="Salvar" class="btn-large green accent-3">
 				</div>
 			</form>
 		</div>
 	</div>
-	@endsection
+</div>
+</div>
+
+@endsection

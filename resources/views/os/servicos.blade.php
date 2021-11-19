@@ -1,296 +1,407 @@
 @extends('default.layout')
 @section('content')
-<style type="text/css">
-.divider{
-	background: #999;
-	height: 1px;
-	width: 100%;
-}
-</style>
-<div class="row">
-	<div class="col s12">
 
-		@if(session()->has('message'))
-		<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-			<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
+<div class="card card-custom gutter-b">
+
+	<div class="card-body">
+		<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+			<h4>Status: 
+				@if($ordem->estado == 'pd')
+				<span class="label label-xl label-inline label-light-warning">PENDENTE</span>
+				@elseif($ordem->estado == 'ap')
+				<span class="label label-xl label-inline label-light-success">APROVADO</span>
+				@elseif($ordem->estado == 'rp')
+				<span class="label label-xl label-inline label-light-danger">REPROVADO</span>
+				@else
+				<span class="label label-xl label-inline label-light-info">FINALIZADO</span>
+				@endif
+
+			</h4>
 		</div>
-		<br>
-		@endif
 
-		<div class="row">
-			<div class="col s12">
-				<div class="card">
-					<div class="row">
-						<div class="card-content">
-							<div class="col s6">
-								<a target="_blank" href="/ordemServico/imprimir/{{$ordem->id}}" class="btn">
-									<i class="material-icons left">print</i> Imprimir
-								</a>
-								<h5>Status da OS:
-									@if($ordem->estado == 'pd')
-									<strong class="yellow-text">Pendente</strong>
-									@elseif($ordem->estado == 'ap')
-									<strong class="green-text">Aprovado</strong>
-									@elseif($ordem->estado == 'rp')
-									<strong class="red-text">Reprovado</strong>
-									@else
-									<strong class="blue-text">Finalizado</strong>
-									@endif
+		<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+			<a href="/ordemServico/alterarEstado/{{$ordem->id}}" class="btn btn-primary orange">
+				<i class="la la-refresh"></i>
+				Alterar estado
+			</a>
 
-									<a href="/ordemServico/alterarEstado/{{$ordem->id}}" class="btn-floating orange">
-										<i class="material-icons">refresh</i>
+			<a target="_blank" href="/ordemServico/imprimir/{{$ordem->id}}" class="btn btn-info">
+				<i class="la la-print"></i> Imprimir
+			</a>
+		</div>
+
+		<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+
+			<h5>NFSe: 
+				@if($ordem->NfNumero)
+				<strong>{{$ordem->NfNumero}}</strong>
+				@else
+				<strong> -- </strong>
+				@endif
+			</h5>
+			<h5>Total <strong class="text-success">R$ {{number_format($ordem->valor, 2, ',', '.')}}</strong></h5>
+			<h5>Usuario responsável: <strong class="text-success">{{$ordem->usuario->nome}}</strong></h5>
+		</div>
+	</div>
+
+	<div class="row" id="content" style="display: block">
+		<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+
+			<div class="container">
+				<div class="card card-custom gutter-b example example-compact">
+					<div class="col-lg-12">
+						<!--begin::Portlet-->
+
+						<form method="post" action="/ordemServico/addServico">
+							@csrf
+
+							<div class="row">
+								<input type="hidden" id="_token" value="{{ csrf_token() }}">
+								<input type="hidden" name="ordem_servico_id" name="" value="{{$ordem->id}}">
+
+
+								<div class="col-xl-12">
+
+									<div class="form-group validated col-sm-12 col-lg-12">
+										<h4>Serviços da OS</h4>
+
+										<div class="kt-section kt-section--first">
+											<div class="kt-section__body">
+
+												<div class="row align-items-center">
+													<div class="form-group validated col-sm-6 col-lg-6">
+														<label class="col-form-label" id="lbl_cpf_cnpj">Serviço</label>
+														<div class="">
+															<select class="form-control select2 servico" id="kt_select2_1" name="servico">
+																@foreach($servicos as $s)
+																<option value="{{$s->id}}">{{$s->id}} - {{$s->nome}}</option>
+																@endforeach
+															</select>
+														</div>
+													</div>
+
+													<div class="form-group validated col-sm-4 col-lg-3">
+														<label class="col-form-label" id="">Quantidade</label>
+														<div class="">
+															<input type="text" id="quantidade" name="quantidade" class="form-control @if($errors->has('quantidade')) is-invalid @endif" value="">
+															@if($errors->has('quantidade'))
+															<div class="invalid-feedback">
+																{{ $errors->first('quantidade') }}
+															</div>
+															@endif
+														</div>
+													</div>
+
+													<div class="col-sm-3 col-lg-2">
+														<button style="margin-top: 10px;" type="submit" class="btn btn-success">Adicionar</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="col-xl-12">
+									<div class="row">
+										<div class="col-xl-12">
+											<div class="container">
+												<label>Registros: <strong class="text-success">{{sizeof($ordem->servicos)}}</strong></label>
+												<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+
+													<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+														<thead class="datatable-head">
+															<tr class="datatable-row" style="left: 0px;">
+																<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 300px;">Serviço</span></th>
+																<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Quantidade</span></th>
+																<th data-field="Country" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Status</span></th>
+																<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Total</span></th>
+
+																<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 120px;">Ações</span></th>
+															</tr>
+														</thead>
+
+														<tbody class="datatable-body">
+
+															<?php $total = 0; ?>
+															@foreach($ordem->servicos as $s)
+															<tr class="datatable-row" style="left: 0px;">
+
+																<td class="datatable-cell"><span class="codigo" style="width: 300px;">{{$s->servico->nome}}</span></td>
+																<td class="datatable-cell"><span class="codigo" style="width: 200px;">{{$s->quantidade}}</span></td>
+																<td class="datatable-cell"><span class="codigo" style="width: 200px;">
+																	@if($s->status == true)
+																	<span class="label label-xl label-inline label-light-success">FINALIZADO
+																	</span>
+																	@else
+																	<span class="label label-xl label-inline label-light-warning">PENDENTE
+																	</span>
+																	@endif
+																</span></td>
+																<?php 
+																$total += $s->servico->valor * $s->quantidade;
+																?>
+
+																<td class="datatable-cell"><span class="codigo" style="width: 200px;">{{number_format(($total), 2, ',', '.')}}</span></td>
+
+																<td class="datatable-cell"><span class="codigo" style="width: 120px;">
+																	<a onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/ordemServico/deleteServico/{{ $s->id }}" }else{return false} })' href="#!" class="btn btn-danger">
+																		<span class="la la-trash"></span>
+																	</a>
+
+																	@if($s->status)
+																	<a class="btn btn-waning" href="/ordemServico/alterarStatusServico/{{ $s->id }}">
+																		<span class="la la-trash"></span>
+																	</a>
+																	@else
+																	<a class="btn btn-success" href="/ordemServico/alterarStatusServico/{{ $s->id }}">
+																		<span class="la la-check"></span>
+																	</a>
+																	@endif
+																</span></td>
+
+															</tr>
+															@endforeach
+
+														</tbody>
+													</table>
+												</div>
+											</div>
+
+										</div>
+									</div>
+								</div>
+
+							</form>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<div class="row" id="content" style="display: block">
+		<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+
+			<div class="container">
+				<div class="card card-custom gutter-b example example-compact">
+					<div class="col-lg-12">
+						<!--begin::Portlet-->
+
+						<form method="post" action="/ordemServico/saveFuncionario">
+							@csrf
+
+							<div class="row">
+								<input type="hidden" id="_token" value="{{ csrf_token() }}">
+								<input type="hidden" name="ordem_servico_id" name="" value="{{$ordem->id}}">
+
+
+								<div class="col-xl-12">
+
+									<div class="form-group validated col-sm-12 col-lg-12">
+										<h4>Funcionários da OS</h4>
+
+										<div class="kt-section kt-section--first">
+											<div class="kt-section__body">
+
+												<div class="row align-items-center">
+													<div class="form-group validated col-sm-4 col-lg-4">
+														<label class="col-form-label" id="lbl_cpf_cnpj">Funcionário</label>
+														<div class="">
+															<select class="form-control select2 servico" id="kt_select2_2" name="funcionario">
+																@foreach($funcionarios as $f)
+																<option value="{{$f->id}}">{{$f->id}} - {{$f->nome}}</option>
+																@endforeach
+															</select>
+														</div>
+													</div>
+
+													<div class="form-group validated col-sm-5 col-lg-5">
+														<label class="col-form-label" id="">Função</label>
+														<div class="">
+															<input type="text" id="quantidade" name="funcao" class="form-control @if($errors->has('funcao')) is-invalid @endif" value="">
+															@if($errors->has('funcao'))
+															<div class="invalid-feedback">
+																{{ $errors->first('funcao') }}
+															</div>
+															@endif
+														</div>
+													</div>
+
+													<div class="col-sm-3 col-lg-2">
+														<button style="margin-top: 10px;" type="submit" class="btn btn-success">Adicionar</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="col-xl-12">
+									<div class="row">
+										<div class="col-xl-12">
+											<div class="container">
+												<label>Registros: <strong class="text-success">{{sizeof($ordem->funcionarios)}}</strong></label>
+												<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+
+													<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+														<thead class="datatable-head">
+															<tr class="datatable-row" style="left: 0px;">
+																<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 300px;">Nome</span></th>
+																<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Função</span></th>
+																<th data-field="Country" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Telefone</span></th>
+
+																<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 120px;">Ações</span></th>
+															</tr>
+														</thead>
+
+														<tbody class="datatable-body">
+
+															@foreach($ordem->funcionarios as $f)
+															<tr class="datatable-row" style="left: 0px;">
+
+																<td class="datatable-cell"><span class="codigo" style="width: 300px;">{{$f->funcionario->nome}}</span></td>
+																<td class="datatable-cell"><span class="codigo" style="width: 200px;">{{$f->funcao}}</span></td>
+
+
+																<td class="datatable-cell"><span class="codigo" style="width: 200px;">{{$f->funcionario->telefone}} / {{$f->funcionario->celular}}</span></td>
+
+																<td class="datatable-cell"><span class="codigo" style="width: 120px;">
+																	<a onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/ordemServico/deleteFuncionario/{{ $f->id }}" }else{return false} })' href="#!" class="btn btn-danger">
+																		<span class="la la-trash"></span>
+																	</a>
+
+																</span></td>
+
+															</tr>
+															@endforeach
+
+														</tbody>
+													</table>
+												</div>
+											</div>
+
+										</div>
+									</div>
+								</div>
+
+							</form>
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<div class="row" id="content" style="display: block">
+		<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+
+			<div class="container">
+				<div class="card card-custom gutter-b example example-compact">
+					<div class="col-lg-12">
+
+						<div class="row">
+
+							<div class="col-xl-12">
+
+								<div class="form-group validated col-sm-12 col-lg-12">
+									<h4>Relatórios da OS</h4>
+
+								</div>
+
+								<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+									<a href="/ordemServico/addRelatorio/{{$ordem->id}}" class="btn btn-success">
+										<i class="la la-plus"></i>
+										Adicionar Relatório
 									</a>
-								</h5>
-
-								<h5>NFSe: 
-									@if($ordem->NfNumero)
-									<strong>{{$ordem->NfNumero}}</strong>
-									@else
-									<strong> -- </strong>
-									@endif
-								</h5>
-
-								
+								</div>
 							</div>
 
-							<div class="col s6">
-								<h5>Total: <strong class="green-text">R$ {{number_format($ordem->valor, 2, ',', '.')}}
-								</strong></h5>
-								<h5>Usuario responsável: <strong>{{$ordem->usuario->nome}}</strong></h5>
+							<div class="col-xl-12">
+								<div class="row">
+									<div class="col-xl-12">
+										<div class="container">
+											<label>Registros: <strong class="text-success">{{sizeof($ordem->relatorios)}}</strong></label>
+											<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+
+												<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+													<thead class="datatable-head">
+														<tr class="datatable-row" style="left: 0px;">
+															<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">#</span></th>
+															<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Data</span></th>
+															<th data-field="Country" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Usuário</span></th>
+															<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 150px;">Ações</span></th>
+														</tr>
+													</thead>
+
+													<tbody class="datatable-body">
+
+														@foreach($ordem->relatorios as $r)
+														<tr class="datatable-row" style="left: 0px;">
+
+															<td class="datatable-cell"><span class="codigo" style="width: 80px;">{{$r->id}}</span></td>
+															<td class="datatable-cell"><span class="codigo" style="width: 200px;">{{ \Carbon\Carbon::parse($r->data_registro)->format('d/m/Y H:i:s')}}</span></td>
+
+
+															<td class="datatable-cell"><span class="codigo" style="width: 200px;">{{$r->usuario->nome}}</span></td>
+
+															<td class="datatable-cell"><span class="codigo" style="width: 150px;">
+																<a onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/ordemServico/deleteRelatorio/{{ $r->id }}" }else{return false} })' href="#!" class="btn btn-danger">
+																	<span class="la la-trash"></span>
+																</a>
+
+																<a class="btn btn-primary" href="/ordemServico/editRelatorio/{{ $r->id }}">
+																	<span class="la la-edit"></span>					
+																</a>
+
+																<a class="btn btn-info" href="#!" onclick="modal('{{ \Carbon\Carbon::parse($r->data_registro)->format('d/m/Y H:i:s')}}', '{{$r->texto}}')">
+																	<span class="la la-sticky-note"></span>					
+																</a>
+
+															</span></td>
+
+														</tr>
+														@endforeach
+
+													</tbody>
+												</table>
+											</div>
+										</div>
+
+									</div>
+								</div>
 							</div>
+
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="divider"></div>
-		<h4>Adicionar Serviço</h4>
-		
-		<form method="post" action="/ordemServico/addServico">
-			<section class="section-1">
-				<div class="row">
-					<input type="hidden" name="_token" value="{{ csrf_token() }}">
-					<input type="hidden" name="ordem_servico_id" name="" value="{{$ordem->id}}">
-					<div class="input-field col s6">
-						<i class="material-icons prefix">person</i>
-						<input autocomplete="off" type="text" name="servico" id="autocomplete-servico" class="autocomplete-servico">
-						<label for="autocomplete-servico">Serviço</label>
-						@if($errors->has('servico'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('servico') }}</span>
-						</div>
-						@endif
-					</div>
+	</div>
+</div>
 
-					<div class="input-field col s3">
-						<i class="material-icons prefix">plus_one</i>
-						<input type="text" name="quantidade" id="quantidade" class="validate">
-						<label for="quantidade">Quantidade</label>
-						@if($errors->has('quantidade'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('quantidade') }}</span>
-						</div>
-						@endif
-					</div>
+<div class="modal fade" id="modal1" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdrop" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="data"></h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					x
+				</button>
+			</div>
+			<div class="modal-body">
+				<p id="texto"></p>
 
-
-					<div class="col s2">
-						<input type="submit" value="Adicionar" class="btn-large green accent-3">
-					</div>
-				</div>
-
-			</section>
-
-		</form>
-		<br>
-		<div class="row">
-			<h4 class="grey-text">Serviços</h4>
-			<p class="blue-text">Registros: {{count($ordem->servicos)}}</p>
-			
-			<table class="striped col s12">
-				<thead>
-					<tr>
-						<th>Serviço</th>
-						<th>Quantidade</th>
-						<th>Status</th>
-						<th>Total</th>
-						<th>Ações</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php 
-					$total = 0;
-					?>
-					@foreach($ordem->servicos as $s)
-					<tr>
-						<th>{{$s->servico->nome}}</th>
-						<th>{{$s->quantidade}}</th>
-						<th>
-							@if($s->status == true)
-							<i class="material-icons green-text">brightness_1</i>
-							@else
-							<i class="material-icons red-text">brightness_1</i>
-							@endif
-						</th>
-						<th>{{number_format(($s->servico->valor * $s->quantidade), 2, ',', '.')}}</th>
-						<?php 
-						$total += $s->servico->valor * $s->quantidade;
-						?>
-						<th>
-
-							<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/ordemServico/deleteServico/{{ $s->id }}">
-								<i class="material-icons left red-text">delete</i>					
-							</a>
-							@if($s->status)
-							<a href="/ordemServico/alterarStatusServico/{{ $s->id }}">
-								<i class="material-icons left yellow-text">remove</i>	
-							</a>
-							@else
-							<a href="/ordemServico/alterarStatusServico/{{ $s->id }}">
-								<i class="material-icons left green-text">check</i>	
-							</a>
-							@endif
-						</th>
-					</tr>
-					@endforeach
-					<tr class="grey">
-						<th colspan="3"></th>
-						<th colspan="2">{{number_format($total, 2, ',', '.')}}</th>
-					</tr>
-				</tbody>
-			</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-light-danger font-weight-bold" data-dismiss="modal">Fechar</button>
+			</div>
 		</div>
-
-		<div class="divider"></div>
-
-		<h4>Adicionar Funcioanrio</h4>
-		<form method="post" action="/ordemServico/saveFuncionario">
-			<section class="section-1">
-				<div class="row">
-					<input type="hidden" name="_token" value="{{ csrf_token() }}">
-					<input type="hidden" name="ordem_servico_id" name="" value="{{$ordem->id}}">
-					<div class="input-field col s6">
-						<i class="material-icons prefix">person</i>
-						<input autocomplete="off" type="text" name="funcionario" id="autocomplete-funcionario" class="autocomplete-funcionario">
-						<label for="autocomplete-funcionario">Funcionario</label>
-						@if($errors->has('funcionario'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('funcionario') }}</span>
-						</div>
-						@endif
-					</div>
-
-					<div class="input-field col s4">
-						<i class="material-icons prefix">note</i>
-						<input type="text" name="funcao" id="funcao" class="validate">
-						<label for="funcao">Função</label>
-						@if($errors->has('funcao'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('funcao') }}</span>
-						</div>
-						@endif
-					</div>
-
-
-					<div class="col s2">
-						<input type="submit" value="Adicionar" class="btn-large green accent-3">
-					</div>
-				</div>
-
-			</section>
-
-		</form>
-
-		<div class="row">
-			<h4 class="grey-text">Funcionarios</h4>
-			<p class="blue-text">Registros: {{count($ordem->funcionarios)}}</p>
-
-			<table class="striped col s12">
-				<thead>
-					<tr>
-						<th>Nome</th>
-						<th>Função</th>
-						<th>Telefone</th>
-						<th>Ações</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach($ordem->funcionarios as $f)
-					<tr>
-						<th>{{$f->funcionario->nome}}</th>
-						<th>{{$f->funcao}}</th>
-						<th>{{$f->funcionario->telefone}} / {{$f->funcionario->celular}}</th>
-						<th>
-							<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/ordemServico/deleteFuncionario/{{ $f->id }}">
-								<i class="material-icons left red-text">delete</i>					
-							</a>
-						</th>
-					</tr>
-					@endforeach
-				</tbody>
-			</table>
-		</div>
-
-		<br>
-		<div class="row">
-			<h4 class="grey-text">Relatórios</h4>
-			<p class="blue-text">Registros: {{count($ordem->relatorios)}}</p>
-			<a href="/ordemServico/addRelatorio/{{$ordem->id}}" class="btn black">
-				<i class="material-icons left">add</i>
-				Adicionar Relatório
-			</a>
-			<table class="striped col s12">
-				<thead>
-					<tr>
-						<th>Código</th>
-						<th>Data</th>
-						<th>Usuario</th>
-						<th>Ações</th>
-					</tr>
-				</thead>
-
-				<tbody>
-					@foreach($ordem->relatorios as $r)
-					<tr>
-						<th>{{$r->id}}</th>
-						<th>{{ \Carbon\Carbon::parse($r->data_registro)->format('d/m/Y H:i:s')}}</th>
-						<th>{{$r->usuario->nome}}</th>
-						<th>
-							<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/ordemServico/deleteRelatorio/{{ $r->id }}">
-								<i class="material-icons left red-text">delete</i>					
-							</a>
-
-							<a href="/ordemServico/editRelatorio/{{ $r->id }}">
-								<i class="material-icons left blue-text">edit</i>					
-							</a>
-
-							<a class="waves-effect waves-light modal-trigger" 
-							onclick="modal('{{ \Carbon\Carbon::parse($r->data_registro)->format('d/m/Y H:i:s')}}', '{{$r->texto}}')"><i class="material-icons left green-text">visibility</i>
-						</a>
-					</th>
-				</tr>
-				@endforeach
-			</tbody>
-		</table>
-	</div>
-
-
-	<!-- Modal -->
-
-
-
-	<!-- Fim Modal -->
-
-</div>
-</div>
-<div id="modal1" class="modal">
-	<div class="modal-content">
-		<h4 id="data"></h4>
-		<p id="texto"></p>
-	</div>
-	<div class="modal-footer">
-		<a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Fechar</a>
 	</div>
 </div>
+
 @endsection

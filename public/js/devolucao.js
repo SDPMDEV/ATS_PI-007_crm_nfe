@@ -37,20 +37,70 @@ function montaTabela(){
 	let t = ""; 
 	ITENS.map((v) => {
 
-		t += "<tr>";
-		t += "<td>"+v.codigo+"</td>";
-		t += "<td class='cod'>"+v.xProd+"</td>";
-		t += "<td>"+v.NCM+"</td>";
-		t += "<td>"+v.CFOP+"</td>";
-		t += "<td>"+v.codBarras+"</td>";
-		t += "<td>"+v.uCom+"</td>";
-		t += "<td>"+v.vUnCom+"</td>";
-		t += "<td>"+v.qCom+"</td>";
-		t += "<td>"+formatReal(v.vUnCom*v.qCom)+"</td>";
-		t += "<td><a href='#tbl tbody' onclick='deleteItem("+v.codigo+")'>"
-		t += "<i class=' material-icons red-text'>delete</i></a></td>";
-		t += "<td><a href='#tbl tbody' onclick='editItem("+v.codigo+")'>"
-		t += "<i class=' material-icons blue-text'>edit</i></a></td>";
+
+		t += '<tr class="datatable-row" style="left: 0px;">'
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 80px;">'
+		t += v.codigo + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 200px;" class="cod">'
+		t += v.xProd + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 80px;">'
+		t += v.NCM + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 80px;">'
+		t += v.CFOP + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 80px;">'
+		t += v.codBarras + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 80px;">'
+		t += v.uCom + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 80px;">'
+		t += v.vUnCom + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 80px;">'
+		t += v.qCom + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 80px;">'
+		t += formatReal(v.vUnCom*v.qCom) + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span style="width: 120px;">'
+		t += "<a href='#tbl tbody' class='btn btn-danger' onclick='deleteItem("+v.codigo+")'>"
+		t += '<i class="la la-trash"></i></a>'
+
+		t += "<a href='#tbl tbody' class='btn btn-warning' onclick='editItem("+v.codigo+")'>"
+		t += '<i class="la la-edit"></i></a>'
+
+		t += '</span>'
+		t += '</td>'
+
+
+		// t += "<td><a href='#tbl tbody' onclick='deleteItem("+v.codigo+")'>"
+		// t += "<i class=' material-icons red-text'>delete</i></a></td>";
+		// t += "<td><a href='#tbl tbody' onclick='editItem("+v.codigo+")'>"
+		// t += "<i class=' material-icons blue-text'>edit</i></a></td>";
+
 		t+= "</tr>";
 
 		SOMAITENS += v.vUnCom*v.qCom;
@@ -65,8 +115,9 @@ function formatReal(v)
 }
 
 function deleteItem(item){
-	if (confirm('Deseja excluir este item, se confirmar sua NF ficará informal?')) { 
-
+	console.log(item)
+	swal("Atenção", "Deseja excluir este item, se confirmar sua NF ficará informal?", "warning")
+	.then(() => {
 		percorreDelete(item, (res) => {
 			let t = montaTabela();
 			$('#tbl tbody').html(t);
@@ -74,7 +125,7 @@ function deleteItem(item){
 
 		})
 		return false;
-	}
+	})
 }
 
 function percorreDelete(id, call){
@@ -96,7 +147,7 @@ function editItem(item){
 		$("#nomeEdit").val(res.xProd)
 		$("#quantidadeEdit").val(res.qCom)
 		$("#idEdit").val(res.codigo)
-		$('#modal2').modal('open');
+		$('#modal2').modal('show');
 	})	
 }
 
@@ -109,7 +160,7 @@ $('#salvarEdit').click(() => {
 		console.log(res)
 		let t = montaTabela();
 		$('#tbl tbody').html(t)
-		$('#modal2').modal('close');
+		$('#modal2').modal('hide');
 	})
 
 })
@@ -143,7 +194,7 @@ function getItem(id, call){
 }
 
 
-$('#savar-devolucao').click(() => {
+$('#salvar-devolucao').click(() => {
 	$('#preloader2').css('display', 'block');
 	let natureza = $('#natureza').val();
 	let xmlEntrada = $('#xmlEntrada').val();

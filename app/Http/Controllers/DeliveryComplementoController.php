@@ -40,13 +40,10 @@ class DeliveryComplementoController extends Controller
 
 		$result = $complemento->create($request->all());
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash("message", "Adicional cadastrado com sucesso.");
+			session()->flash("mensagem_sucesso", "Adicional cadastrado com sucesso.");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao cadastrar adicional.');
+			session()->flash('mensagem_erro', 'Erro ao cadastrar adicional.');
 		}
-		
 		
 		return redirect('/deliveryComplemento');
 	}
@@ -78,11 +75,9 @@ class DeliveryComplementoController extends Controller
 
     	$result = $resp->save();
     	if($result){
-    		session()->flash('color', 'green');
-    		session()->flash('message', 'Adicional editado com sucesso!');
+    		session()->flash('mensagem_sucesso', 'Adicional editado com sucesso!');
     	}else{
-    		session()->flash('color', 'red');
-    		session()->flash('message', 'Erro ao editar adicional!');
+    		session()->flash('mensagem_erro', 'Erro ao editar adicional!');
     	}
 
     	return redirect('/deliveryComplemento'); 
@@ -94,11 +89,11 @@ class DeliveryComplementoController extends Controller
     	->first();
 
     	if($complemento->delete()){
-    		session()->flash('color', 'blue');
-    		session()->flash('message', 'Registro removido!');
+
+    		session()->flash('mensagem_sucesso', 'Registro removido!');
     	}else{
-    		session()->flash('color', 'red');
-    		session()->flash('message', 'Erro!');
+
+    		session()->flash('mensagem_erro', 'Erro!');
     	}
     	return redirect('/deliveryComplemento');
     }

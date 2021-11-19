@@ -1,127 +1,151 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
-		<nav class="black">
-			<div class="nav-wrapper">
-				<form method="get" action="/codigoDesconto/pesquisa">
-					<div class="input-field">
-						<input placeholder="Pesquisa por Cliente" id="search" name="pesquisa" 
-						type="search" required>
-						<label class="label-icon" for="search">
-							<i class="material-icons">search</i></label>
-							<i class="material-icons">close</i>
-						</div>
+<div class="card card-custom gutter-b">
+	<div class="card-body">
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
+			<div class="">
+				<div class="col-sm-12 col-lg-4 col-md-6 col-xl-4">
 
-					</form>
+					<a href="/codigoDesconto/new" class="btn btn-lg btn-success">
+						<i class="fa fa-plus"></i>Novo Código de Desconto
+					</a>
 				</div>
-			</nav>
+			</div>
+			<br>
 			<h4>Códigos de Desconto</h4>
 
-			@if(session()->has('message'))
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-			@endif
 
-			<div class="row"></div>
-			<div class="row">
-				<a href="/codigoDesconto/new" class="btn green accent-3">
-					<i class="material-icons left">add</i>	
-					Novo Código de Desconto		
-				</a>
-			</div>
-
+			<label>Registros: <strong class="text-success">{{sizeof($codigos)}}</strong></label>
 			
 
-			<div class="row">
-				<div class="col s12">
-					<label>Numero de registros: {{count($codigos)}}</label>					
+			<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+
+				<div class="pb-5" data-wizard-type="step-content">
+
+					<!-- Inicio da tabela -->
+
+					<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+						<div class="row">
+							<div class="col-xl-12">
+
+								<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+
+									<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+										<thead class="datatable-head">
+											<tr class="datatable-row" style="left: 0px;">
+												<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Cliente</span></th>
+												<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Código</span></th>
+												<th data-field="Country" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Status</span></th>
+												<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">SMS</span></th>
+												<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">PUSH</span></th>
+												<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Tipo</span></th>
+												<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Valor</span></th>
+												<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Ações</span></th>
+											</tr>
+										</thead>
+										<tbody id="body" class="datatable-body">
+											@foreach($codigos as $c)
+											<tr class="datatable-row">
+
+												<td class="datatable-cell">
+													<span class="codigo" style="width: 200px;">
+														@if($c->cliente)
+														<label>{{ $c->cliente->nome }}</label>
+														@else
+														<label>TODOS</label>
+														@endif
+													</span>
+												</td>
+												<td class="datatable-cell">
+													<span class="codigo" style="width: 100px;">
+														{{ $c->codigo }}
+													</span>
+												</td>
+												<td class="datatable-cell">
+													<span class="codigo" style="width: 100px;">
+														@if($c->ativo)
+														<span class="label label-xl label-inline label-light-success">ATIVO</span>
+														@else
+														<span class="label label-xl label-inline label-light-danger">DESATIVADO</span>
+														@endif
+													</span>
+												</td>
+												<td class="datatable-cell">
+													<span class="codigo" style="width: 100px;">
+														@if($c->sms)
+														<span class="label label-xl label-inline label-light-success">OK</span>
+														@else
+														<span class="label label-xl label-inline label-light-danger">PENDENTE</span>
+														@endif
+													</span>
+												</td>
+
+												<td class="datatable-cell">
+													<span class="codigo" style="width: 100px;">
+														@if($c->push)
+														<span class="label label-xl label-inline label-light-success">OK</span>
+														@else
+														<span class="label label-xl label-inline label-light-danger">PENDENTE</span>
+														@endif
+													</span>
+												</td>
+												<td class="datatable-cell">
+													<span class="codigo" style="width: 100px;">
+														{{ $c->tipo }}
+													</span>
+												</td>
+												<td class="datatable-cell">
+													<span class="codigo" style="width: 100px;">
+														{{ number_format($c->valor, 2, ',', '.') }}
+													</span>
+												</td>
+
+												<td class="datatable-cell">
+													<span class="codigo" style="width: 240px;">
+
+														<!-- aqui -->
+
+														<a class="btn btn-sm btn-primary" href="/codigoDesconto/edit/{{ $c->id }}">
+															<i class="la la-edit"></i>				
+														</a>
+
+														<a class="btn btn-sm btn-danger" onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/codigoDesconto/delete/{{ $c->id }}" }else{return false} })' href="#!">
+															<i class="la la-trash"></i>				
+														</a>
+														@if($c->ativo)
+														<a class="btn btn-sm btn-primary" href="/codigoDesconto/push/{{$c->id}}">
+															<i class="la la-bell"></i>
+														</a>
+
+														<a class="btn btn-sm btn-dark" href="/codigoDesconto/sms/{{$c->id}}">
+															<i class="la la-sms"></i>
+														</a>
+
+														<a class="btn btn-sm btn-warning" href="/codigoDesconto/alterarStatus/{{$c->id}}">
+															<i class="la la-times"></i>
+														</a>
+														@else
+
+														<a class="btn btn-sm btn-success" href="/codigoDesconto/alterarStatus/{{$c->id}}">
+															<i class="la la-check"></i>
+														</a>
+														@endif
+
+														<!-- adasd -->
+													</span>
+												</td>
+											</tr>
+											@endforeach
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
-				<table class="col s12">
-					<thead>
-						<tr>
-							<th>#</th>
-							<th>Cliente</th>
-							<th>Código</th>
-							<th>Status</th>
-							<th>SMS</th>
-							<th>PUSH</th>
-							<th>Tipo</th>
-							<th>Valor</th>
-							<th>Ações</th>
-						</tr>
-					</thead>
-
-					<tbody>
-						@foreach($codigos as $c)
-						<tr>
-							<th>{{ $c->id }}</th>
-							@if($c->cliente)
-							<th>{{ $c->cliente->nome }}</th>
-							@else
-							<th>TODOS</th>
-							@endif
-							<th>{{ $c->codigo }}</th>
-							<th>
-								@if($c->ativo)
-								<i class="material-icons green-text">brightness_1</i>
-								@else
-								<i class="material-icons red-text">brightness_1</i>
-								@endif
-							</th>
-
-							<th>
-								@if($c->sms)
-								<i class="material-icons green-text">brightness_1</i>
-								@else
-								<i class="material-icons red-text">brightness_1</i>
-								@endif
-							</th>
-
-							<th>
-								@if($c->push)
-								<i class="material-icons green-text">brightness_1</i>
-								@else
-								<i class="material-icons red-text">brightness_1</i>
-								@endif
-							</th>
-
-							<th>{{ $c->tipo }}</th>
-							<th>{{ number_format($c->valor, 2, ',', '.') }}</th>
-
-							<th>
-								<a href="/codigoDesconto/edit/{{ $c->id }}">
-									<i class="material-icons left">edit</i>					
-								</a>
-								<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/codigoDesconto/delete/{{ $c->id }}">
-									<i class="material-icons left red-text">delete</i>					
-								</a>
-								@if($c->ativo)
-								<a href="/codigoDesconto/push/{{$c->id}}">
-									<i class="material-icons purple-text">notifications</i>
-								</a>
-
-								<a href="/codigoDesconto/sms/{{$c->id}}">
-									<i class="material-icons green-text">sms</i>
-								</a>
-
-								<a href="/codigoDesconto/alterarStatus/{{$c->id}}">
-									<i class="material-icons yellow-text">close</i>
-								</a>
-								@else
-
-								<a href="/codigoDesconto/alterarStatus/{{$c->id}}">
-									<i class="material-icons green-text">check</i>
-								</a>
-								@endif
-							</th>
-						</tr>
-						@endforeach
-					</tbody>
-				</table>
 			</div>
 		</div>
 	</div>
-	@endsection	
+</div>
+@endsection	

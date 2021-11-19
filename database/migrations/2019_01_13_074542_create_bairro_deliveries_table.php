@@ -17,6 +17,7 @@ class CreateBairroDeliveriesTable extends Migration
             $table->increments('id');
             $table->string('nome', 20);
             $table->decimal('valor_entrega', 10, 2);
+            $table->decimal('valor_repasse', 10, 2)->default(0);
             $table->timestamps();
         });
     }

@@ -14,27 +14,30 @@ function encerrar(){
 				chave: chave,
 				protocolo: protocolo
 			})
-			docs.push({
-				chave: chave,
-				protocolo: protocolo
-			})
+			
 		}
 	})
 
 	if(docs.length > 0){
-		$('#preloader').css('display', 'block');
-
-
+		$('#btn-encerrar').addClass('spinner');
+		$('#btn-encerrar').addClass('disabled');
+		console.log(docs)
 		$.post(path + 'mdfeSefaz/encerrar', {data: docs, _token: $('#token').val()})
 		.done((success) => {
 			console.log(success)
-			$('#modal-alert-success').modal('open');
-			$('#preloader').css('display', 'none');
+			$('#btn-encerrar').removeClass('spinner');
+			$('#btn-encerrar').removeClass('disabled');
+			swal("Sucesso", "Documento(s) encerrados!", "success")
+			.then(() => {
+				location.href = path + "mdfe"
+			})
+
 		})
 		.fail((err) => {
 			console.log(err)
-			$('#modal-alert-erro').modal('open');
-			$('#preloader').css('display', 'none');
+			swal("Erro", "Verifique o console do navegador!", "error")
+			$('#btn-encerrar').removeClass('spinner');
+			$('#btn-encerrar').removeClass('disabled');
 		})
 	}
 }

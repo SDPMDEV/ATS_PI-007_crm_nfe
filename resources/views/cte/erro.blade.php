@@ -1,8 +1,9 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
+
+	<div class="card-body">
 		<h5>Para emissão do CT-e é necessario ter cadastrado:</h5>
 		<h5>* Emitente fiscal com certificado digital</h5>
 		<h5>* Veiculo cadastrado</h5>
@@ -11,19 +12,19 @@
 
 		<div class="row">
 			@if(count($naturezas) == 0)
-			<a href="/naturezaOperacao" class="btn-large">ir para naturezas de operação</a>
+			<a href="/naturezaOperacao" class="btn btn-danger">ir para naturezas de operação</a>
 			@endif
 
 			@if(count($veiculos) == 0)
-			<a href="/veiculos" class="btn-large">ir para veiculos</a>
+			<a href="/veiculos" class="btn btn-danger">ir para veiculos</a>
 			@endif
 
 			@if($config == null)
-			<a href="/configNF" class="btn-large">ir para emitente fiscal</a>
+			<a href="/configNF" class="btn btn-danger">ir para emitente fiscal</a>
 			@endif
 
 			@if($clienteCadastrado == null)
-			<a href="/clientes" class="btn-large">ir para clientes</a>
+			<a href="/clientes" class="btn btn-danger">ir para clientes</a>
 			@endif
 		</div>
 	</div>

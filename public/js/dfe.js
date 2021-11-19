@@ -1,6 +1,4 @@
-$(function () {
-	filtrar();
-});
+var array = [];
 
 var codigo = "";
 var nome = "";
@@ -11,65 +9,94 @@ var valor = "";
 var valorCompra = "";
 var quantidade = "";
 var codBarras = "";
-
+var nNf = 0;
 var semRegitro;
 
+$(function () {
+	let uri = window.location.pathname;
+	if(uri.split('/')[2] == 'novaConsulta'){
+		filtrar();
+	}else {
+
+		array = JSON.parse($('#docs').val());
+	}
+});
+
+$('#tipo_evento').change(() => {
+	let tipo = $('#tipo_evento').val();
+	if(tipo == 3 || tipo == 4){
+		$('#div-just').css('display', 'block')
+	}else{
+		$('#div-just').css('display', 'none')
+	}
+})
+
 function filtrar(){
-	$('#preloader').css('display', 'block');
-	let data_inicial = $('#data_inicial').val();
-	let data_final = $('#data_final').val();
+	$.get(path + 'dfe/getDocumentosNovos')
+	.done(value => {
+		console.log(value)
+		$('#preloader1').css('display', 'none')
+		$('#aguarde').css('display', 'none')
 
-	$.get(path + 'dfe/getDocumentos', {data_inicial: data_inicial, data_final: data_final})
-	.done((res) => {
-		$('#preloader').css('display', 'none');
-		montaHTML(res, (html) => {
-			$('#tbl').html(html)
-		})
-	})
-	.fail((err) => {
-		$('#preloader').css('display', 'none');
-		console.log(err)
-	})
-}
-
-function montaHTML(resultado, call){
-	let html = "";
-	resultado.map((element) => {
-		// console.log(element)
-		let acao = "";
-		if(element.incluso){
-			acao = '<a target="_blank" href="/dfe/download/'+ element.chave[0] +'" class="btn green">Completa</a>';
+		if(value.length > 0){
+			montaTabela(value, (html) => {
+				console.log(html)
+				$('table tbody').html(html)
+				$('#table').css('display', 'block')
+			})
+			swal("Sucesso", "Foram encontrados " + value.length + " novos registros!", "success")
 		}else{
-			acao = '<form method="get" action="/dfe/manifestar">';
-			acao += '<input type="hidden" name="nome" value="' + element.nome[0] + '">';
-			acao += '<input type="hidden" name="cnpj" value="' + element.cnpj[0] + '">';
-			acao += '<input type="hidden" name="valor" value="' + element.valor[0] + '">';
-			acao += '<input type="hidden" name="data_emissao" value="' + element.data_emissao[0] + '">';
-			acao += '<input type="hidden" name="num_prot" value="' + element.num_prot[0] + '">';
-			acao += '<input type="hidden" name="chave" value="' + element.chave[0] + '">';
-			acao += '<button type="submit" class="btn red">Manifestar</button>';
-			acao += '</form>';
-		}
-		if(element.nome[0]){
-			html += "<tr>";
-			html += "<td>" + element.nome[0] + "</td>";
-			html += "<td>" + element.cnpj[0] + "</td>";
-			html += "<td>" + element.valor[0] + "</td>";
-			html += "<td>" + element.data_emissao + "</td>";
-			html += "<td>" + element.num_prot[0] + "</td>";
-			html += "<td>" + element.chave[0] + "</td>";
+			swal("Sucesso", "A requisição obteve sucesso, porém sem novos registros!!", "success")
+			$('#sem-resultado').css('display', 'block')
 
-			html += "<td>";
-			html += acao;
-			html += "</td>";
+		}
+
+	})
+	.fail(err => {
+		console.log(err)
+		$('#preloader1').css('display', 'none')
+		$('#aguarde').css('display', 'none')
+		swal("Erro", "Erro ao realizar consulta", "warning")
+	})
+}
+
+function montaTabela(array, call){
+	let html = '';
+	array.map(v => {
+		console.log(v)
+		html += '<tr class="datatable-row">';
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 300px;" id="id">'
+		+ v.nome[0] + '</span></td>'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		+ v.documento[0] + '</span></td>'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		+ v.valor[0] + '</span></td>'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 200px;" id="id">'
+		+ v.chave[0] + '</span></td>'
+		html += '</tr>';
+	})
+
+	call(html)
+}
+
+function setarEvento(chave){
+	console.log(array)
+	array.map((element) => {
+		if(element.chave == chave){
+			console.log(element)
+			$('#nome').val(element.nome)
+			$('#cnpj').val(element.documento)
+			$('#valor').val(element.valor)
+			$('#data_emissao').val(element.data_emissao)
+			$('#num_prot').val(element.num_prot)
+			$('#chave').val(element.chave)
 		}
 
 	})
 
-	call(html);
 }
 
-function _construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra){
+function _construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra, nNf){
 	this.codigo = codigo;
 	this.nome = nome;
 	this.ncm = ncm;
@@ -78,15 +105,18 @@ function _construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantida
 	this.valor = valor;
 	this.valorCompra = valorCompra;
 	this.quantidade = quantidade;
+	this.nNf = nNf;
 	this.codBarras = codBarras.substring(0, 13);
+
 }
 
-function cadProd(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra){
-	_construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra);
+function cadProd(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra, nNf){
+	_construct(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade, valorCompra, nNf);
+
 	$('#nome').val(nome);
 	$("#nome").focus();
-
 	getUnidadeMedida((data) => {
+
 		let achouUnidade = false;
 		data.map((v) => {
 			if(v == unidade){
@@ -95,29 +125,35 @@ function cadProd(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade,
 		})
 
 		if(!achouUnidade){
-			alert("Unidade de compra deste produto não corresponde a nenhuma pré-determinada\n"+
-				"Unidade: " + unidade);
-			if(unidade == 'M3C'){
-				unidade = 'M3';
-				alert('M3C alterado para ' + unidade);
-			}
-			else if(unidade == 'M2C'){
-				unidade = 'M2';
-				alert('M2C alterado para ' + unidade);
-			}
-			else if(unidade == 'MC'){
-				unidade = 'M';
-				alert('MC alterado para ' + unidade);
-			}
-			else if(unidade == 'UN'){
-				unidade = 'UNID';
-				alert('UN alterado para ' + unidade);
-			}else{
-				unidade = 'UNID';
-				alert('Unidade de compra alterado para ' + unidade);
+			swal('', "Unidade de compra deste produto não corresponde a nenhuma pré-determinada\n"+
+				"Unidade: " + unidade, 'warning')
+			.then(s => {
 
-			}
 
+				if(unidade == 'M3C'){
+					unidade = 'M3';
+					swal('', 'M3C alterado para ' + unidade, 'warning')
+
+				}
+				else if(unidade == 'M2C'){
+					unidade = 'M2';
+					swal('', 'M2C alterado para ' + unidade, 'warning')
+
+				}
+				else if(unidade == 'MC'){
+					unidade = 'M';
+					swal('', 'MC alterado para ' + unidade, 'warning')
+				}
+				else if(unidade == 'UN'){
+					unidade = 'UNID';
+					swal('', 'UN alterado para ' + unidade, 'warning')
+
+				}else{
+					unidade = 'UNID';
+					swal('', 'UN alterado para ' + unidade, 'warning')
+
+				}
+			})
 		}
 
 		$('#ncm').val(ncm);
@@ -135,13 +171,55 @@ function cadProd(codigo, nome, codBarras, ncm, cfop, unidade, valor, quantidade,
 		$('#conv_estoque').val('1');
 		$('#valor_venda').val('0');
 		$("#quantidade").trigger("click");
-		Materialize.updateTextFields();
-		$('#modal1').modal('open');
+		$('#modal1').modal('show');
 	})
 
 }
 
+function setEstoque(codigo, nome, quantidade){
+	alert(codigo)
+	swal("Alerta", "Deseja atribuir estoque a este produto? " + nome, "warning")
+	.then(sim => {
+		if(sim){
+			let js = {
+				nome: nome,
+				quantidade: quantidade
+			}
+
+			$.ajax
+			({
+				type: 'POST',
+				data: {
+					produto: prod,
+					_token: token
+				},
+				url: path + 'produtos/salvarProdutoDaNotaComEstoque',
+				dataType: 'json',
+				success: function(e){
+					console.log(e)
+
+					swal("Sucesso", "Produto inserido o estoque quantidade: " + quantidade, "success")
+					.then(sim => {
+						location.reload();
+					});
+
+				}, error: function(e){
+					console.log(e)
+					swal("Erro", "Erro ao importar estoque do produto")
+				}
+			});
+
+		}
+
+	});
+	
+
+
+
+}
+
 function getUnidadeMedida(call){
+
 	$.ajax
 	({
 		type: 'GET',
@@ -163,7 +241,7 @@ $('#salvar').click(() => {
 	$("#th_"+this.codigo).removeClass("red-text");
 	$("#th_"+this.codigo).html($('#nome').val());
 	let valorVenda = $('#valor_venda').val();
-	let valorCompra = $('#valor_compra').val();
+	let valorCompra = $('#valor').val();
 	let unidadeVenda = $('#unidade_venda').val();
 	let conversaoEstoque =$('#conv_estoque').val();
 	let categoria_id =$('#categoria_id').val();
@@ -173,29 +251,35 @@ $('#salvar').click(() => {
 	let CST_PIS =$('#CST_PIS').val();
 	let CST_COFINS =$('#CST_COFINS').val();
 	let CST_IPI =$('#CST_IPI').val();
+	let cfop = $('#cfop').val();
 
 	let prod = {
 		valorVenda: valorVenda,
-		valorCompra: this.valorCompra,
+		valorCompra: valorCompra,
 		unidadeVenda: unidadeVenda,
 		conversao_unitaria: conversaoEstoque,
 		categoria_id: categoria_id,
 		cor: cor,
 		nome: $('#nome').val(),
 		ncm: this.ncm,
-		cfop: this.cfop,
+		cfop: cfop,
 		unidadeCompra: this.unidade,
 		valor: this.valor,
 		quantidade: this.quantidade,
 		codBarras: this.codBarras,
+		numero_nfe: this.nNf,
 		CST_CSOSN: CST_CSOSN,
 		CST_PIS: CST_PIS,
 		CST_COFINS: CST_COFINS,
-		CST_IPI: CST_IPI
+		CST_IPI: CST_IPI,
+		referencia: this.codigo,
+		
 	}
 	console.log(prod.quantidade)
 
-	//console.log(this.semRegitro)
+	console.log(prod)
+
+	console.log(this.semRegitro)
 
 	let token = $('#_token').val();
 
@@ -212,10 +296,16 @@ $('#salvar').click(() => {
 			$("#th_prod_id_"+codigo).html(e.id);
 			$("#th_acao1_"+codigo).css('display', 'none');
 			$("#th_acao2_"+codigo).css('display', 'block');
+			$("#th_estoque_"+codigo).addClass('disabled');
+			
 			$('#preloader').css('display', 'none');
-			$('#modal1').modal('close');
-			alert("Produto Saldo, e inserido o estoque quantidade: " + prod.quantidade)
-			location.reload();
+			$('#modal1').modal('hide');
+			// alert("Produto Saldo, e inserido o estoque quantidade: " + prod.quantidade)
+			swal("Sucesso", "Produto Saldo, e inserido o estoque quantidade: " + prod.quantidade, "success")
+			.then(sim => {
+				location.reload();
+
+			});
 
 		}, error: function(e){
 			console.log(e)
@@ -224,3 +314,37 @@ $('#salvar').click(() => {
 	});
 })
 
+function salvarEstoque(id, quantidade, valor, numero_nfe){
+	swal("Alerta", "Deseja atribuir estoque a este produto?", "warning")
+	.then(sim => {
+		if(sim){
+			let token = $('#_token').val();
+			$.ajax
+			({
+				type: 'POST',
+				data: {
+					produto: id,
+					quantidade: quantidade,
+					valor: valor,
+					numero_nfe: numero_nfe,
+					_token: token
+				},
+				url: path + 'produtos/setEstoque',
+				dataType: 'json',
+				success: function(e){
+					$("#th_estoque_"+id).addClass('disabled');
+
+					swal("Sucesso", "Inserido o estoque quantidade: " + quantidade, "success")
+					.then(() => {
+						location.reload()
+					})
+
+
+				}, error: function(e){
+					console.log(e)
+					$('#preloader').css('display', 'none');
+				}
+			});
+		}
+	})
+}

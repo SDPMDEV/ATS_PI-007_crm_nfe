@@ -1,79 +1,127 @@
 @extends('default.layout')
 @section('content')
-<div class="row">
-	<div class="col s12">
-		<h4>{{{ isset($categoria) ? "Editar": "Cadastrar" }}} Categoria de Delivery</h4>
-		<form method="post" action="{{{ isset($categoria) ? '/deliveryCategoria/update': '/deliveryCategoria/save' }}}" enctype="multipart/form-data">
-			<input type="hidden" name="id" value="{{{ isset($categoria->id) ? $categoria->id : 0 }}}">
 
-			<div class="row">
-				<div class="input-field col s6">
-					<input value="{{{ isset($categoria->nome) ? $categoria->nome : old('nome') }}}" id="nome" name="nome" type="text" class="validate">
-					<label for="nome">Nome</label>
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 
-					@if($errors->has('nome'))
-					<div class="center-align red lighten-2">
-						<span class="white-text">{{ $errors->first('nome') }}</span>
-					</div>
-					@endif
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
 
-				</div>
-			</div>
+				<form method="post" action="{{{ isset($categoria) ? '/deliveryCategoria/update': '/deliveryCategoria/save' }}}" enctype="multipart/form-data">
 
-			<div class="row">
-				<div class="input-field col s10">
-					<textarea name="descricao" id="descricao" class="materialize-textarea">{{{ isset($categoria->descricao) ? $categoria->descricao : old('descricao') }}}</textarea>
-					<label for="descricao">Descrição</label>
 
-					@if($errors->has('descricao'))
-					<div class="center-align red lighten-2">
-						<span class="white-text">{{ $errors->first('descricao') }}</span>
-					</div>
-					@endif
-				</div>
+					<input type="hidden" name="id" value="{{{ isset($categoria) ? $categoria->id : 0 }}}">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
 
-				
-
-			</div>
-
-			<div class="row">
-				<div class="col s6">
-					<div class="file-field input-field">
-						<div class="btn black">
-							<span>Imagem</span>
-							<input value="{{{ isset($categoria->path) ? $categoria->path : old('path') }}}" name="file" accept=".png, .jpg, .jpeg" type="file">
-						</div>
-						<div class="file-path-wrapper">
-							<input class="file-path validate" type="text">
+							<h3 class="card-title">{{isset($categoria) ? 'Editar' : 'Novo'}} Categoria</h3>
 						</div>
 
-						@if($errors->has('file'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('file') }}</span>
-						</div>
-						@endif
 					</div>
-				</div>
+					@csrf
 
-				@if(isset($categoria))
-				<div class="col s6">
-					<img style="width: 250px; height: 200px;" src="/imagens_categorias/{{$categoria->path}}">
-				</div>
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
 
-				<input type="hidden" name="file_out" value="{{$categoria->path}}">
-				@endif
-				
+									<div class="row">
+										<div class="form-group validated col-sm-6 col-lg-6">
+											<label class="col-form-label">Nome</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('nome')) is-invalid @endif" name="nome" value="{{{ isset($categoria) ? $categoria->nome : old('nome') }}}">
+												@if($errors->has('nome'))
+												<div class="invalid-feedback">
+													{{ $errors->first('nome') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div>
+
+										<div class="row">
+											<div class="form-group validated col-sm-12 col-lg-12">
+												<label class="col-form-label">Descrição</label>
+												<div class="">
+
+													<textarea class="form-control" name="descricao" placeholder="Descrição" rows="3">{{{ isset($categoria->descricao) ? $categoria->descricao : old('descricao') }}}</textarea>
+													@if($errors->has('descricao'))
+													<div class="invalid-feedback">
+														{{ $errors->first('descricao') }}
+													</div>
+													@endif
+												</div>
+											</div>
+										</div>
+
+										<div style="background-image: url(/imgs/no_image.png)">
+											
+										</div>
+
+										<div class="form-group row">
+											<label class="col-xl-12 col-lg-12 col-form-label text-left">Imagem</label>
+											<div class="col-lg-10 col-xl-6">
+
+												<div class="image-input image-input-outline" id="kt_image_1">
+													<div class="image-input-wrapper" @if(isset($categoria) && file_exists('imagens_categorias/'.$categoria->path)) style="background-image: url(/imagens_categorias/{{$categoria->path}})" @else style="background-image: url(/imgs/no_image.png)" @endif></div>
+													<label class="btn btn-xs btn-icon btn-circle btn-white btn-hover-text-primary btn-shadow" data-action="change" data-toggle="tooltip" title="" data-original-title="Change avatar">
+														<i class="fa fa-pencil icon-sm text-muted"></i>
+														<input type="file" name="file" accept=".png, .jpg, .jpeg">
+														<input type="hidden" name="profile_avatar_remove">
+													</label>
+													<span class="btn btn-xs btn-icon btn-circle btn-white btn-hover-text-primary btn-shadow" data-action="cancel" data-toggle="tooltip" title="" data-original-title="Cancel avatar">
+														<i class="fa fa-close icon-xs text-muted"></i>
+													</span>
+												</div>
+
+
+												<span class="form-text text-muted">.png, .jpg, .jpeg</span>
+												@if($errors->has('file'))
+												<div class="invalid-feedback">
+													{{ $errors->first('file') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+									</div>
+
+
+
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="card-footer">
+
+						<div class="row">
+							<div class="col-xl-2">
+
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="/deliveryCategoria">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Salvar</span>
+								</button>
+							</div>
+
+						</div>
+					</div>
+				</form>
 			</div>
-
-			<input type="hidden" name="_token" value="{{ csrf_token() }}">
-
-
-			<br>
-			<div class="row">
-				<a class="btn-large red lighten-2" href="/deliveryCategoria">Cancelar</a>
-				<input type="submit" value="Salvar" class="btn-large green accent-3">
-			</div>
-		</form>
+		</div>
 	</div>
 </div>
+
+
 @endsection

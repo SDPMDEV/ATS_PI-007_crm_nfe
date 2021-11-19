@@ -1,69 +1,107 @@
 @extends('default.layout')
 @section('content')
-<div class="row">
-	<div class="col s12">
+<style type="text/css">
+.btn-file {
+	position: relative;
+	overflow: hidden;
+}
 
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
+.btn-file input[type=file] {
+	position: absolute;
+	top: 0;
+	right: 0;
+	min-width: 100%;
+	min-height: 100%;
+	font-size: 100px;
+	text-align: right;
+	filter: alpha(opacity=0);
+	opacity: 0;
+	outline: none;
+	background: white;
+	cursor: inherit;
+	display: block;
+}
+</style>
+
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
+
+				<form class="container" method="post" action="/configNF/certificado" enctype="multipart/form-data">
+
+
+
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">Upload de Certificado</h3>
+						</div>
+
+					</div>
+					@csrf
+
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
+
+									<div class="row">
+
+										<div class="form-group validated col-sm-6 col-lg-6">
+											<label class="col-form-label">Arquivo</label>
+											<div class="">
+												<span style="width: 100%" class="btn btn-primary btn-file">
+													Procurar arquivo<input accept=".bin, .pfx" name="file" type="file">
+
+												</span>
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-4 col-lg-4">
+											<label class="col-form-label">Senha</label>
+											<div class="">
+												<input id="senha" type="password" class="form-control @if($errors->has('razao_social')) is-invalid @endif" name="senha" >
+												
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+
+						</div>
+
+					</div>
+					<div class="card-footer">
+
+						<div class="row">
+							<div class="col-xl-2">
+
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="/configNF">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Salvar</span>
+								</button>
+							</div>
+
+						</div>
+					</div>
+
+				</form>
 			</div>
 		</div>
-		@endif
-
-		<form class="container" method="post" action="/configNF/certificado"
-		enctype="multipart/form-data">
-			@csrf
-
-			<div class="row"><br>
-				<div class="col s8">
-					<div class="file-field input-field">
-						<div class="btn black">
-							<i class="material-icons left">save</i>
-							<span>Arquivo</span>
-							<input name="file" accept=".bin, .pfx" type="file">
-						</div>
-						<div class="file-path-wrapper">
-							<input class="file-path validate" type="text">
-						</div>
-
-						@if($errors->has('file'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('file') }}</span>
-						</div>
-						@endif
-					</div>
-				</div>
-
-				<div class="col s3">
-					<div class="input-field">
-						<input type="password" name="senha" id="senha-view">
-
-						<label id="senha">Senha do Certificado </label>
-					</div>
-				</div>
-				<div class="col s1">
-					<div class="">
-						<a id="ver-senha" class="btn-floating btn-large waves-effect waves-light white"><i class="material-icons blue-text">remove_red_eye</i></a>
-        
-					</div>
-				</div>
-			</div>
-
-			<div class="row">
-				<div class="col s6 offset-s3">
-					<button style="width: 100%" class="btn-large green accent-3" type="submit">
-						<i class="material-icons left">cloud</i>
-					UPLOAD</button>
-				</div>
-			</div>
-		</form>
 	</div>
 </div>
 
-<script type="text/javascript">
-	$('#ver-senha').click(() => {
-		alert('dsd')
-	})
-</script>
 @endsection

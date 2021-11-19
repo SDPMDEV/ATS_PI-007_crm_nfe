@@ -49,7 +49,14 @@ class ConfigDeliveryController extends Controller
 				'tempo_maximo_cancelamento' => $request->tempo_maximo_cancelamento,
 				'nome_exibicao_web' => $request->nome_exibicao_web,
 				'latitude' => $request->latitude,
-				'longitude' => $request->longitude
+				'longitude' => $request->longitude,
+				'politica_privacidade' => $request->politica_privacidade ?? '',
+				'entrega_gratis_ate' => $request->entrega_gratis_ate ?? 0,
+				'valor_km' => $request->valor_km ? str_replace(",", ".", $request->valor_km) : 0,
+				'usar_bairros' => $request->usar_bairros ? true : false,
+				'maximo_km_entrega' => $request->maximo_km_entrega ? true : false,
+				'maximo_adicionais' => $request->maximo_adicionais,
+				'maximo_adicionais_pizza' => $request->maximo_adicionais_pizza
 			]);
 		}else{
 			$config = DeliveryConfig::
@@ -67,26 +74,28 @@ class ConfigDeliveryController extends Controller
 			$config->nome_exibicao_web = $request->nome_exibicao_web;
 			$config->latitude = $request->latitude;
 			$config->longitude = $request->longitude;
+			$config->politica_privacidade = $request->politica_privacidade ?? '';
+			$config->entrega_gratis_ate = $request->entrega_gratis_ate ?? 0;
+			$config->valor_km = $request->valor_km ?? 0;
+			$config->maximo_km_entrega = $request->maximo_km_entrega ?? 0;
+			$config->usar_bairros = $request->usar_bairros ? true : false;
+			$config->maximo_adicionais = $request->maximo_adicionais;
+			$config->maximo_adicionais_pizza = $request->maximo_adicionais_pizza;
 
 			$result = $config->save();
 		}
 
 		if($request->hasFile('file')){
     		//unlink anterior
-
     		$file = $request->file('file');
-
     		$nomeImagem = "logo.png";
-
     		$upload = $file->move(public_path('images'), $nomeImagem);
-
     	}
+
 		if($result){
-			session()->flash('color', 'blue');
-			session()->flash("message", "Configurado com sucesso!");
+			session()->flash("mensagem_sucesso", "Configurado com sucesso!");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao configurar!');
+			session()->flash('mensagem_erro', 'Erro ao configurar!');
 		}
 
 		return redirect('/configDelivery');
@@ -107,6 +116,9 @@ class ConfigDeliveryController extends Controller
 			'nome_exibicao_web' => 'required|max:30',
 			'latitude' => 'required|max:10',
 			'longitude' => 'required|max:10',
+			'politica_privacidade' => 'max:400',
+			'maximo_adicionais' => 'required',
+			'maximo_adicionais_pizza' => 'required'
 		];
 
 		$messages = [
@@ -128,7 +140,10 @@ class ConfigDeliveryController extends Controller
 			'latitude.max' => '10 caracteres maximos permitidos.',
 			'longitude.required' => 'O campo Longitude é obrigatório.',
 			'longitude.max' => '10 caracteres maximos permitidos.',
+			'politica_privacidade.max' => '400 caracteres maximos permitidos.',
 
+			'maximo_adicionais.required' => 'Campo obrigatório.',
+			'maximo_adicionais_pizza.required' => 'Campo obrigatório.',
 
 		];
 		$this->validate($request, $rules, $messages);

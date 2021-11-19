@@ -4,29 +4,29 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Fornecedor;
+use App\Produto;
 use App\Cotacao;
 use App\ItemCotacao;
 use Mail;
 use Dompdf\Dompdf;
 
-
 class CotacaoController extends Controller
 {
 
 	public function __construct(){
-        $this->middleware(function ($request, $next) {
-            $value = session('user_logged');
-            if(!$value){
-                return redirect("/login");
-            }else{
-                if($value['acesso_cliente'] == 0){
-                    return redirect("/sempermissao");
-                }
-            }
-            return $next($request);
-        });
-    }
-    
+		$this->middleware(function ($request, $next) {
+			$value = session('user_logged');
+			if(!$value){
+				return redirect("/login");
+			}else{
+				if($value['acesso_cliente'] == 0){
+					return redirect("/sempermissao");
+				}
+			}
+			return $next($request);
+		});
+	}
+
 	public function index(){
 
 		date_default_timezone_set('America/Sao_Paulo');
@@ -37,7 +37,6 @@ class CotacaoController extends Controller
 		whereRaw("DATE_FORMAT(data_registro, '%Y-%m-%d') BETWEEN '$dataBefore' AND '$dataCurrent'")
 		->orderBy('id', 'desc')
 		->get();
-
 
 		return view('cotacao/list')
 		->with('cotacoes', $cotacoes)
@@ -95,10 +94,13 @@ class CotacaoController extends Controller
 		where('id', $id)
 		->first();
 
+		$fornecedores = Fornecedor::orderBy('razao_social')->get();
+
 		return view('cotacao/clone')
 		->with('cotacaoJs', true)
 		->with('cloneJs', true)
 		->with('cotacao', $cotacao)
+		->with('fornecedores', $fornecedores)
 		->with('title', 'Clonar Cotação');
 
 
@@ -197,9 +199,12 @@ class CotacaoController extends Controller
 	}
 
 	public function new(){
-
+		$fornecedores = Fornecedor::orderBy('razao_social')->get();
+		$produtos = Produto::orderBy('nome')->get();
 		return view('cotacao/register')
 		->with('cotacaoJs', true)
+		->with('fornecedores', $fornecedores)
+		->with('produtos', $produtos)
 		->with('title', 'Nova Cotação');
 	}
 
@@ -269,15 +274,11 @@ class CotacaoController extends Controller
 		$cotacaoId = $item->cotacao->id;
 
 		if($item->delete()){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Cotação removida!');
+			session()->flash('mensagem_sucesso', 'Item removido!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro');
+			session()->flash('mensagem_erro', 'Erro ao remover item');
 		}
-
-
-		return redirect("/cotacao/edit/$cotacaoId");
+		return redirect()->back();
 
 	}
 
@@ -299,11 +300,9 @@ class CotacaoController extends Controller
 		]);
 
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Produto adicionado!');
+			session()->flash('mensagem_sucesso', 'Produto adicionado!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro');
+			session()->flash('mensagem_erro', 'Erro');
 		}
 
 
@@ -314,11 +313,9 @@ class CotacaoController extends Controller
 	public function delete($id){
 
 		if(Cotacao::where('id', $id)->delete()){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Cotação removida!');
+			session()->flash('mensagem_sucesso', 'Cotação removida!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro');
+			session()->flash('mensagem_erro', 'Erro');
 		}
 		return redirect("/cotacao");
 
@@ -334,12 +331,10 @@ class CotacaoController extends Controller
 		$result = $cotacao->save();
 
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Cotação ' . 
+			session()->flash('mensagem_sucesso', 'Cotação ' . 
 				($status == 1 ? 'Ativada!' : 'Desativada!'));
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro');
+			session()->flash('mensagem_erro', 'Erro');
 		}
 		return redirect("/cotacao");
 
@@ -406,27 +401,29 @@ class CotacaoController extends Controller
     	where('id', $id)
     	->first();
     	$pathUrl = getenv('PATH_URL');
+    	try{
+    		Mail::send('mail.cotacao', ['link' => 
+    			"$pathUrl/response/$cotacao->link"], 
 
-    	Mail::send('mail.cotacao', ['link' => 
-    		"$pathUrl/response/$cotacao->link"], 
+    			function($message) use ($cotacao){
+    				$nomeEmpresa = getenv('MAIL_NAME');
+    				$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+    				$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
 
-    		function($message) use ($cotacao){
-    			$nomeEmpresa = getenv('SMS_NOME_EMPRESA');
-    			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
-    			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
+    				$emailEnvio = getenv('MAIL_USERNAME');
 
-    			$emailEnvio = getenv('MAIL_USERNAME');
+    				$message->to($cotacao->fornecedor->email)->subject('Cotação de Serviço/Compra');
+    				$message->from($emailEnvio, $nomeEmpresa);
+    				$message->subject('Envio de Cotação ' . $cotacao->id);
 
-    			$message->to($cotacao->fornecedor->email)->subject('Cotação de Serviço/Compra');
-    			$message->from($emailEnvio, $nomeEmpresa);
-    			$message->subject('Envio de Cotação ' . $cotacao->id);
+    			});
 
-    		});
+    		session()->flash('mensagem_sucesso', 'EMAIL ENVIADO');
 
-    	session()->flash('color', 'green');
-    	session()->flash('message', 'EMAIL ENVIADO');
-
-    	return redirect("/cotacao");
+    		return redirect("/cotacao");
+    	}catch(\Exception $e){
+    		echo $e->getMessage();
+    	}
 
     }
 
@@ -522,8 +519,7 @@ class CotacaoController extends Controller
     		->with('fornecedores', $fornecedores)
     		->with('cotacoes', $cotacoes);
     	}else{
-    		session()->flash('color', 'red');
-    		session()->flash('message', 'Referência sem nehuma resposta!');
+    		session()->flash('mensagem_erro', 'Referência sem nehuma resposta!');
     		return redirect('/cotacao/listaPorReferencia');
     	}
     }
@@ -582,8 +578,7 @@ class CotacaoController extends Controller
     	$cotacao = Cotacao::find($id);
     	$cotacao->escolhida = true;
     	$cotacao->save();
-    	session()->flash('color', 'green');
-    	session()->flash('message', 'Cotação escolhida para referencia ' . $cotacao->referencia . '!');
+    	session()->flash('mensagem_sucesso', 'Cotação escolhida para referencia ' . $cotacao->referencia . '!');
     	return redirect('/cotacao/listaPorReferencia');
     }
 
@@ -610,22 +605,22 @@ class CotacaoController extends Controller
 
     	$fornecedorByNome = Fornecedor::where('razao_social', $fornecedor)->first();
     	$p = view('cotacao/relatorio')
-		->with('cotacao', $cotacoes[0])
-		->with('fornecedor', $fornecedorByNome)
-		->with('itens', $temp);
+    	->with('cotacao', $cotacoes[0])
+    	->with('fornecedor', $fornecedorByNome)
+    	->with('itens', $temp);
 
 		// return $p;
 
 
 
-		$domPdf = new Dompdf(["enable_remote" => true]);
-		$domPdf->loadHtml($p);
+    	$domPdf = new Dompdf(["enable_remote" => true]);
+    	$domPdf->loadHtml($p);
 
-		$pdf = ob_get_clean();
+    	$pdf = ob_get_clean();
 
-		$domPdf->setPaper("A4");
-		$domPdf->render();
-		$domPdf->stream("Refencia_{$cotacoes[0]->referencia}_Fornecedor_{$fornecedorByNome->razao_social}.pdf");
+    	$domPdf->setPaper("A4");
+    	$domPdf->render();
+    	$domPdf->stream("Refencia_{$cotacoes[0]->referencia}_Fornecedor_{$fornecedorByNome->razao_social}.pdf");
     }
 
 }

@@ -49,11 +49,10 @@ class NaturezaOperacaoController extends Controller
       $result = $natureza->create($request->all());
 
       if($result){
-         session()->flash('color', 'blue');
-         session()->flash("message", "Natureza de Operação cadastrada com sucesso.");
+
+         session()->flash("mensagem_sucesso", "Natureza de Operação cadastrada com sucesso.");
      }else{
-         session()->flash('color', 'red');
-         session()->flash('message', 'Erro ao cadastrar natureza de operação.');
+         session()->flash('mensagem_erro', 'Erro ao cadastrar natureza de operação.');
      }
 
      return redirect('/naturezaOperacao');
@@ -88,11 +87,11 @@ class NaturezaOperacaoController extends Controller
 
         $result = $resp->save();
         if($result){
-          session()->flash('color', 'green');
-          session()->flash('message', 'Natureza de operação editada com sucesso!');
+
+          session()->flash('mensagem_sucesso', 'Natureza de operação editada com sucesso!');
       }else{
-          session()->flash('color', 'red');
-          session()->flash('message', 'Erro ao editar categoria!');
+
+          session()->flash('mensagem_ero', 'Erro ao editar categoria!');
       }
 
       return redirect('/naturezaOperacao'); 
@@ -103,11 +102,11 @@ class NaturezaOperacaoController extends Controller
    ::where('id', $id)
    ->delete();
    if($delete){
-      session()->flash('color', 'blue');
-      session()->flash('message', 'Registro removido!');
+
+      session()->flash('mensagem_sucesso', 'Registro removido!');
   }else{
-      session()->flash('color', 'red');
-      session()->flash('message', 'Erro!');
+
+      session()->flash('mensagem_erro', 'Erro!');
   }
   return redirect('/naturezaOperacao');
 }

@@ -4,6 +4,7 @@ var TAMANHOPIZZASELECIONADO = 0;
 var SABORESESCOLHIDOS = [];
 
 $(function () {
+
   verificaUnidadeCompra();
   
   validaAtribuiDelivery();
@@ -219,6 +220,27 @@ function getSaboresPizza(){
     console.log(err)
   })
 }
+
+$('#kt_select2_1').change(() => {
+  let uri = window.location.pathname;
+  if(uri.split('/')[2] != 'apontamentoManual' && uri.split('/')[2] != 'receita'){
+    let id = $('#kt_select2_1').val()
+    getProduto(id, (data) => {
+      if(!data.delivery){
+        $('#valor').val(data.valor_venda)
+
+        console.log(data)
+        if(data.delivery && data.delivery.pizza.length > 0){
+          setaTamanhosPizza(data.delivery)
+        }
+
+      }else{
+        swal('Erro', 'Este produto já possui cadastro no delivery', 'error')
+        $('#kt_select2_1').val('null').change();
+      }
+    })
+  }
+})
 
 // data: {
 //   'Apple': ,

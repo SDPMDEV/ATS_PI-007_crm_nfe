@@ -1,48 +1,49 @@
 
 $(function () {
-  let cidadeId = $('#cidadeId').val();
-  let cidadeCobrancaId = $('#cidadeCobrancaId').val();
-  console.log(cidadeCobrancaId)
-  getCidades(function(data){
-   $('input.autocomplete-cidade').autocomplete({
-     data: data,
-     limit: 20, 
-     onAutocomplete: function(val) {
-       var cliente = $('#autocomplete-cidade').val().split('|');
+ //  let cidadeId = $('#cidadeId').val();
+ //  let cidadeCobrancaId = $('#cidadeCobrancaId').val();
 
-     },
-     minLength: 1,
-   });
+ //  getCidades(function(data){
+ //   $('input.autocomplete-cidade').autocomplete({
+ //     data: data,
+ //     limit: 20, 
+ //     onAutocomplete: function(val) {
+ //       var cliente = $('#autocomplete-cidade').val().split('|');
 
-   $('input.autocomplete-cidade-cobranca').autocomplete({
-     data: data,
-     limit: 20, 
-     onAutocomplete: function(val) {
-       var cliente = $('#autocomplete-cidade-cobranca').val().split('|');
+ //     },
+ //     minLength: 1,
+ //   });
 
-     },
-     minLength: 1,
-   });
- });
+ //   $('input.autocomplete-cidade-cobranca').autocomplete({
+ //     data: data,
+ //     limit: 20, 
+ //     onAutocomplete: function(val) {
+ //       var cliente = $('#autocomplete-cidade-cobranca').val().split('|');
+
+ //     },
+ //     minLength: 1,
+ //   });
+ // });
 
   
 
-  if(cidadeId > 0){
+ //  if(cidadeId > 0){
 
-    findCidade(cidadeId, (data) => {
+ //    findCidade(cidadeId, (data) => {
 
-      $('#autocomplete-cidade').val(data.id + ' - ' + data.nome)
-    })
-  }
+ //      $('#autocomplete-cidade').val(data.id + ' - ' + data.nome)
+ //      Materialize.updateTextFields();
+ //    })
+ //  }
 
-  if(cidadeCobrancaId > 0){
+ //  if(cidadeCobrancaId > 0){
 
-    findCidade(cidadeCobrancaId, (data) => {
+ //    findCidade(cidadeCobrancaId, (data) => {
 
-      $('#autocomplete-cidade-cobranca').val(data.id + ' - ' + data.nome)
-      Materialize.updateTextFields();
-    })
-  }
+ //      $('#autocomplete-cidade-cobranca').val(data.id + ' - ' + data.nome)
+ //      Materialize.updateTextFields();
+ //    })
+ //  }
 
 
 

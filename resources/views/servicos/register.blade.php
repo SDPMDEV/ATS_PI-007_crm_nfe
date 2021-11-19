@@ -1,69 +1,116 @@
 @extends('default.layout')
 @section('content')
-	<div class="row">
-		<div class="col s12">
-			<h4>{{{ isset($servico) ? "Editar": "Cadastrar" }}} Serviço</h4>
-			<form method="post" action="{{{ isset($servico) ? '/servicos/update': '/servicos/save' }}}" enctype="multipart/form-data">
-				<input type="hidden" name="id" value="{{{ isset($servico->id) ? $servico->id : 0 }}}">
-				
-				<div class="row">
-					<div class="input-field col s6">
-			          <input value="{{{ isset($servico->nome) ? $servico->nome : old('nome') }}}" id="nome" name="nome" type="text" class="validate">
-			          <label for="nome">Nome</label>
-			          
-			          @if($errors->has('nome'))
-			          <div class="center-align red lighten-2">
-			          	<span class="white-text">{{ $errors->first('nome') }}</span>
-			          </div>
-			          @endif
 
-			        </div>
-				</div>
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 
-				<div class="row">
-					<div class="input-field col s4">
-			          <input value="{{{ isset($servico->valor) ? $servico->valor : old('valor') }}}" id="valor" name="valor" type="text" class="validate">
-			          <label for="valor">Valor</label>
-			          
-			          @if($errors->has('valor'))
-			          <div class="center-align red lighten-2">
-			          	<span class="white-text">{{ $errors->first('valor') }}</span>
-			          </div>
-			          @endif
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
 
-			        </div>
-				</div>
+				<form method="post" action="{{{ isset($servico) ? '/servicos/update': '/servicos/save' }}}" enctype="multipart/form-data">
 
-				<div class="row">
-					<div class="col s4 input-field">
-						<select name="categoria_id">
-							@foreach($categorias as $c)
-								<option value="{{$c->id}}">{{$c->nome}}</option>
-							@endforeach
-						</select>
-						<label>Categoria</label>
+
+					<input type="hidden" name="id" value="{{{ isset($servico) ? $servico->id : 0 }}}">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">{{isset($servico) ? 'Editar' : 'Novo'}} Serviço</h3>
+						</div>
+
 					</div>
-				</div>
+					@csrf
 
-				<div class="row">
-					<div class="col s4 input-field">
-						<select name="unidade_cobranca">
-							<option value="UN">UN</option>
-							<option value="HR">HR</option>
-							<option value="MIN">MIN</option>
-						</select>
-						<label>Unidade de cobrança</label>
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
+
+									<div class="row">
+										<div class="form-group validated col-sm-6 col-lg-10">
+											<label class="col-form-label">Nome</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('nome')) is-invalid @endif" name="nome" value="{{{ isset($servico) ? $servico->nome : old('nome') }}}">
+												@if($errors->has('nome'))
+												<div class="invalid-feedback">
+													{{ $errors->first('nome') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-6 col-lg-2">
+											<label class="col-form-label">Valor</label>
+											<div class="">
+												<input type="text" id="valor" class="form-control @if($errors->has('valor')) is-invalid @endif" name="valor" value="{{{ isset($servico) ? $servico->valor : old('valor') }}}">
+												@if($errors->has('valor'))
+												<div class="invalid-feedback">
+													{{ $errors->first('valor') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-4 col-md-6 col-sm-10">
+											<label class="col-form-label">Categoria</label>
+
+											<select class="custom-select form-control" name="categoria_id">
+												@foreach($categorias as $cat)
+												<option value="{{$cat->id}}" @isset($produto) @if($cat->id == $servico->categoria_id)
+													selected=""
+													@endif
+													@endisset >{{$cat->nome}}</option>
+												@endforeach
+											</select>
+
+										</div>
+
+										<div class="form-group validated col-lg-4 col-md-6 col-sm-10">
+											<label class="col-form-label">Unidade de cobrança</label>
+
+											<select class="custom-select form-control" name="unidade_cobranca">
+												<option @isset($servico) @if($servico->unidade_cobranca == 'UN') selected @endif @endisset  value="UN">UN</option>
+												<option @isset($servico) @if($servico->unidade_cobranca == 'HR') selected @endif @endisset  value="HR">HR</option>
+												<option @isset($servico) @if($servico->unidade_cobranca == 'MIN') selected @endif @endisset  value="MIN">MIN</option>
+											</select>
+
+										</div>
+
+									</div>
+
+
+								</div>
+							</div>
+						</div>
 					</div>
-				</div>
+					<div class="card-footer">
 
-				<input type="hidden" name="_token" value="{{ csrf_token() }}">
+						<div class="row">
+							<div class="col-xl-2">
 
-				<br>
-				<div class="row">
-					<a class="btn-large red lighten-2" href="/servicos">Cancelar</a>
-					<input type="submit" value="Salvar" class="btn-large green accent-3">
-				</div>
-			</form>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="/categoriasConta">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Salvar</span>
+								</button>
+							</div>
+
+						</div>
+					</div>
+				</form>
+			</div>
 		</div>
 	</div>
+</div>
+
 @endsection

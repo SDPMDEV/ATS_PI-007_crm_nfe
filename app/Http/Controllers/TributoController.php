@@ -33,6 +33,7 @@ class TributoController extends Controller
 
 
 	public function save(Request $request){
+		
 		$this->_validate($request);
 		if($request->id == 0){
 			$result = Tributacao::create([
@@ -40,26 +41,25 @@ class TributoController extends Controller
 				'pis' => $request->pis,
 				'cofins' => $request->cofins,
 				'ipi' => $request->ipi,
-				'regime' => $request->regime
+				'regime' => $request->regime,
+				'ncm_padrao' => $request->ncm_padrao
 			]);
 		}else{
-			$trib = Tributacao::
-			first();
+			$trib = Tributacao::first();
 
 			$trib->icms = $request->icms;
 			$trib->pis = $request->pis;
 			$trib->cofins = $request->cofins;
 			$trib->ipi = $request->ipi;
 			$trib->regime = $request->regime;
+			$trib->ncm_padrao = $request->ncm_padrao;
 			$result = $trib->save();
 		}
 
 		if($result){
-			session()->flash('color', 'blue');
-			session()->flash("message", "Configurado com sucesso!");
+			session()->flash("mensagem_sucesso", "Configurado com sucesso!");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao configurar!');
+			session()->flash('mensagem_erro', 'Erro ao configurar!');
 		}
 
 		return redirect('/tributos');
@@ -71,7 +71,8 @@ class TributoController extends Controller
 			'icms' => 'required',
 			'pis' => 'required',
 			'cofins' => 'required',
-			'ipi' => 'required'
+			'ipi' => 'required',
+			'ncm_padrao' => 'required'
 			
 		];
 
@@ -79,7 +80,8 @@ class TributoController extends Controller
 			'icms.required' => 'O campo ICMS é obrigatório.',
 			'pis.required' => 'O campo PIS é obrigatório.',
 			'cofins.required' => 'O campo COFINS é obrigatório.',
-			'ipi.required' => 'O campo IPI é obrigatório.'
+			'ipi.required' => 'O campo IPI é obrigatório.',
+			'ncm_padrao.required' => 'O campo NCM é obrigatório.'
 
 		];
 		$this->validate($request, $rules, $messages);

@@ -4,7 +4,8 @@ google.load("visualization", "1", {packages:["corechart"]});
 $(function(){
 
   let js = $('#somaContas').val();
-  js = JSON.parse(js);
+  try{
+    js = JSON.parse(js);
       //montando o array com os dados
       let indices = [''];
       let valores = [''];
@@ -43,9 +44,10 @@ $(function(){
           title: 'Pizza',
           is3D: true,
         });
+      }
 
 
-      });
+    });
 
 $('#ver-graficos').click(() => {
   $('#graficos').removeClass("dismiss");

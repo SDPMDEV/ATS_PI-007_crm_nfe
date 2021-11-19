@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class AberturaCaixa extends Model
 {
     protected $fillable = [
-        'usuario_id', 'valor'
+        'usuario_id', 'valor', 'ultima_venda'
     ];
 }

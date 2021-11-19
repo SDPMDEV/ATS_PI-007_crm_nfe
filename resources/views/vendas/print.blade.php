@@ -9,6 +9,9 @@
 		strong{
 			color: red;
 		}
+		h5{
+			line-height: 0.2;
+		}
 	</style>
 </head>
 <body>
@@ -16,13 +19,19 @@
 	<div class="row">
 		<div class="col s12">
 
-			<h3 class="center-align">Relátorio Venda {{$venda->id}}</h3>
-			<h5>Cliente: <strong>{{$venda->cliente->razao_social}}</strong></h5>
-			<h5>CPF/CNPJ: <strong class="red-text">{{$venda->cliente->cpf_cnpj}}</strong></h5>
-			<h5>IE/RG: <strong class="red-text">{{$venda->cliente->ie_rg}}</strong></h5>
-			<h5>Logradouro: <strong class="red-text">{{$venda->cliente->rua}}, {{$venda->cliente->numero}} </strong></h5>
-			<h5>Bairro: <strong class="red-text">{{$venda->cliente->bairro}} </strong></h5>
-			<h5>Cidade: <strong class="red-text">{{$venda->cliente->cidade->nome}} ({{$venda->cliente->cidade->uf}})</strong></h5>
+			<h3 class="center-align">Relátorio Venda ID: <strong>{{$venda->id}}</strong></h3>
+			<div style="width: 50%; float:left">
+
+				<h5>Cliente: <strong>{{$venda->cliente->razao_social}}</strong></h5>
+				<h5>CPF/CNPJ: <strong class="red-text">{{$venda->cliente->cpf_cnpj}}</strong></h5>
+				<h5>IE/RG: <strong class="red-text">{{$venda->cliente->ie_rg}}</strong></h5>
+			</div>
+			<div style="width: 50%; float:right;">
+
+				<h5>Logradouro: <strong class="red-text">{{$venda->cliente->rua}}, {{$venda->cliente->numero}} </strong></h5>
+				<h5>Bairro: <strong class="red-text">{{$venda->cliente->bairro}} </strong></h5>
+				<h5>Cidade: <strong class="red-text">{{$venda->cliente->cidade->nome}} ({{$venda->cliente->cidade->uf}})</strong></h5>
+			</div>
 
 
 		</div>

@@ -1,82 +1,117 @@
+
+
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
+	
+	<div class="card-body">
 
-		<h4>Estoque</h4>
+		<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+			<div class="card card-custom gutter-b example example-compact">
+				<div class="card-header">
 
-		<div class="row">
-			<br>
-			<!-- <div class="row">
-				<i class="material-icons red-text">
-					brightness_1
-				</i> Itens sem valor de venda
-				<br>
-				<i class="material-icons yellow-text">
-					brightness_1
-				</i> Itens com valor de compra maior que valor de venda
-			</div> -->
-			<div class="col s12">
-				<label>Numero de registros: {{count($estoque)}}</label>					
+					<div class="col-xl-12">
+						<div class="row">
+							<div class="col-xl-12">
+								<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+									<br>
+									<h4>Estoque</h4>
+
+									<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+										<thead class="datatable-head">
+											<tr class="datatable-row" style="left: 0px;">
+												
+												<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 150px;">Produto</span></th>
+												<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Categoria</span></th>
+												<th data-field="Country" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Quanitdade</span></th>
+												<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Un. Compra</span></th>
+
+												<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Un. Venda</span></th>
+												<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Valor de Compra</span></th>
+
+												<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Subtotal</span></th>
+
+											</tr>
+										</thead>
+										<tbody class="datatable-body">
+											<?php 
+											$subtotal = 0;
+											?>
+											@foreach($estoque as $e)
+											<tr class="datatable-row" style="left: 0px;">
+												<td class="datatable-cell"><span class="codigo" style="width: 150px;">
+													{{$e->produto->nome}} | {{$e->produto->cor}}
+												</span></td>
+												<td class="datatable-cell"><span class="codigo" style="width: 80px;">{{$e->produto->categoria->nome}}</span></td>
+												<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+													{{$e->quantidade}}
+												</span></td>
+												<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+													{{$e->produto->unidade_compra}}
+												</span></td>
+												<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+													{{$e->produto->unidade_venda}}
+												</span></td>
+												<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+													{{ number_format($e->valor_compra, 2, ',', '.') }}
+												</span></td>
+
+												<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+													{{ number_format($e->valor_compra * $e->quantidade, 2, ',', '.') }}
+												</span></td>
+
+												<?php 
+												$subtotal += $e->quantidade * $e->valor_compra;
+												?>
+
+											</tr>
+											@endforeach
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="d-flex justify-content-between align-items-center flex-wrap">
+							<div class="d-flex flex-wrap py-2 mr-3">
+								@if(isset($links))
+								{{$estoque->links()}}
+								@endif
+							</div>
+						</div>
+
+						<div class="card-body">
+							<div class="row">
+								<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+									<div class="card card-custom gutter-b example example-compact">
+										<div class="card-header">
+
+											<div class="card-body">
+												<h3 class="card-title">Total em Estoque: R$ <strong class="red-text">{{ number_format($subtotal, 2, ',', '.') }}</strong></h3>
+
+												<a target="_blank" class="navi-text" href="/estoque/apontamentoManual">
+													<span class="label label-xl label-inline label-light-danger">Apontamento Manual</span>
+												</a>
+
+												<a target="_blank" class="navi-text" href="/estoque/listApontamentos">
+													<span class="label label-xl label-inline label-light-primary">Listar Alterações</span>
+												</a>
+											</div>
+
+										</div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+
+					</div>
+				</div>
+
 			</div>
-
-			<table class="col s12">
-				<thead>
-					<tr>
-						<th>Produto</th>
-						<th>Categoria</th>
-						<th>Quantidade</th>
-						<th>Un. Compra</th>
-						<th>Un. Venda</th>
-						<th>Valor de Compra</th>
-						<th>Subtotal</th>
-					</tr>
-				</thead>
-
-				<tbody>
-					<?php 
-					$subtotal = 0;
-					?>
-					@foreach($estoque as $e)
-
-					<tr>
-
-						<td>{{$e->produto->nome}} | {{$e->produto->cor}}</td>
-						<td>{{$e->produto->categoria->nome}}</td>
-						<td>{{$e->quantidade}}</td>
-						<td>{{$e->produto->unidade_compra}}</td>
-						<td>{{$e->produto->unidade_venda}}</td>
-						<td>{{ number_format($e->valor_compra, 2, ',', '.') }}</td>
-						<td>{{ number_format($e->valor_compra * $e->quantidade, 2, ',', '.') }}</td>
-
-						<?php 
-						$subtotal += $e->quantidade * $e->valor_compra;
-						?>
-
-					</tr>
-					@endforeach
-					<tr class="green lighten-4 gray-text">
-						<td colspan="6" class="center-align">TOTAL EM ESTOQUE</td>
-						<td>{{ number_format($subtotal, 2, ',', '.') }}</td>
-					</tr>
-				</tbody>
-			</table>
 		</div>
-
-		@if(isset($links))
-		<ul class="pagination center-align">
-			<li class="waves-effect">{{$estoque->links()}}</li>
-		</ul>
-		@endif
-
-		<div class="row">
-			<a href="/estoque/apontamentoManual" class="btn red">
-				<i class="material-icons left">inbox</i>	
-				Apontamento Manual		
-			</a>
-		</div>
-
 	</div>
+
 </div>
-@endsection	
+
+@endsection

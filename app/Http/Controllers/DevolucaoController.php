@@ -168,14 +168,14 @@ class DevolucaoController extends Controller
 				->with('dadosEmitente', $dadosEmitente)
 				->with('dadosAtualizados', $dadosAtualizados);
 			}else{
-				session()->flash('color', 'red');
-				session()->flash('message', 'Este XML de devolução já esta incluido no sistema!');
+
+				session()->flash('mensagem_erro', 'Este XML de devolução já esta incluido no sistema!');
 				return redirect("/devolucao/nova");
 			}
 
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'XML inválido!');
+
+			session()->flash('mensagem_erro', 'XML inválido!');
 			return redirect("/devolucao/nova");
 		}
 	}
@@ -311,8 +311,10 @@ class DevolucaoController extends Controller
 			]);
 			if(getenv("DEVOLUCAO_ALTERA_ESTOQUE") == 1){
 				$produto = Produto::where('nome', $i['xProd'])->first();
-				$stockMove->downStock(
-					(int) $produto->id, (float) str_replace(",", ".", $i['qCom']));
+				if($produto != null){
+					$stockMove->downStock(
+						(int) $produto->id, (float) str_replace(",", ".", $i['qCom']));
+				}
 			}
 		}
 
@@ -394,14 +396,16 @@ class DevolucaoController extends Controller
 
 			if(getenv("DEVOLUCAO_ALTERA_ESTOQUE") == 1){
 				$produto = Produto::where('nome', $i->nome)->first();
-				$stockMove->pluStock(
-					(int) $produto->id, (float) str_replace(",", ".", $i->quantidade));
+				if($produto != null){
+					$stockMove->pluStock(
+						(int) $produto->id, (float) str_replace(",", ".", $i->quantidade));
+				}
 			}
 		}
 
 		$devolucao->delete();
-		session()->flash('color', 'blue');
-		session()->flash("message", "Deletado com sucesso!");
+
+		session()->flash("mensagem_sucesso", "Deletado com sucesso!");
 		return redirect('devolucao');
 	}
 
@@ -485,8 +489,8 @@ class DevolucaoController extends Controller
 			"schemes" => "PL_009_V4",
 			"versao" => "4.00",
 			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => "000002"
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
 		], 55);
 
 		if($devolucao->estado == 0 || $devolucao->estado == 2){
@@ -536,8 +540,8 @@ class DevolucaoController extends Controller
 			"schemes" => "PL_009_V4",
 			"versao" => "4.00",
 			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => "000002"
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
 		], 55);
 
 		$resultado = $nfe_dev->cancelar($devolucao, $request->justificativa);

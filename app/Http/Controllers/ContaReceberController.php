@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\ContaReceber;
 use App\CategoriaConta;
+use App\Usuario;
 
 class ContaReceberController extends Controller
 {
@@ -27,11 +28,14 @@ class ContaReceberController extends Controller
 		whereBetween('data_vencimento', [date("Y-m-d"), 
 			date('Y-m-d', strtotime('+1 month'))])
 		->get();
+
+		$usuarios = Usuario::all();
 		$somaContas = $this->somaCategoriaDeContas($contas);
 		return view('contaReceber/list')
 		->with('contas', $contas)
 		->with('graficoJs', true)
 		->with('somaContas', $somaContas)
+		->with('usuarios', $usuarios)
 		->with('infoDados', "Dos próximos 30 dias")
 		->with('title', 'Contas a Receber');
 	}
@@ -70,6 +74,9 @@ class ContaReceberController extends Controller
 		$dataFinal = $request->data_final;
 		$cliente = $request->cliente;
 		$status = $request->status;
+		$usuario = $request->usuario;
+
+
 		$contas = null;
 
 		if(isset($cliente) && isset($dataInicial) && isset($dataFinal)){
@@ -77,28 +84,37 @@ class ContaReceberController extends Controller
 				$cliente, 
 				$this->parseDate($dataInicial),
 				$this->parseDate($dataFinal),
-				$status
+				$status,
+				$usuario
 			);
 		}else if(isset($dataInicial) && isset($dataFinal)){
 			$contas = ContaReceber::filtroData(
 				$this->parseDate($dataInicial),
 				$this->parseDate($dataFinal),
-				$status
+				$status,
+				$usuario
 			);
 		}else if(isset($cliente)){
 			$contas = ContaReceber::filtroFornecedor(
 				$cliente,
-				$status
+				$status,
+				$usuario
+			);
+		}else if(isset($usuario)){
+			$contas = ContaReceber::filtroUsuario(
+				$usuario
 			);
 		}else{
 			$contas = ContaReceber::filtroStatus($status);
 		}
 
 		$somaContas = $this->somaCategoriaDeContas($contas);
+		$usuarios = Usuario::all();
 
 		return view('contaReceber/list')
 		->with('contas', $contas)
 		->with('cliente', $cliente)
+		->with('usuarios', $usuarios)
 		->with('dataInicial', $dataInicial)
 		->with('dataFinal', $dataFinal)
 		->with('status', $status)
@@ -130,11 +146,10 @@ class ContaReceberController extends Controller
 	public function save(Request $request){
 		
 		if(strlen($request->recorrencia) == 5){
+			echo $request->recorrencia;
 			$valid = $this->validaRecorrencia($request->recorrencia);
-			echo $valid;
 			if(!$valid){
-				session()->flash('color', 'red');
-				session()->flash('message', 'Valor recorrente inválido!');
+				session()->flash('mensagem_erro', 'Valor recorrente inválido!');
 				return redirect('/contasReceber/new');
 			}
 		}
@@ -149,7 +164,8 @@ class ContaReceberController extends Controller
 			'valor_recebido' => 0,
 			'status' => $request->status ? true : false,
 			'referencia' => $request->referencia,
-			'categoria_id' => $request->categoria_id
+			'categoria_id' => $request->categoria_id,
+			'usuario_id' => get_id_user()
 		]);
 		
 		$loopRecorrencia = $this->calculaRecorrencia($request->recorrencia);
@@ -178,8 +194,7 @@ class ContaReceberController extends Controller
 			}
 		}
 
-		session()->flash('color', 'green');
-		session()->flash('message', 'Registro inserido!');
+		session()->flash('mensagem_sucesso', 'Registro inserido!');
 
 		return redirect('/contasReceber');
 	}
@@ -198,11 +213,11 @@ class ContaReceberController extends Controller
 		$result = $conta->save();
 
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Registro editado!');
+
+			session()->flash('mensagem_sucesso', 'Registro atualizado!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Ocorreu um erro!');
+
+			session()->flash('mensagem_erro', 'Ocorreu um erro!');
 		}
 
 		return redirect('/contasReceber');
@@ -225,8 +240,9 @@ class ContaReceberController extends Controller
 		$mesAutal = date('m');
 		$anoAtual = date('y');
 		$temp = explode("/", $rec);
+
 		if($anoAtual > $temp[1]) return false;
-		if($temp[0] <= $mesAutal) return false;
+		if((int)$temp[0] <= $mesAutal && $anoAtual == $temp[1]) return false;
 
 		return true;
 	}
@@ -282,22 +298,147 @@ class ContaReceberController extends Controller
 		where('id', $request->id)
 		->first();
 
-		$valor = str_replace(".", "", $request->valor);
-		$valor = str_replace(",", ".", $valor);
+		// $valor = str_replace(".", "", $request->valor);
+		// $valor = str_replace(",", ".", $valor);
+
+		if($conta->valor_integral != $request->valor){
+			$valor = $request->valor;
+
+			$contasParaReceber = ContaReceber::
+			select('conta_recebers.*')
+			->join('vendas', 'vendas.id' , '=', 'conta_recebers.venda_id')
+
+			->where('conta_recebers.status', false)
+			->where('conta_recebers.id', '!=', $conta->id)
+			->where('vendas.cliente_id', $conta->venda->cliente_id)
+			->get();
+
+			if($conta->valor_integral > $request->valor){
+				$contasParaReceber = [];
+			}
+
+
+			return view('contaReceber/valorDivergente')
+			->with('conta', $conta)
+			->with('valor', $valor)
+			->with('receberConta', true)
+			->with('contasParaReceber', $contasParaReceber)
+			->with('title', 'Receber Conta');
+
+		}else{
+
+			$conta->status = true;
+			$conta->valor_recebido = $request->valor;
+			$conta->data_recebimento = date("Y-m-d");
+
+			$result = $conta->save();
+			if($result){
+
+				session()->flash('mensagem_sucesso', 'Conta recebida!');
+			}else{
+
+				session()->flash('mensagem_erro', 'Erro!');
+			}
+			return redirect('/contasReceber');
+		}
+	}
+
+	public function receberSomente(Request $request){
+		$conta = ContaReceber::find($request->id);
+		$valor = $request->valor;
 
 		$conta->status = true;
-		$conta->valor_recebido = $valor;
+		$conta->valor_recebido = $request->valor;
 		$conta->data_recebimento = date("Y-m-d");
 
 		$result = $conta->save();
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Conta recebida!');
+
+			session()->flash('mensagem_sucesso', 'Conta recebida!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/contasReceber');
+	}
+
+	public function receberComDivergencia(Request $request){
+		$conta = ContaReceber::find($request->id);
+		$valor = $request->valor;
+
+		$res = ContaReceber::create([
+			'venda_id' => $conta->venda_id,
+			'data_vencimento' => $conta->data_vencimento,
+			'data_recebimento' => $conta->data_recebimento,
+			'valor_integral' => $conta->valor_integral - $valor,
+			'valor_recebido' => 0,
+			'status' => false,
+			'referencia' => $conta->referencia,
+			'categoria_id' => 1,
+			'usuario_id' => get_id_user()
+		]);
+
+		$conta->status = true;
+		$conta->valor_recebido = $request->valor;
+		$conta->valor_integral = $request->valor;
+		$conta->data_recebimento = date("Y-m-d");
+
+		$result = $conta->save();
+		if($result){
+			$id = $res->id;
+			session()->flash('mensagem_sucesso', 'Conta recebida parcialmente, uma nova foi criada com ID: ' . $id);
+		}else{
+
+			session()->flash('mensagem_erro', 'Erro!');
+		}
+		return redirect('/contasReceber');
+	}
+
+	public function receberComOutros(Request $request){
+		$conta = ContaReceber::find($request->id);
+		$valor = $request->valor;
+		$temp = "";
+		$somaParaTroco = $conta->valor_integral;
+		try{
+			if(isset($request->contas)){
+				$contasMais = explode(",", $request->contas);
+				print_r($contasMais);
+				foreach($contasMais as $key => $c){
+					$ctemp = ContaReceber::find($c);
+					$ctemp->status = true;
+					$ctemp->valor_recebido = $ctemp->valor_integral;
+					$ctemp->data_recebimento = date("Y-m-d");
+					$ctemp->save();
+
+					$temp .= " $c" . (sizeof($contasMais)-1 > $key ? "," : "");
+
+					$somaParaTroco += $ctemp->valor_integral;
+				}
+
+
+			}
+
+			$conta->status = true;
+			$conta->valor_recebido = $conta->valor_integral;
+			$conta->data_recebimento = date("Y-m-d");
+			$conta->save();
+
+			$troco = $valor - $somaParaTroco;
+
+			$msg = "Sucesso conta(s) com ID: $conta->id, " . $temp . " recebida(s)";
+
+			if($troco > 0){
+				$msg .= " , valor de troco: R$ " . number_format($troco, 2);
+			}
+			session()->flash('mensagem_sucesso', $msg);
+
+			return redirect('/contasReceber');
+
+		}catch(\Exception $e){
+			session()->flash('mensagem_erro', 'Ocorreu um erro ao receber: ' . $e->getMessage());
+
+		}
+
 	}
 
 	public function delete($id){
@@ -305,11 +446,11 @@ class ContaReceberController extends Controller
 		::where('id', $id)
 		->delete();
 		if($delete){
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Registro removido!');
+
+			session()->flash('mensagem_sucesso', 'Registro removido!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/contasReceber');
 	}

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\ListaPreco;
 use Illuminate\Http\Request;
 use App\Produto;
+use App\Estoque;
 use App\Categoria;
 use App\ConfigNota;
 use App\Tributacao;
@@ -11,7 +13,10 @@ use App\Rules\EAN13;
 use App\Helpers\StockMove;
 use App\CategoriaProdutoDelivery;
 use App\ProdutoDelivery;
+use App\ProdutoListaPreco;
 use App\ImagensProdutoDelivery;
+use App\ItemDfe;
+use App\TelaPedido;
 
 class ProductController extends Controller
 {
@@ -34,27 +39,72 @@ class ProductController extends Controller
         paginate(15);
         $categorias = Categoria::all();
 
+        $produtos = $this->setaEstoque($produtos);
+
+        $produto = new Produto();
+        $resp = $produto;
+        $telas = TelaPedido::all();
+        $config = ConfigNota::first();
+        $tributacao = Tributacao::first();
+        $lista = ListaPreco::all();
+        $listaCSTCSOSN = Produto::listaCSTCSOSN();
+        $listaCST_IPI = Produto::listaCST_IPI();
+        $anps = Produto::lista_ANP();
+        $unidadesDeMedida = Produto::unidadesMedida();
+        $categorias = Categoria::all();
+        $categoriasDelivery = CategoriaProdutoDelivery::all();
+        $listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
+
+        $natureza = Produto::firstNatureza();
+        if($natureza == null){
+
+            session()->flash('mensagem_erro', 'Cadastre uma natureza de operação!');
+            return redirect('/naturezaOperacao');
+        }
+
         return view('produtos/list')
-        ->with('produtos', $produtos)
-        ->with('links', true)
-        ->with('categorias', $categorias)
-        ->with('title', 'Produtos');
+            ->with('produtos', $produtos)
+            ->with('links', true)
+            ->with('categorias', $categorias)
+            ->with('title', 'Produtos')
+            ->with('lista', $lista)
+            ->with('title', 'Lista de Preços')
+            ->with('produto', $resp)
+            ->with('config', $config)
+            ->with('tributacao', $tributacao)
+            ->with('natureza', $natureza)
+            ->with('listaCSTCSOSN', $listaCSTCSOSN)
+            ->with('listaCST_IPI', $listaCST_IPI)
+            ->with('anps', $anps)
+            ->with('unidadesDeMedida', $unidadesDeMedida)
+            ->with('categorias', $categorias)
+            ->with('categoriasDelivery', $categoriasDelivery)
+            ->with('produtoJs', true)
+            ->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
+            ->with('telas', $telas);
+    }
+
+    private function setaEstoque($produtos){
+        foreach($produtos as $p){
+            $estoque = Estoque::where('produto_id', $p->id)->first();
+            $p->estoque_atual = $estoque == null ? 0 : $estoque->quantidade;
+        }
+        return $produtos;
     }
 
     public function new(){
         $categoria = Categoria::first();
         if($categoria == null){
             //nao tem categoria
-            session()->flash('color', 'red');
-            session()->flash('message', 'Cadastre ao menos uma categoria!');
+            session()->flash('mensagem_erro', 'Cadastre ao menos uma categoria!');
             return redirect('/categorias');
         }
         $anps = Produto::lista_ANP();
         $natureza = Produto::firstNatureza();
 
         if($natureza == null){
-            session()->flash('color', 'red');
-            session()->flash('message', 'Cadastre uma natureza de operação!');
+
+            session()->flash('mensagem_erro', 'Cadastre uma natureza de operação!');
             return redirect('/naturezaOperacao');
         }
 
@@ -67,27 +117,31 @@ class ProductController extends Controller
         $tributacao = Tributacao::first();
 
         if($tributacao == null){
-            session()->flash('color', 'red');
-            session()->flash('message', 'Informe a tributação padrão!');
+
+            session()->flash('mensagem_erro', 'Informe a tributação padrão!');
             return redirect('tributos');
         }
 
         $unidadesDeMedida = Produto::unidadesMedida();
         $config = ConfigNota::first();
-        return view('produtos/register')
-        ->with('categorias', $categorias)
-        ->with('unidadesDeMedida', $unidadesDeMedida)
 
-        ->with('listaCSTCSOSN', $listaCSTCSOSN)
-        ->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
-        ->with('listaCST_IPI', $listaCST_IPI)
-        ->with('anps', $anps)
-        ->with('config', $config)
-        ->with('categoriasDelivery', $categoriasDelivery)
-        ->with('tributacao', $tributacao)
-        ->with('natureza', $natureza)
-        ->with('produtoJs', true)
-        ->with('title', 'Cadastrar Produto');
+        $telas = TelaPedido::all();
+
+        return view('produtos/register')
+            ->with('categorias', $categorias)
+            ->with('unidadesDeMedida', $unidadesDeMedida)
+
+            ->with('listaCSTCSOSN', $listaCSTCSOSN)
+            ->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
+            ->with('listaCST_IPI', $listaCST_IPI)
+            ->with('anps', $anps)
+            ->with('config', $config)
+            ->with('categoriasDelivery', $categoriasDelivery)
+            ->with('tributacao', $tributacao)
+            ->with('natureza', $natureza)
+            ->with('telas', $telas)
+            ->with('produtoJs', true)
+            ->with('title', 'Cadastrar Produto');
     }
 
     public function save(Request $request){
@@ -95,17 +149,20 @@ class ProductController extends Controller
 
         $anps = Produto::lista_ANP();
         $descAnp = '';
+
         foreach($anps as $key => $a){
             if($key == $request->anp){
                 $descAnp = $a;
             }
         }
+
         $request->merge([ 'composto' => $request->input('composto') ? true : false ]);
         $request->merge([ 'valor_livre' => $request->input('valor_livre') ? true : false ]);
-        $request->merge([ 'valor_venda' =>str_replace(",", ".", $request->input('valor_venda'))]);
-        $request->merge([ 'conversao_unitaria' => $request->input('conversao_unitaria') ? 
+        $request->merge([ 'gerenciar_estoque' => $request->input('gerenciar_estoque') ? true : false ]);
+        $request->merge([ 'valor_venda' => str_replace(",", ".", $request->input('valor_venda'))]);
+        $request->merge([ 'valor_compra' => str_replace(",", ".", $request->input('valor_compra'))]);
+        $request->merge([ 'conversao_unitaria' => $request->input('conversao_unitaria') ?
             $request->input('conversao_unitaria') : 1]);
-
         $request->merge([ 'codBarras' => $request->input('codBarras') ?? 'SEM GTIN']);
         $request->merge([ 'CST_CSOSN' => $request->input('CST_CSOSN') ?? '0']);
         $request->merge([ 'CST_PIS' => $request->input('CST_PIS') ?? '0']);
@@ -115,26 +172,27 @@ class ProductController extends Controller
         $request->merge([ 'descricao_anp' => $request->anp != '' ? $descAnp : '']);
         $request->merge([ 'descricao_anp' => $request->anp != '' ? $descAnp : '']);
         $request->merge([ 'cListServ' => $request->cListServ ?? '']);
-        $request->merge([ 'alerta_vencimento' => $request->alerta_vencimento ?? '']);
+        $request->merge([ 'alerta_vencimento' => $request->alerta_vencimento ?? 0]);
         $request->merge([ 'imagem' => '' ]);
-        
+        $request->merge([ 'estoque_minimo' => $request->estoque_minimo ?? 0]);
+        $request->merge([ 'referencia' => $request->referencia ?? '']);
+        $request->merge([ 'tela_id' => $request->tela_id != 'null' ? $request->tela_id : NULL]);
 
         $this->_validate($request);
 
         $result = $produto->create($request->all());
         $produto = Produto::find($result->id);
         $this->salveImagemProduto($request, $produto); // salva a imagem no produto comum
+
         if($request->atribuir_delivery){
-            $this->salvarProdutoNoDelivery($request, $produto); 
-        // salva o produto no delivery
+            $this->salvarProdutoNoDelivery($request, $produto);
+            // salva o produto no delivery
         }
 
         if($result){
-            session()->flash('color', 'blue');
-            session()->flash("message", "Produto cadastrado com sucesso!");
+            session()->flash("mensagem_sucesso", "Produto cadastrado com sucesso!");
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao cadastrar produto!');
+            session()->flash('mensagem_erro', 'Erro ao cadastrar produto!');
         }
 
         return redirect('/produtos');
@@ -145,12 +203,12 @@ class ProductController extends Controller
         $anps = Produto::lista_ANP();
 
         if($natureza == null){
-            session()->flash('color', 'red');
-            session()->flash('message', 'Cadastre uma natureza de operação!');
+
+            session()->flash('mensagem_erro', 'Cadastre uma natureza de operação!');
             return redirect('/naturezaOperacao');
         }
 
-        $produto = new Produto(); 
+        $produto = new Produto();
 
         $listaCSTCSOSN = Produto::listaCSTCSOSN();
         $listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
@@ -163,33 +221,38 @@ class ProductController extends Controller
         $config = ConfigNota::first();
         $tributacao = Tributacao::first();
         $resp = $produto
-        ->where('id', $id)->first();  
+            ->where('id', $id)->first();
 
         if($tributacao == null){
-            session()->flash('color', 'red');
-            session()->flash('message', 'Informe a tributação padrão!');
+
+            session()->flash('mensagem_erro', 'Informe a tributação padrão!');
             return redirect('tributos');
         }
 
+        $telas = TelaPedido::all();
+
         return view('produtos/register')
-        ->with('produto', $resp)
-        ->with('config', $config)
-        ->with('tributacao', $tributacao)
-        ->with('natureza', $natureza)
-        ->with('listaCSTCSOSN', $listaCSTCSOSN)
-        ->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
-        ->with('listaCST_IPI', $listaCST_IPI)
-        ->with('anps', $anps)
-        ->with('unidadesDeMedida', $unidadesDeMedida)
-        ->with('categorias', $categorias)
-        ->with('categoriasDelivery', $categoriasDelivery)
-        ->with('produtoJs', true)
-        ->with('title', 'Editar Produto');
+            ->with('produto', $resp)
+            ->with('telas', $telas)
+            ->with('config', $config)
+            ->with('tributacao', $tributacao)
+            ->with('natureza', $natureza)
+            ->with('listaCSTCSOSN', $listaCSTCSOSN)
+            ->with('listaCST_PIS_COFINS', $listaCST_PIS_COFINS)
+            ->with('listaCST_IPI', $listaCST_IPI)
+            ->with('anps', $anps)
+            ->with('unidadesDeMedida', $unidadesDeMedida)
+            ->with('categorias', $categorias)
+            ->with('categoriasDelivery', $categoriasDelivery)
+            ->with('produtoJs', true)
+            ->with('title', 'Editar Produto');
 
     }
 
     private function salveImagemProduto($request, $produto){
         if($request->hasFile('file')){
+
+
             $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
             //unlink anterior
             if(file_exists($public.'imgs_produtos/'.$produto->imagem) && $produto->imagem != '')
@@ -212,47 +275,60 @@ class ProductController extends Controller
         $pesquisa = $request->input('pesquisa');
         $produtos = Produto::where('nome', 'LIKE', "%$pesquisa%")->get();
         $categorias = Categoria::all();
+        $produtos = $this->setaEstoque($produtos);
 
         return view('produtos/list')
-        ->with('categorias', $categorias)
-        ->with('produtos', $produtos)
-        ->with('title', 'Filtro Produto');
+            ->with('categorias', $categorias)
+            ->with('produtos', $produtos)
+            ->with('title', 'Filtro Produto');
     }
 
     public function filtroCategoria(Request $request){
         $categoria = $request->input('categoria');
-        $produtos = Produto::where('categoria_id', $categoria)->get();
+        $pesquisa = $request->input('pesquisa');
+
+        $query = Produto::where('nome', 'LIKE', "%$pesquisa%");
+        if($categoria != '-'){
+            $query = Produto::where('categoria_id', $categoria);
+        }
+
+        $produtos = $query->get();
+
         $categorias = Categoria::all();
 
-        $nomeCategoria = Categoria::find($categoria);
-
+        $categoria = Categoria::find($categoria);
+        $produtos = $this->setaEstoque($produtos);
 
         return view('produtos/list')
-        ->with('produtos', $produtos)
-        ->with('categorias', $categorias)
-        ->with('categoria', $nomeCategoria->nome)
-        ->with('title', 'Filtro Produto');
+            ->with('produtos', $produtos)
+            ->with('categorias', $categorias)
+            ->with('categoria', $categoria != null ? $categoria->nome : '')
+            ->with('title', 'Filtro Produto');
     }
 
     public function receita($id){
         $resp = Produto::
         where('id', $id)
-        ->first();  
+            ->first();
+
+        $produtos = Produto::all();
 
         return view('produtos/receita')
-        ->with('produto', $resp)
-        ->with('produtoJs', true)
-        ->with('title', 'Receita do Produto');
+            ->with('produto', $resp)
+            ->with('produtos', $produtos)
+            ->with('produtoJs', true)
+            ->with('title', 'Receita do Produto');
 
     }
 
-    public function update(Request $request){
-        
+    public function update(Request $request)
+    {
+
         $product = new Produto();
 
         $id = $request->input('id');
         $resp = $product
-        ->where('id', $id)->first(); 
+            ->where('id', $id)->first();
 
         $this->_validate($request);
 
@@ -268,6 +344,7 @@ class ProductController extends Controller
         $resp->categoria_id = $request->input('categoria_id');
         $resp->cor = $request->input('cor');
         $resp->valor_venda = str_replace(",", ".", $request->input('valor_venda'));
+        $resp->valor_compra = str_replace(",", ".", $request->input('valor_compra'));
         $resp->NCM = $request->input('NCM');
         $resp->CEST = $request->input('CEST') ?? '';
 
@@ -293,29 +370,35 @@ class ProductController extends Controller
         $resp->codigo_anp = $request->input('anp') ?? '';
         $resp->descricao_anp = $descAnp;
         $resp->alerta_vencimento = $request->alerta_vencimento;
+        $resp->referencia = $request->referencia;
 
         $resp->composto = $request->composto ? true : false;
         $resp->valor_livre = $request->valor_livre ? true : false;
+        $resp->gerenciar_estoque = $request->gerenciar_estoque ? true : false;
+        $resp->estoque_minimo = $request->estoque_minimo;
+        $resp->tela_id = $request->tela_id != 'null' ? $request->tela_id : NULL;
 
         $result = $resp->save();
         $this->salveImagemProduto($request, $resp);
         if($result){
-            $this->updateProdutoNoDelivery($request, $resp);
-            session()->flash('color', 'green');
-            session()->flash('message', 'Produto editado com sucesso!');
+            if($request->atribuir_delivery){
+                $this->updateProdutoNoDelivery($request, $resp);
+            }
+
+            session()->flash('mensagem_sucesso', 'Produto editado com sucesso!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao editar produto!');
+
+            session()->flash('mensagem_erro', 'Erro ao editar produto!');
         }
 
-        return redirect('/produtos'); 
+        return redirect('/produtos');
     }
 
     public function delete($id){
         try{
             $produto = Produto
-            ::where('id', $id)
-            ->first();
+                ::where('id', $id)
+                ->first();
             $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 
 
@@ -325,25 +408,25 @@ class ProductController extends Controller
             $delete = $produto->delete();
 
             if($delete){
-                session()->flash('color', 'blue');
-                session()->flash('message', 'Registro removido!');
+                session()->flash('mensagem_sucesso', 'Registro removido!');
             }else{
-                session()->flash('color', 'red');
-                session()->flash('message', 'Erro!');
+
+                session()->flash('mensagem_erro', 'Erro!');
             }
             return redirect('/produtos');
         }catch(\Exception $e){
             return view('errors.sql')
-            ->with('title', 'Erro ao deletar produto')
-            ->with('motivo', 'Não é possivel remover produtos, presentes vendas, compras ou pedidos!');
+                ->with('title', 'Erro ao deletar produto')
+                ->with('motivo', 'Não é possivel remover produtos, presentes vendas, compras ou pedidos!');
         }
     }
 
     private function _validate(Request $request){
         $rules = [
-            'nome' => 'required|max:50',
+            'nome' => 'required|max:100',
             'valor_venda' => 'required',
-            'NCM' => 'required',
+            'valor_compra' => 'required',
+            'NCM' => 'required|min:10',
             'perc_icms' => 'required',
             'perc_pis' => 'required',
             'perc_cofins' => 'required',
@@ -351,17 +434,19 @@ class ProductController extends Controller
             'codBarras' => [new EAN13],
             'CFOP_saida_estadual' => 'required',
             'CFOP_saida_inter_estadual' => 'required',
-            'file' => 'max:300',
+            'file' => 'max:700',
             // 'CEST' => 'required'
         ];
 
         $messages = [
             'nome.required' => 'O campo nome é obrigatório.',
             'NCM.required' => 'O campo NCM é obrigatório.',
+            'NCM.min' => 'NCM precisa de 8 digitos.',
             // 'CFOP.required' => 'O campo CFOP é obrigatório.',
             'CEST.required' => 'O campo CEST é obrigatório.',
-            'valor_venda.required' => 'O campo valor é obrigatório.',
-            'nome.max' => '50 caracteres maximos permitidos.',
+            'valor_venda.required' => 'O campo valor de venda é obrigatório.',
+            'valor_compra.required' => 'O campo valor de compra é obrigatório.',
+            'nome.max' => '100 caracteres maximos permitidos.',
             'perc_icms.required' => 'O campo %ICMS é obrigatório.',
             'perc_pis.required' => 'O campo %PIS é obrigatório.',
             'perc_cofins.required' => 'O campo %COFINS é obrigatório.',
@@ -378,26 +463,25 @@ class ProductController extends Controller
         $products = Produto::all();
         $arr = array();
         foreach($products as $p){
-            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | Cor: ' . $p->cor : '')] = null;
-                //array_push($arr, $temp);
+            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | COR: ' . $p->cor : '') . ($p->referencia != '' ? ' | REF: ' . $p->referencia : '')] = null;
+            //array_push($arr, $temp);
         }
         echo json_encode($arr);
     }
 
     public function getUnidadesMedida(){
         $unidades = Produto::unidadesMedida();
-
         echo json_encode($unidades);
     }
 
     public function composto(){
         $products = Produto::
         where('composto', true)
-        ->get();
+            ->get();
         $arr = array();
         foreach($products as $p){
-            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | Cor: ' . $p->cor : '')] = null;
-                //array_push($arr, $temp);
+            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | Cor: ' . $p->cor : '') . ($p->referencia != '' ? ' | REF: ' . $p->referencia : '')] = null;
+            //array_push($arr, $temp);
         }
         echo json_encode($arr);
     }
@@ -405,11 +489,11 @@ class ProductController extends Controller
     public function naoComposto(){
         $products = Produto::
         where('composto', false)
-        ->get();
+            ->get();
         $arr = array();
         foreach($products as $p){
-            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | Cor: ' . $p->cor : '')] = null;
-                //array_push($arr, $temp);
+            $arr[$p->id. ' - ' .$p->nome . ($p->cor != '--' ? ' | Cor: ' . $p->cor : '') . ($p->referencia != '' ? ' | REF: ' . $p->referencia : '')] = null;
+            //array_push($arr, $temp);
         }
         echo json_encode($arr);
     }
@@ -418,14 +502,14 @@ class ProductController extends Controller
         $id = $request->input('id');
         $product = Product::
         where('id', $id)
-        ->first();
+            ->first();
         echo json_encode($product->value_sale);
     }
 
     public function getProduto($id){
         $produto = Produto::
         where('id', $id)
-        ->first();
+            ->first();
         if($produto->delivery){
             foreach($produto->delivery->pizza as $tp){
                 $tp->tamanho;
@@ -434,10 +518,36 @@ class ProductController extends Controller
         echo json_encode($produto);
     }
 
+    public function getProdutoVenda($id, $listaId){
+        $produto = Produto::
+        where('id', $id)
+            ->first();
+        if($produto->delivery){
+            foreach($produto->delivery->pizza as $tp){
+                $tp->tamanho;
+            }
+        }
+
+        if($listaId > 0){
+            $lista = ProdutoListaPreco::
+            where('lista_id', $listaId)
+                ->where('produto_id', $produto->id)
+                ->first();
+
+            if($lista->valor > 0){
+                $produto->valor_venda = (string) $lista->valor;
+            }
+        }
+
+        $estoque = Estoque::where('produto_id', $id)->first();
+        $produto->estoque_atual = $estoque != null ? $estoque->quantidade : 0;
+        echo json_encode($produto);
+    }
+
     public function getProdutoCodBarras($cod){
         $produto = Produto::
         where('codBarras', $cod)
-        ->first();
+            ->first();
 
         echo json_encode($produto);
     }
@@ -449,11 +559,15 @@ class ProductController extends Controller
 
         $valorVenda = str_replace(".", "", $produto['valorVenda']);
         $valorVenda = str_replace(",", ".", $valorVenda);
+
+        $valorCompra = $produto['valorCompra'];
+
         $result = Produto::create([
             'nome' => $produto['nome'],
             'NCM' => $produto['ncm'],
             // 'CFOP' => $produto['cfop'],
             'valor_venda' => $valorVenda,
+            'valor_compra' => $produto['valorCompra'],
             'valor_livre' => false,
             'cor' => $produto['cor'],
             'conversao_unitaria' => (int) $produto['conversao_unitaria'],
@@ -464,7 +578,7 @@ class ProductController extends Controller
             'composto' => false,
             'CST_CSOSN' => $produto['CST_CSOSN'],
             'CST_PIS' => $produto['CST_PIS'],
-            'CST_COFINS' => $produto['CST_COFINS'],        
+            'CST_COFINS' => $produto['CST_COFINS'],
             'CST_IPI' => $produto['CST_IPI'],
             'perc_icms' => 0,
             'perc_pis' => 0,
@@ -472,15 +586,16 @@ class ProductController extends Controller
             'perc_ipi' => 0,
             'CFOP_saida_estadual' => $natureza->CFOP_saida_estadual,
             'CFOP_saida_inter_estadual' => $natureza->CFOP_saida_inter_estadual,
-            'codigo_anp' => '', 
+            'codigo_anp' => '',
             'descricao_anp' => '',
             'cListServ' => '',
             'imagem' => '',
-            'alerta_vencimento' => NULL
+            'alerta_vencimento' => 0,
+            'referencia' => $produto['referencia']
 
         ]);
 
-        echo json_encode($result);  
+        echo json_encode($result);
     }
 
     public function salvarProdutoDaNotaComEstoque(Request $request){
@@ -489,12 +604,13 @@ class ProductController extends Controller
         $natureza = Produto::firstNatureza();
         $valorVenda = str_replace(",", ".", $produto['valorVenda']);
 
-        $valorCompra = str_replace(",", ".", $produto['valorCompra']);
+        $valorCompra = $produto['valorCompra'];
+
         $result = Produto::create([
             'nome' => $produto['nome'],
             'NCM' => $produto['ncm'],
-
             'valor_venda' => $valorVenda,
+            'valor_compra' => $valorCompra,
             'valor_livre' => false,
             'cor' => $produto['cor'],
             'conversao_unitaria' => (int) $produto['conversao_unitaria'],
@@ -505,7 +621,7 @@ class ProductController extends Controller
             'composto' => false,
             'CST_CSOSN' => $produto['CST_CSOSN'],
             'CST_PIS' => $produto['CST_PIS'],
-            'CST_COFINS' => $produto['CST_COFINS'],        
+            'CST_COFINS' => $produto['CST_COFINS'],
             'CST_IPI' => $produto['CST_IPI'],
             'perc_icms' => 0,
             'perc_pis' => 0,
@@ -513,18 +629,41 @@ class ProductController extends Controller
             'perc_ipi' => 0,
             'CFOP_saida_estadual' => $natureza->CFOP_saida_estadual,
             'CFOP_saida_inter_estadual' => $natureza->CFOP_saida_inter_estadual,
-            'codigo_anp' => '', 
+            'codigo_anp' => '',
             'descricao_anp' => '',
             'cListServ' => '',
             'imagem' => '',
-            'alerta_vencimento' => NULL
+            'alerta_vencimento' => 0,
+            'referencia' => $produto['referencia']
 
         ]);
+
+        ItemDfe::create(
+            [
+                'numero_nfe' => $produto['numero_nfe'],
+                'produto_id' => $result->id
+            ]
+        );
 
         $stockMove = new StockMove();
         $stockMove->pluStock($result->id, $produto['quantidade'], $valorCompra);
 
-        echo json_encode($result);  
+        echo json_encode($result);
+    }
+
+    public function setEstoque(Request $request){
+        $stockMove = new StockMove();
+        $stockMove->pluStock($request->produto, $request->quantidade, $request->valor);
+
+        ItemDfe::create(
+            [
+                'numero_nfe' => $request->numero_nfe,
+                'produto_id' => $request->produto
+            ]
+        );
+
+
+        echo json_encode("ok");
     }
 
     private function salvarProdutoNoDelivery($request, $produto){
@@ -532,7 +671,7 @@ class ProductController extends Controller
 
         $categoria = CategoriaProdutoDelivery::
         where('id', $request->categoria_delivery_id)
-        ->first();
+            ->first();
 
         $valor = 0;
         if(strpos($categoria->nome, 'izza') !== false){
@@ -568,10 +707,10 @@ class ProductController extends Controller
             $catPizza = false;
             $categoria = CategoriaProdutoDelivery::
             where('id', $request->categoria_delivery_id)
-            ->first();
+                ->first();
 
             $valor = 0;
-            if(strpos($categoria->nome, 'izza') !== false){
+            if($categoria && strpos($categoria->nome, 'izza') !== false){
 
             }else{
                 $valor = str_replace(",", ".", $request->valor_venda);
@@ -581,7 +720,7 @@ class ProductController extends Controller
             $produtoDelivery->descricao = $request->input('descricao') ?? $produtoDelivery->descricao;
             $produtoDelivery->ingredientes = $request->input('ingredientes') ?? $produtoDelivery->ingredientes;
             $produtoDelivery->limite_diario = $request->input('limite_diario') ?? $produtoDelivery->limite_diario;
-            $produtoDelivery->categoria_id = $request->input('categoria_id') ?? $produtoDelivery->categoria_id;
+            $produtoDelivery->categoria_id = $request->input('categoria_delivery_id') ?? $produtoDelivery->categoria_delivery_id;
             $produtoDelivery->valor = $request->input('valor') ?? $valor;
 
             $result = $produtoDelivery->save();
@@ -589,6 +728,8 @@ class ProductController extends Controller
             if($result){
                 $this->salveImagemProdutoDelivery($request, $produtoDelivery);
             }
+        }else{
+            $this->salvarProdutoNoDelivery($request, $produto);
         }
 
     }
@@ -622,7 +763,7 @@ class ProductController extends Controller
 
             // $upload = $file->move(public_path('imagens_produtos'), $nomeImagem);
             // if(file_exists($public.'imgs_produtos/'.$nomeImagem)){
-                copy($public.'imgs_produtos/'.$nomeImagem, $public.'imagens_produtos/'.$nomeImagem);
+            copy($public.'imgs_produtos/'.$nomeImagem, $public.'imagens_produtos/'.$nomeImagem);
             // }else{
             //     $file->move(public_path('imagens_produtos'), $nomeImagem);
             // }

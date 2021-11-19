@@ -1,434 +1,442 @@
 @extends('default.layout')
 @section('content')
+<div class="card card-custom gutter-b">
+	<div class="card-body">
 
-<div class="row">
-	<div class="col s12">
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-		</div>
-		@endif
 
-		<h3>Comanda: <strong class="red-text">{{$pedido->comanda}}</strong></h3>
+		<h3>Comanda: <strong class="text-danger">{{$pedido->comanda}}</strong></h3>
 		@if($pedido->mesa_id != NULL)
-		<h3>Mesa: <strong class="red-text">{{$pedido->mesa->nome}}</strong></h3>
+		<h3>Mesa: <strong class="text-danger">{{$pedido->mesa->nome}}</strong></h3>
 		@else
-		<h3>Mesa: <strong class="red-text">Avulsa</strong></h3>
+		<h3>Mesa: <strong class="text-danger">Avulsa</strong></h3>
 		@endif
 		<input type="hidden" id="DIVISAO_VALOR_PIZZA" value="{{getenv('DIVISAO_VALOR_PIZZA')}}" name="">
 		@if($pedido->observacao != '')
-		<h5>Observação: <strong>{{$pedido->observacao}}</strong></h5>
+		<h5>Observação: <strong class="text-info">{{$pedido->observacao}}</strong></h5>
 		@endif
-		<form class="col s12" method="post" action="/pedidos/saveItem">
-			<input type="hidden" name="_token" value="{{ csrf_token() }}">
-			<input type="hidden" id="pedido_id" name="id" value="{{$pedido->id}}">
-			<br>
 
-			<div class="row">
-				<div>
+		<input type="hidden" id="produtos" value="{{json_encode($produtos)}}" name="">
+		<input type="hidden" id="adicionais" value="{{json_encode($adicionais)}}" name="">
+		<input type="hidden" id="pizzas" value="{{json_encode($pizzas)}}" name="">
 
-					<div class="input-field col s4" style="margin-top: 70px;">
-						<i class="material-icons prefix">inbox</i>
-						<input autocomplete="off" type="text" value="{{old('produto')}}" name="produto" id="autocomplete-produto" class="autocomplete-produto">
-						<label for="autocomplete-produto">Produto</label>
-						@if($errors->has('produto'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('produto') }}</span>
+		<div class="card card-custom gutter-b">
+			<div class="card-body">
+
+				<form method="post" action="/pedidos/saveItem">
+					<input type="hidden" name="_token" value="{{ csrf_token() }}">
+					<input type="hidden" id="pedido_id" name="id" value="{{$pedido->id}}">
+					<br>
+
+					<div class="row align-items-center">
+						<div class="form-group validated col-sm-6 col-lg-5 col-12">
+							<label class="col-form-label" id="">Produto</label><br>
+							<select class="form-control select2" style="width: 100%" id="kt_select2_1" name="produto">
+								<option value="null">Selecione o produto</option>
+								@foreach($produtos as $p)
+								<option value="{{$p->id}}">{{$p->id}} - {{$p->nome}}</option>
+								@endforeach
+							</select>
 						</div>
+
+						<div class="form-group validated col-sm-3 col-lg-3 col-6">
+							<div style="display: block;" id="tamanhos-pizza">
+								<label class="col-form-label" id="">Tamanho de Pizza</label>
+								<select class="custom-select form-control" id="seleciona_tamanho" name="seleciona_tamanho">
+									@foreach($tamanhos as $t)
+									<option value="{{$t->id}}">{{$t->nome}}</option>
+									@endforeach
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group validated col-sm-3 col-lg-3 col-6">
+							<div style="display: block;" id="sabores-pizza">
+								<label class="col-form-label" id="">Sabores</label>
+								<select class="custom-select form-control" id="sabores" name="sabores">
+									<option></option>
+								</select>
+							</div>
+
+						</div>
+						<div class="col-sm-1 col-lg-1 col-3" style="display: none;" id="btn-add-sabor">
+							<a style="margin-top: 12px;" class="btn btn-light-info">
+								<i class="la la-plus"></i>
+							</a>
+						</div>
+
+						<input type="hidden" name="tamanho_pizza_id" id="tamanho_pizza_id">
+						<input type="hidden" name="sabores_escolhidos" id="sabores_escolhidos">
+						<input type="hidden" name="adicioanis_escolhidos" id="adicioanis_escolhidos">
+					</div>
+					
+					<div id="sabores-html" style="display: none;">
+						<div class="row">
+
+						</div>
+					</div>
+
+
+					<div class="row align-items-center">
+						<div class="form-group validated col-sm-5 col-lg-5 col-12">
+							<label class="col-form-label" id="">Adicionais</label><br>
+							<select class="form-control select2" style="width: 100%" id="kt_select2_2">
+								@foreach($adicionais as $a)
+								<option value="{{$a->id}}">{{$a->id}} - {{$a->nome}} - R${{$a->valor}}</option>
+								@endforeach
+							</select>
+						</div>
+						<div class="col-sm-1 col-lg-1 col-3" id="btn-add-adicional">
+							<a style="margin-top: 12px;" class="btn btn-light-info">
+								<i class="la la-plus"></i>
+							</a>
+						</div>
+
+						<div class="form-group col-lg-6 col-md-6 col-sm-6 col-6">
+							<label class="col-form-label">Observação</label>
+							<div class="">
+								<div class="input-group">
+									<input type="text" name="observacao" class="form-control" id="observacao"/>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div id="adicioanais-html" style="display: none;">
+						<div class="row">
+
+						</div>
+					</div>
+
+					<div class="row align-items-center">
+
+						<div class="form-group col-lg-2 col-md-2 col-sm-6 col-6">
+							<label class="col-form-label">Quantidade</label>
+							<div class="">
+								<div class="input-group">
+									<input type="text" value="1.000" name="quantidade" class="form-control @if($errors->has('quantidade')) is-invalid @endif" id="quantidade"/>
+									@if($errors->has('quantidade'))
+									<div class="invalid-feedback">
+										{{ $errors->first('quantidade') }}
+									</div>
+									@endif
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group col-lg-2 col-md-2 col-sm-6 col-6">
+							<label class="col-form-label">Valor</label>
+							<div class="">
+								<div class="input-group">
+									<input type="text" value="0" name="valor" class="form-control @if($errors->has('valor')) is-invalid @endif" id="valor"/>
+									@if($errors->has('valor'))
+									<div class="invalid-feedback">
+										{{ $errors->first('valor') }}
+									</div>
+									@endif
+								</div>
+							</div>
+						</div>
+
+						<div class="col-lg-2 col-md-2 col-sm-6 col-6">
+							<button style="margin-top: 12px;" value="0" type="submit" class="btn btn-success">
+								<i class="la la-plus"></i> Adicionar
+							</button>
+						</div>
+					</div>
+
+
+				</form>
+			</div>
+		</div>
+		<div class="card card-custom gutter-b">
+			<div class="card-body">
+
+				@if(sizeof($pedido->itens) > 0)
+
+				<a href="/pedidos/imprimirPedido/{{$pedido->id}}" target="_blank" class="btn btn-primary">
+					<i class="la la-print"></i>
+					Imprimir pedido
+				</a>
+
+				<a onclick="imprimirItens()" target="_blank" class="btn btn-danger">
+					<i class="la la-print"></i>
+					Imprimir itens
+				</a>
+				@endif
+
+				<div class="row">
+					<div class="col-xl-12">
+						<br>
+						<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+
+							<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+								<thead class="datatable-head">
+									<tr class="datatable-row" style="left: 0px;">
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 60px;">#</span></th>
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 200px;">Produto</span></th>
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Tamanho Pizza</span></th>
+										<th data-field="Country" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Sabores</span></th>
+										<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Adicionais</span></th>
+
+										<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Status</span></th>
+
+										<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Valor</span></th>
+										<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Quantidade</span></th>
+										<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Subtotal+adicional</span></th>
+										<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Observação</span></th>
+										<th data-field="CompanyName" class="datatable-cell datatable-cell-sort"><span style="width: 180px;">Ações</span></th>
+									</tr>
+								</thead>
+								<?php $finalizado = 0; $pendente = 0; ?>
+								<tbody id="body" class="datatable-body">
+									@foreach($pedido->itens as $i)
+									<tr class="datatable-row" @if($i->status) style="background: #64ffda" @endif>
+										<?php $temp = $i; ?>
+										<td id="checkbox">
+
+											<p style="width: 70px;">
+												<input type="checkbox" class="check" @if($i->impresso == 0) checked @endif id="item_{{$i->id}}"/>
+												<label for="item{{$i->id}}"></label>
+											</p>
+										</td>
+										<td style="display: none" id="item_id">{{$i->id}}</td>
+
+										<td class="datatable-cell"><span class="codigo" style="width: 200px;">{{$i->produto->nome}}</span>
+										</td>
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												@if(!empty($i->tamanho))
+												<label>{{$i->tamanho->nome}}</label>
+												@else
+												<label>--</label>
+												@endif
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												@if(count($i->sabores) > 0)
+												<label>
+													@foreach($i->sabores as $key => $s)
+													{{$s->produto->produto->nome}}
+													@if($key < count($i->sabores)-1)
+													| 
+													@endif
+													@endforeach
+												</label>
+												@else
+												<label>--</label>
+												@endif
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												<?php $somaAdicionais = 0; ?>
+												@if(count($i->itensAdicionais) > 0)
+												<label>
+													@foreach($i->itensAdicionais as $key => $a)
+													{{$a->adicional->nome()}}
+													<?php $somaAdicionais += $a->adicional->valor * $i->quantidade?>
+													@if($key < count($i->itensAdicionais)-1)
+													| 
+													@endif
+													@endforeach
+												</label>
+												@else
+												<label>--</label>
+												@endif
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												@if($i->status)
+												<span class="label label-xl label-inline label-light-success">OK</span>
+												@else
+												<span class="label label-xl label-inline label-light-danger">PENDENTE</span>
+												@endif
+											</span>
+										</td>
+										<?php 
+										$valorVenda = 0;
+										$valorVenda = $i->valor;
+										?>
+
+										<td class="datatable-cell">
+											<span style="width: 100px;">
+												{{number_format($valorVenda, 2, ',', '.')}}
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span style="width: 100px;">
+												{{$temp->quantidade}}
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span style="width: 100px;">
+												{{number_format((($valorVenda * $i->quantidade) + $somaAdicionais), 2, ',', '.')}}
+											</span>
+										</td>
+
+
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+
+												<a href="#!" onclick='swal("", "{{$i->observacao}}", "info")' class="btn btn-light-info @if(!$i->observacao) disabled @endif">
+													Ver
+												</a>
+
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 180px;">
+
+												<a onclick='swal("Atenção!", "Deseja excluir este registro?", "warning").then((sim) => {if(sim){ location.href="/pedidos/deleteItem/{{$i->id}}" }else{return false} })' href="#!" class="btn btn-danger">
+													<i class="la la-trash"></i>				
+												</a>
+												@if(!$i->status)
+												<a href="/pedidos/alterarStatus/{{$i->id}}" class="btn btn-success">
+													<i class="la la-check"></i>
+												</a>
+												@endif
+
+											</span>
+										</td>
+
+									</tr>
+
+									<?php 
+									if($i->status) $finalizado++;
+									else $pendente++;
+									?>
+									@endforeach
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+		<div class="card card-custom gutter-b">
+			<div class="card-body">
+
+				<div class="row align-items-center">
+					<div class="form-group col-lg-4 col-md-4 col-sm-6">
+						<label class="col-form-label">Selecione o Bairro (Opcional)</label>
+						<div class="">
+							<div class="input-group date">
+								<select class="custom-select form-control" id="bairro" name="bairro">
+									<option value="0">Selecione o Bairro</option>
+									@foreach($bairros as $b)
+									<option @if($pedido->bairro_id == $b->id) selected @endif value="{{$b->id}}">{{$b->nome}} - R$ {{$b->valor_entrega}}</option>
+									@endforeach
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-2 col-md-2 col-sm-2">
+						<a style="margin-top: 13px;" href="#modal-endereco" data-toggle="modal" data-target="#modal-endereco" class="btn btn-info">
+							<i class="la la-map"></i>
+						</a>
+					</div>
+				</div>
+
+				<div class="row">
+					@if($pedido->rua != '')
+					<div class="form-group col-lg-12 col-md-12 col-sm-12">
+						<h5>Nome: <strong class="text-success">{{$pedido->nome}}</strong></h5>
+						<h5>Rua: <strong class="text-success">{{$pedido->rua}}, {{$pedido->numero}}</strong>, Telefone: <strong class="text-success">{{$pedido->telefone}}</strong></h5>
+						<h5>Refêrencia: <strong class="text-success">{{$pedido->referencia}}</strong></h5>
+					</div>
+					@endif
+				</div>
+
+				<div class="row">
+					<div class="form-group col-lg-12 col-md-12 col-sm-12">
+						<h3>TOTAL PRODUTOS: <strong class="text-info">{{number_format($pedido->somaItems(), 2, ',', '.')}}</strong></h3>
+						@if($pedido->bairro_id != null)
+						<h3>ENTREGA: <strong class="text-info">{{number_format($pedido->bairro->valor_entrega, 2, ',', '.')}}</strong></h3>
+						<h2>TOTAL GERAL: <strong class="text-danger">{{number_format($pedido->somaItems() + $pedido->bairro->valor_entrega, 2, ',', '.')}}</strong></h2>
 						@endif
+
+						<h3>ITENS FINALIZADOS: <strong class="text-success">{{$finalizado}}</strong></h3>
+						<h3>ITENS PENDENTES: <strong class="text-warning">{{$pendente}}</strong></h3>
 					</div>
-				</div>
-				
-				<div style="display: none;" id="tamanhos-pizza">
-					<div class="">
-						<div class="col s4">
-							<i class="material-icons prefix">local_pizza</i>
-
-							<div class="chips" id="tamanhos">
-
-							</div>
-							<label>Tamanhos de Pizza</label>
-							@if($errors->has('tamanho_pizza_id'))
-							<div class="center-align red lighten-2">
-								<span class="white-text">{{ $errors->first('tamanho_pizza_id') }}</span>
-							</div>
-							@endif
-						</div>
+					<div class="col-lg-4 col-md-4 col-sm-4">
+						<a style="width: 100%;" class="btn btn-ls btn-success @if($pendente > 0 || $pedido->status) disabled @endif green accent-4" href="/pedidos/finalizar/{{$pedido->id}}">
+							<i class="la la-check"></i>
+						Finalizar Pedido</a>
 					</div>
-				</div>
-
-				
-				<div style="display: none;" id="sabores-pizza" >
-
-					<div class="col s4" style="margin-top: 35px;">
-						<i class="material-icons prefix">local_pizza</i>
-
-						<div id="sabores" class="chips chips-autocomplete">
-						</div>
-						<label>Sabores adicionais</label>
-					</div>
-
 				</div>
 			</div>
-
-			<input type="hidden" name="tamanho_pizza_id" id="tamanho_pizza_id">
-			<input type="hidden" name="sabores_escolhidos" id="sabores_escolhidos">
-			<input type="hidden" name="adicioanis_escolhidos" id="adicioanis_escolhidos">
-
+		</div>
+	</div>
+</div>
 
 
-			<div class="row">
-				<div class="col s4">
-					<i class="material-icons prefix">room_service</i>
+<div class="modal fade" id="modal-endereco" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="staticBackdrop" aria-hidden="true">
+	<form method="get" action="/pedidos/setarEndereco">
 
-					<div class="chips chips-autocomplete" id="adicionais">
-					</div>
-					<label>Adicionais para este produto</label>
-				</div>
-
-				<div class="input-field col s6" style="margin-top: 30px;">
-					<i class="material-icons prefix">note</i>
-					<input type="text" id="observacao" name="observacao">
-					<label>Observação</label>
-				</div>
-			</div>
-
-
-
-			<div class="row">
-
-				<div class="input-field col s2">
-					<i class="material-icons prefix">exposure_plus_1</i>
-					<input type="text" value="1000" id="quantidade" name="quantidade">
-					<label>Quantidade</label>
-					@if($errors->has('quantidade'))
-					<div class="center-align red lighten-2">
-						<span class="white-text">{{ $errors->first('quantidade') }}</span>
-					</div>
-					@endif
-				</div>
-
-				<div class="input-field col s2">
-					<i class="material-icons prefix">attach_money</i>
-					<input type="text" value="0" id="valor" name="valor">
-					<label>Valor</label>
-					@if($errors->has('valor'))
-					<div class="center-align red lighten-2">
-						<span class="white-text">{{ $errors->first('valor') }}</span>
-					</div>
-					@endif
-				</div>
-
-
-				<div class="col s2">
-					<button type="submit" class="btn-large green accent-3">
-						<i class="material-icons">add</i>
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">ENDEREÇO</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						x
 					</button>
 				</div>
-			</div>
-		</div>
-	</form>
-
-	<div class="row">
-
-
-		@if(sizeof($pedido->itens) > 0)
-		<div class="col s3">
-			<a href="/pedidos/imprimirPedido/{{$pedido->id}}" target="_blank" class="btn brown" style="width: 100%">Imprimir pedido</a>
-		</div>
-
-		<div class="col s3">
-			<a onclick="imprimirItens()" target="_blank" class="btn red" style="width: 100%">Imprimir itens</a>
-		</div>
-
-		@endif
-
-	</div>
-	<div class="row">
-		<table class="striped col s12">
-			<thead>
-				<tr>
-					<th>#</th>
-
-					<th>Produto</th>
-					<th>Tamanho de Pizza</th>
-					<th>Sabores</th>
-					<th>Adicionais</th>
-					<th>Status</th>
-					<th>Valor</th>
-					<th>Quantidade</th>
-					<th>Subtotal+adicional</th>
-					<th>Observação</th>
-					<th>Ações</th>
-				</tr>
-			</thead>
-
-			<?php $finalizado = 0; $pendente = 0; ?>
-			<tbody id="body">
-				@foreach($pedido->itens as $i)
-				<tr>
-					<?php $temp = $i; ?>
-
-					<td id="checkbox">
-						
-						<p>
-							<input type="checkbox" class="check" @if($i->impresso == 0) checked @endif id="item_{{$i->id}}" />
-							<label for="item_{{$i->id}}"></label>
-						</p>
-
-					</td>
-					<td style="display: none" id="item_id">{{$i->id}}</td>
-					<td>{{$i->produto->nome}}</td>
-
-
-					@if(!empty($i->tamanho))
-					<td>{{$i->tamanho->nome}}</td>
-					@else
-					<td>--</td>
-					@endif
-
-
-					@if(count($i->sabores) > 0)
-					<td>
-						@foreach($i->sabores as $key => $s)
-						{{$s->produto->produto->nome}}
-						@if($key < count($i->sabores)-1)
-						| 
-						@endif
-						@endforeach
-					</td>
-					@else
-					<td>--</td>
-					@endif
-
-					<?php $somaAdicionais = 0; ?>
-					@if(count($i->itensAdicionais) > 0)
-					<td>
-						@foreach($i->itensAdicionais as $key => $a)
-						{{$a->adicional->nome}}
-						<?php $somaAdicionais += $a->adicional->valor * $i->quantidade?>
-						@if($key < count($i->itensAdicionais)-1)
-						| 
-						@endif
-						@endforeach
-					</td>
-					@else
-					<td>--</td>
-					@endif
-
-					<td>
-						@if($i->status)
-						<i class="material-icons green-text">brightness_1</i>
-						@else
-						<i class="material-icons red-text">brightness_1</i>
-						@endif
-					</td>
-
-					<?php 
-					$valorVenda = 0;
-
-					$valorVenda = $i->valor;
-
-					?>
-
-					<td>{{number_format($valorVenda, 2, ',', '.')}}</td>
-
-					<td>{{$temp->quantidade}}</td>
-					<td>{{number_format((($valorVenda * $i->quantidade) + $somaAdicionais), 2, ',', '.')}}</td>
-					<td>
-						<a class="btn red lighten-2 tooltipped" data-position="bottom" data-delay="50" data-tooltip="{{$i->observacao}}"
-							@if(empty($i->observacao))
-							disabled
-							@endif
-							>
-							<i class="material-icons">message</i>
-
-						</a>
-					</td>
-					<td>
-						<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/pedidos/deleteItem/{{$i->id}}">
-							<i class="material-icons left red-text">delete</i>					
-						</a>
-						@if(!$i->status)
-						<a href="/pedidos/alterarStatus/{{$i->id}}">
-							<i class="material-icons green-text">check</i>
-						</a>
-						@endif
-					</td>
-
-					<?php 
-					if($i->status) $finalizado++;
-					else $pendente++;
-					?>
-				</tr>
-				@endforeach
-			</tbody>
-		</table>
-	</div>
-
-	<div class="row">
-		<div class="input-field col s4">
-			<i class="material-icons prefix">map</i>
-			<select id="bairro" name="bairro">
-				<option value="0">Selecione o Bairro</option>
-				@foreach($bairros as $b)
-				<option @if($pedido->bairro_id == $b->id) selected @endif value="{{$b->id}}">{{$b->nome}} - R$ {{$b->valor_entrega}}</option>
-				@endforeach
-			</select>
-			<label for="bairro">Bairro</label>
-
-		</div>
-		<div class="input-field col s1">
-			<a href="#modal-endereco" class="btn modal-trigger blue accent-3">
-				<i class="material-icons">add_location</i>
-			</a>
-		</div>
-
-	</div>
-
-	@if($pedido->rua != '')
-	<div class="col s12">
-		<p>Nome: <strong class="red-text">{{$pedido->nome}}</strong></p>
-		<p>Rua: <strong class="red-text">{{$pedido->rua}}, {{$pedido->numero}}</strong>, Telefone: <strong class="red-text">{{$pedido->telefone}}</strong></p>
-		<p>Refêrencia: <strong class="red-text">{{$pedido->referencia}}</strong></p>
-	</div>
-	@endif
-
-	<div class="row">
-		<div class="col s12">
-			<h5>TOTAL PRODUTOS: <strong class="green-text">{{number_format($pedido->somaItems(), 2, ',', '.')}}</strong></h5>
-			@if($pedido->bairro_id != null)
-			<h5>ENTREGA: <strong class="red-text">{{number_format($pedido->bairro->valor_entrega, 2, ',', '.')}}</strong></h5>
-			<h4>TOTAL GERAL: <strong class="red-text">{{number_format($pedido->somaItems() + $pedido->bairro->valor_entrega, 2, ',', '.')}}</strong></h4>
-			@endif
-
-			<h5>ITENS FINALIZADOS: <strong class="green-text">{{$finalizado}}</strong></h5>
-			<h5>ITENS PENDENTES: <strong class="red-text">{{$pendente}}</strong></h5>
-		</div>
-		<br>
-
-		
-
-		<div class="row">
-			<div class="col s12">
-
-				<a class="btn-large @if($pendente > 0 || $pedido->status) disabled @endif green accent-4" href="/pedidos/finalizar/{{$pedido->id}}">Finalizar</a>
-			</div>
-		</div>
-		<input type="hidden" id="_token" value="{{csrf_token()}}">
-	</div>
-</div>
-</div>
-
-
-</div>
-
-<div id="modal1" class="modal">
-	<div class="modal-content">
-		<h4>Envio de SMS</h4>
-
-		<div class="row">
-			<div class="input-field col s6">
-				<input type="text" id="numero_sms">
-				<label for="correcao">Numero</label>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="input-field col s12">
-				<textarea id="msg_sms" class="materialize-textarea"></textarea>
-				<label for="msg_sms">Mensagem</label>
-			</div>
-		</div>
-
-		<div class="row" id="preloader1" style="display: none">
-			<div class="col s12 center-align">
-				<div class="preloader-wrapper active">
-					<div class="spinner-layer spinner--only">
-						<div class="circle-clipper left">
-							<div class="circle"></div>
-						</div><div class="gap-patch">
-							<div class="circle"></div>
-						</div><div class="circle-clipper right">
-							<div class="circle"></div>
+				<div class="modal-body">
+					<input type="hidden" name="pedido_id" value="{{$pedido->id}}">
+					<div class="row">
+						<div class="form-group validated col-sm-8 col-lg-8">
+							<label class="col-form-label" id="">Nome</label>
+							<div class="">
+								<input type="text" id="nome" name="nome" value="{{$pedido->nome}}" class="form-control">
+							</div>
 						</div>
+						<div class="form-group validated col-sm-8 col-lg-8">
+							<label class="col-form-label" id="">Rua</label>
+							<div class="">
+								<input type="text" id="nome" name="rua" value="{{$pedido->rua}}" class="form-control">
+							</div>
+						</div>
+						<div class="form-group validated col-sm-2 col-lg-2">
+							<label class="col-form-label" id="">Número</label>
+							<div class="">
+								<input type="text" id="numero" name="numero" class="form-control" value="{{$pedido->numero}}">
+							</div>
+						</div>
+
+						<div class="form-group validated col-sm-4 col-lg-4">
+							<label class="col-form-label" id="">Referência</label>
+							<div class="">
+								<input type="text" id="referencia" name="referencia" class="form-control" value="{{$pedido->referencia}}">
+							</div>
+						</div>
+
+						<div class="form-group validated col-sm-4 col-lg-4">
+							<label class="col-form-label" id="">Telefone</label>
+							<div class="">
+								<input type="text" id="telefone" name="telefone" class="form-control" value="{{$pedido->telefone}}">
+							</div>
+						</div>
+
 					</div>
+
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-light-danger font-weight-bold" data-dismiss="modal">Fechar</button>
+					<button type="submit" id="btn-inut-2" class="btn btn-light-success font-weight-bold spinner-white spinner-right">Salvar</button>
 				</div>
 			</div>
-		</div>
-	</div>
-	<div class="modal-footer">
-		<a href="#!" class="modal-action modal-close btn grey">Fechar</a>
-		<button onclick="sendSms()" class="btn blue">enviar</button>
-	</div>
-</div>
-
-<div id="modal2" class="modal">
-
-	<div class="modal-content">
-
-		<div class="row">
-			<div class="input-field col s4">
-				<input type="text" id="numero_whats">
-				<label>WhatsApp</label>
-			</div>
-		</div>
-
-		<div class="row">
-			<div class="input-field col s12">
-				<input type="text" id="msg_whats">
-				<label>Texto</label>
-			</div>
-		</div>
-
-	</div>
-	<div class="modal-footer">
-		<a href="#!" onclick="enviarWhatsApp()" class="btn modal-action waves-effect waves-green green">Enviar</a>
-		<a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Fechar</a>
-	</div>
-</div>
-
-<div id="modal-endereco" class="modal">
-
-	<form method="get" action="/pedidos/setarEndereco">
-		<div class="modal-content">
-			<h4>Endereço</h4>
-			<input type="hidden" name="pedido_id" value="{{$pedido->id}}">
-			<div class="row">
-				<div class="input-field col s10">
-					<input type="text" name="nome" value="{{$pedido->nome}}" id="nome" data-length="50">
-					<label>Nome</label>
-				</div>
-				<div class="input-field col s8">
-					<input type="text" name="rua" value="{{$pedido->rua}}" id="rua" data-length="50">
-					<label>Rua</label>
-				</div>
-				<div class="input-field col s2">
-					<input type="text" name="numero" value="{{$pedido->numero}}" id="numero" data-length="10">
-					<label>Número</label>
-				</div>
-			</div>
-
-			<div class="row">
-				<div class="input-field col s5">
-					<input type="text" name="referencia" value="{{$pedido->referencia}}" id="referencia" data-length="30">
-					<label>Referência</label>
-				</div>
-				<div class="input-field col s5">
-					<input type="text" name="telefone" value="{{$pedido->telefone}}" id="telefone" data-length="15">
-					<label>Telefone</label>
-				</div>
-			</div>
-
-		</div>
-		<div class="modal-footer">
-			<a href="#!" class="modal-action modal-close red white-text waves-effect waves-green btn-flat">Fechar</a>
-			<button href="#!" class="modal-action waves green accent-3 btn">Salvar</button>
 		</div>
 	</form>
-
 </div>
 
 @endsection	

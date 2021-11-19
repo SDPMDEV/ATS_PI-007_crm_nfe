@@ -1,59 +1,50 @@
 @extends('default.layout')
 @section('content')
+<div class="card card-custom gutter-b">
 
-	<div class="row">
-		<div class="col s12">
 
-			<h4>Lista de Categorias de Serviço</h4>
+	<div class="card-body">
+		<div class="">
+			<div class="col-sm-12 col-lg-4 col-md-6 col-xl-4">
 
-			@if(session()->has('message'))
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-			@endif
-
-			<div class="row"></div>
-			<div class="row">
-				<a href="/categoriasServico/new" class="btn green accent-3">
-			      	<i class="material-icons left">add</i>	
-			      	Nova Categoria		
+				<a href="/categoriasServico/new" class="btn btn-lg btn-success">
+					<i class="fa fa-plus"></i>Nova Categoria
 				</a>
 			</div>
-
-			
+		</div>
+		<br>
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
+			<br>
 
 			<div class="row">
-				<div class="col s12">
-					<label>Numero de registros: {{count($categorias)}}</label>					
+
+				@foreach($categorias as $c)
+
+
+				<div class="col-sm-12 col-lg-6 col-md-6 col-xl-4">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">{{$c->nome}}
+							</h3>
+							<div class="card-toolbar">
+
+								<a href="/categoriasServico/edit/{{$c->id}}" class="btn btn-icon btn-circle btn-sm btn-light-primary mr-1"><i class="la la-pencil"></i></a>
+								<a href="/categoriasServico/delete/{{$c->id}}" class="btn btn-icon btn-circle btn-sm btn-light-danger mr-1"><i class="la la-trash"></i></a>
+								
+
+							</div>
+						</div>
+
+					</div>
+
 				</div>
-				<table class="col s12">
-					<thead>
-						<tr>
-							<th>Código</th>
-							<th>Nome</th>
-							<th>Ações</th>
-						</tr>
-					</thead>
 
-					<tbody>
-						@foreach($categorias as $c)
-						<tr>
-							<th>{{ $c->id }}</th>
-							<th>{{ $c->nome }}</th>
+				@endforeach
 
-							<th>
-								<a href="/categoriasServico/edit/{{ $c->id }}">
-	      							<i class="material-icons left">edit</i>					
-								</a>
-								<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/categoriasServico/delete/{{ $c->id }}">
-	      							<i class="material-icons left red-text">delete</i>					
-								</a>
-							</th>
-						</tr>
-						@endforeach
-					</tbody>
-				</table>
 			</div>
 		</div>
 	</div>
-@endsection	
+</div>
+
+@endsection

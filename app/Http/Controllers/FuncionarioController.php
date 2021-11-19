@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Funcionario;
 use App\ContatoFuncionario;
+use App\Usuario;
+use App\ComissaoVenda;
+
 class FuncionarioController extends Controller
 {
     public function __construct(){
@@ -12,6 +15,11 @@ class FuncionarioController extends Controller
             $value = session('user_logged');
             if(!$value){
                 return redirect("/login");
+            }else{
+
+                if($value['acesso_financeiro'] == 0){
+                    return redirect("/sempermissao");
+                }
             }
             return $next($request);
         });
@@ -19,13 +27,26 @@ class FuncionarioController extends Controller
 
     public function index(){
         $funcionarios = Funcionario::all();
+
         return view('funcionarios/list')
         ->with('funcionarios', $funcionarios)
         ->with('title', 'Funcionarios');
     }
 
     public function new(){
+        $usuarios = Usuario::all();
+        $funcionarios = Funcionario::all();
+
+        $temp = [];
+        foreach($usuarios as $u){
+
+            if(!isset($u->funcionario)){
+                array_push($temp, $u);
+            }
+        }
+
         return view('funcionarios/register')
+        ->with('usuarios', $temp)
         ->with('title', 'Cadastrar Funcionario');
     }
 
@@ -37,32 +58,42 @@ class FuncionarioController extends Controller
         $funcionario = new Funcionario();
         $this->_validate($request);
 
+
         $dataRegsitro = $this->parseDate($request->input('data_registro'));
         $request->merge([ 'data_registro' => $dataRegsitro]);
+        $request->merge([ 'percentual_comissao' => $request->percentual_comissao ?? 0]);
+        $request->merge([ 'usuario_id' => $request->usuario_id != 'NULL' ? $request->usuario_id : null]);
 
 
         $result = $funcionario->create($request->all());
 
         if($result){
-            session()->flash('color', 'blue');
-            session()->flash("message", "Funcionario cadastrado com sucesso!");
+            session()->flash("mensagem_sucesso", "Funcionario cadastrado com sucesso!");
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao cadastrar funcionario!');
+            session()->flash('mensagem_erro', 'Erro ao cadastrar funcionario!');
         }
         
         return redirect('/funcionarios');
     }
 
     public function edit($id){
+        $usuarios = Usuario::all();
         $funcionario = new Funcionario(); //Model
         
         $resp = $funcionario
-        ->where('id', $id)->first();  
+        ->where('id', $id)->first(); 
+
+        $temp = [];
+        foreach($usuarios as $u){
+            if(!isset($u->funcionario)){
+                array_push($temp, $u);
+            }
+        } 
 
         return view('funcionarios/register')
         ->with('pessoaFisicaOuJuridica', true)
         ->with('funcionario', $resp)
+        ->with('usuarios', $temp)
         ->with('title', 'Editar Funcionario');
 
     }
@@ -74,7 +105,7 @@ class FuncionarioController extends Controller
         $resp = $funcionario
         ->where('id', $id)->first(); 
 
-        $request->merge([ 'data_registro' => '01/01/2000']);
+        $request->merge([ 'data_registro' => $this->parseDate($request->input('data_registro'))]);
 
         $this->_validate($request);
         
@@ -89,17 +120,18 @@ class FuncionarioController extends Controller
         $resp->telefone = $request->input('telefone');
         $resp->celular = $request->input('celular');
         $resp->email = $request->input('email');
+        $resp->percentual_comissao = $request->input('percentual_comissao') ?? 0;
+
+        $resp->usuario_id = ($request->usuario_id && $request->usuario_id != 'NULL') ? $request->usuario_id : null;
 
         $result = $resp->save();
         if($result){
-            session()->flash('color', 'green');
-            session()->flash('message', 'Funcionario editado com sucesso!');
+            session()->flash('mensagem_sucesso', 'Funcionario editado com sucesso!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao editar funcionario!');
+            session()->flash('mensagem_erro', 'Erro ao editar funcionario!');
         }
         
-        return redirect('/fornecedores'); 
+        return redirect('/funcionarios'); 
     }
 
     public function delete($id){
@@ -107,11 +139,9 @@ class FuncionarioController extends Controller
         ::where('id', $id)
         ->delete();
         if($delete){
-            session()->flash('color', 'blue');
-            session()->flash('message', 'Registro removido!');
+            session()->flash('mensagem_sucesso', 'Registro removido!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro!');
+            session()->flash('mensagem_erro', 'Erro!');
         }
         return redirect('/funcionarios');
     }
@@ -143,9 +173,9 @@ class FuncionarioController extends Controller
             'numero.max' => '10 caracteres maximos permitidos.',
             'bairro.required' => 'O campo Bairro é obrigatório.',
             'bairro.max' => '50 caracteres maximos permitidos.',
-            'telefone.required' => 'O campo Celular é obrigatório.',
+            'telefone.required' => 'O campo telefone é obrigatório.',
             'telefone.max' => '20 caracteres maximos permitidos.',
-            'celular.required' => 'O campo Celular 2 é obrigatório.',
+            'celular.required' => 'O campo celular  é obrigatório.',
             'celular.max' => '20 caracteres maximos permitidos.',
 
             'email.required' => 'O campo Email é obrigatório.',
@@ -206,11 +236,9 @@ class FuncionarioController extends Controller
         $delete = $funcionario->delete();
 
         if($delete){
-            session()->flash('color', 'blue');
-            session()->flash('message', 'Registro removido!');
+            session()->flash('mensagem_sucesso', 'Registro removido!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro!');
+            session()->flash('mensagem_erro', 'Erro!');
         }
 
         return redirect("/funcionarios/contatos/$funcionario->id");
@@ -233,11 +261,9 @@ class FuncionarioController extends Controller
             $result = ContatoFuncionario::create($request->all());
         }
         if($result){
-            session()->flash('color', 'blue');
-            session()->flash("message", "Contato cadastrado/editado com sucesso!");
+            session()->flash("mensagem_sucesso", "Contato cadastrado/editado com sucesso!");
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao cadastrar contato!');
+            session()->flash('mensagem_erro', 'Erro ao cadastrar contato!');
         }
         
         return redirect("/funcionarios/contatos/$request->funcionario_id");
@@ -251,5 +277,72 @@ class FuncionarioController extends Controller
                 //array_push($arr, $temp);
         }
         echo json_encode($arr);
+    }
+
+    public function comissao(){
+        $funcionarios = Funcionario::all();
+        $comissoes = ComissaoVenda::limit(200)
+        ->orderBy('id', 'desc')
+        ->get();
+
+        return view('funcionarios/comissao')
+        ->with('funcionarios', $funcionarios)
+        ->with('comissoes', $comissoes)
+        ->with('comissaoJs', true)
+        ->with('title', 'Lista de comissões');
+    }
+
+    public function pagarComissao(Request $request){
+        try{
+            $vArr = $arr = $request->arr;
+            $arr = explode(",", $arr);
+
+            foreach($arr as $a){
+
+                $pedido = ComissaoVenda::find($a);
+                $pedido->status = 1;
+
+                $pedido->save();
+            }
+            session()->flash('mensagem_sucesso', 'Comissão(s) paga(s) com sucesso!');
+        }catch(\Exception $e){
+            session()->flash('mensagem_erro', 'Erro ao pagar comissão(s)!');
+
+        }
+        return redirect()->back();
+    }
+
+    public function comissaoFiltro(Request $request){
+        $funcionarioId = $request->funcionario_id;
+        $status = $request->status;
+        $dataInicial = $request->data_inicial;
+        $dataFinal = $request->data_final;
+
+        $comissoes = ComissaoVenda::
+        orderBy('id', 'desc');
+
+        if($status != '--'){
+            $comissoes->where('status', $status);
+        }
+
+        if($dataFinal && $dataInicial){
+            $data_inicial = $this->parseDate($request->data_inicial);
+            $data_final = $this->parseDate($request->data_final, true);
+            $comissoes->whereBetween('created_at', [$data_inicial, 
+                $data_final]);
+        }
+
+        if($funcionarioId != '--'){
+            $comissoes->where('funcionario_id', $funcionarioId);
+        }
+        $comissoes = $comissoes->get();
+
+        $funcionarios = Funcionario::all();
+
+        return view('funcionarios/comissao')
+        ->with('funcionarios', $funcionarios)
+        ->with('comissoes', $comissoes)
+        ->with('comissaoJs', true)
+        ->with('title', 'Lista de comissões');
     }
 }

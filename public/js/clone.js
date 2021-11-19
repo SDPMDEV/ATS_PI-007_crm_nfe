@@ -1,6 +1,7 @@
 FORNECEDORES = [];
+html = ''
 $('#add').click(() => {
-	var forn = $('#autocomplete-fornecedor').val().split('-');
+	var forn = $('#kt_select2_1').val().split('-');
 	let fornecedorAtual = $('#fornecedor-atual').val();
 
 	getFornecedor(forn[0], (d) => {
@@ -12,22 +13,23 @@ $('#add').click(() => {
 				console.log(duplicidade)
 				if(!duplicidade){
 					FORNECEDORES.push(d.id);
-					let t = '<label>'+
-					'<i class="material-icons left green-text">check</i>'+
+					html += '<div class="col-4"><div class="card card-custom gutter-b bg-info"><div class="card-body"><label>'+
+					'<i class="la la-check"></i>'+
 					d.razao_social+
-					'</label>';
+					'</label></div></div></div>';
 
-					$('#fornecedores').html(t);
+					$('#fornecedores').html(html);
+
 					console.log(FORNECEDORES)
 					$('#btn-clonar').removeAttr('disabled');
 
 				}else{
-					Materialize.toast('Fornecedor ja adicionado!', 4000)
+					swal("Erro", "Fornecedor ja adicionado!!", "error")
+
 				}
 			})
 		}else{
-			Materialize.toast('Esta cotação já pertence a este fornecedor!', 4000)
-			$('#autocomplete-fornecedor').val('')
+			swal("Erro", "Esta cotação já pertence a este fornecedor!", "error")
 
 		}
 

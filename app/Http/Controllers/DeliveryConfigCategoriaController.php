@@ -23,11 +23,11 @@ class DeliveryConfigCategoriaController extends Controller
 	public function index(){
 		$categorias = CategoriaProdutoDelivery::all();
         $existeCategoriaPizza = $this->existeCategoriaPizza($categorias);
-		return view('categoriaDelivery/list')
+        return view('categoriaDelivery/list')
         ->with('categorias', $categorias)
-		->with('existeCategoriaPizza', $existeCategoriaPizza)
-		->with('title', 'Categorias de Delivery');
-	}
+        ->with('existeCategoriaPizza', $existeCategoriaPizza)
+        ->with('title', 'Categorias de Delivery');
+    }
 
     private function existeCategoriaPizza($categorias){
         $tamanhoFirst = count(TamanhoPizza::all()) > 0 ? true : false;
@@ -39,44 +39,44 @@ class DeliveryConfigCategoriaController extends Controller
         return false;
     }
 
-	public function new(){
-		return view('categoriaDelivery/register')
-		->with('title', 'Cadastrar Categoria para Delivery');
-	}
+    public function new(){
+      return view('categoriaDelivery/register')
+      ->with('title', 'Cadastrar Categoria para Delivery');
+  }
 
-	public function save(Request $request){
-		
-		$category = new CategoriaProdutoDelivery();
+  public function save(Request $request){
 
-		$this->_validate($request);
+      $category = new CategoriaProdutoDelivery();
 
-		$file = $request->file('file');
+      $this->_validate($request);
 
-		$extensao = $file->getClientOriginalExtension();
-		$nomeImagem = md5($file->getClientOriginalName()).".".$extensao;
-		$request->merge([ 'path' => $nomeImagem ]);
+      $file = $request->file('file');
 
-		$upload = $file->move(public_path('imagens_categorias'), $nomeImagem);
+      $extensao = $file->getClientOriginalExtension();
+      $nomeImagem = md5($file->getClientOriginalName()).".".$extensao;
+      $request->merge([ 'path' => $nomeImagem ]);
 
-		if(!$upload){
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao realizar upload da imagem.');
-		}else{
+      $upload = $file->move(public_path('imagens_categorias'), $nomeImagem);
 
-			$result = $category->create($request->all());
-			if($result){
-				session()->flash('color', 'green');
-				session()->flash("message", "Categoria cadastrada com sucesso.");
-			}else{
-				session()->flash('color', 'red');
-				session()->flash('message', 'Erro ao cadastrar categoria.');
-			}
-		}
-		
-		return redirect('/deliveryCategoria');
-	}
+      if(!$upload){
 
-	public function edit($id){
+         session()->flash('mensagem_erro', 'Erro ao realizar upload da imagem.');
+     }else{
+
+         $result = $category->create($request->all());
+         if($result){
+
+            session()->flash("mensagem_sucesso", "Categoria cadastrada com sucesso.");
+        }else{
+
+            session()->flash('mensagem_erro', 'Erro ao cadastrar categoria.');
+        }
+    }
+
+    return redirect('/deliveryCategoria');
+}
+
+public function edit($id){
         $categoria = new CategoriaProdutoDelivery(); //Model
 
         $resp = $categoria
@@ -90,12 +90,13 @@ class DeliveryConfigCategoriaController extends Controller
 
     public function additional($id){
         $categoria = new CategoriaProdutoDelivery(); //Model
-
+        $adicionais = ComplementoDelivery::orderBy('nome')->get();
         $resp = $categoria
         ->where('id', $id)->first();  
 
         return view('categoriaDelivery/additional')
         ->with('categoria', $resp)
+        ->with('adicionais', $adicionais)
         ->with('adicional', true)
         ->with('title', 'Adicionais da Categoria de Delivery');
 
@@ -113,131 +114,131 @@ class DeliveryConfigCategoriaController extends Controller
     	if($request->hasFile('file')){
     		//unlink anterior
             $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-    		if(file_exists($public . 'imagens_categorias/'.$anterior->path))
-    			unlink($public . 'imagens_categorias/'.$anterior->path);
+            if(file_exists($public . 'imagens_categorias/'.$anterior->path))
+             unlink($public . 'imagens_categorias/'.$anterior->path);
 
-    		$file = $request->file('file');
+         $file = $request->file('file');
 
-    		$extensao = $file->getClientOriginalExtension();
-    		$nomeImagem = md5($file->getClientOriginalName()).".".$extensao;
+         $extensao = $file->getClientOriginalExtension();
+         $nomeImagem = md5($file->getClientOriginalName()).".".$extensao;
 
-    		$upload = $file->move(public_path('imagens_categorias'), $nomeImagem);
-    		$request->merge([ 'file' => $nomeImagem ]);
-    	}else{
-    		$request->merge([ 'file' => $anterior->path ]);
-    	}
+         $upload = $file->move(public_path('imagens_categorias'), $nomeImagem);
+         $request->merge([ 'file' => $nomeImagem ]);
+     }else{
+      $request->merge([ 'file' => $anterior->path ]);
+  }
 
-    	$this->_validate($request, false);
+  $this->_validate($request, false);
 
-    	$resp->nome = $request->input('nome');
-    	$resp->descricao = $request->input('descricao');
-    	$resp->path = $request->input('file');
+  $resp->nome = $request->input('nome');
+  $resp->descricao = $request->input('descricao');
+  $resp->path = $request->input('file');
 
-    	$result = $resp->save();
-    	if($result){
-    		session()->flash('color', 'green');
-    		session()->flash('message', 'Categoria editada com sucesso!');
-    	}else{
-    		session()->flash('color', 'red');
-    		session()->flash('message', 'Erro ao editar categoria!');
-    	}
+  $result = $resp->save();
+  if($result){
 
-    	return redirect('/deliveryCategoria'); 
+      session()->flash('mensagem_sucesso', 'Categoria editada com sucesso!');
+  }else{
+
+      session()->flash('mensagem_erro', 'Erro ao editar categoria!');
+  }
+
+  return redirect('/deliveryCategoria'); 
+}
+
+public function delete($id){
+   $categoria = CategoriaProdutoDelivery
+   ::where('id', $id)
+   ->first();
+
+   $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+   if(file_exists($public . 'imagens_categorias/'.$categoria->path))
+      unlink($public . 'imagens_categorias/'.$categoria->path);
+  if($categoria->delete()){
+
+      session()->flash('mensagem_sucesso', 'Registro removido!');
+  }else{
+
+      session()->flash('mensagem_erro', 'Erro!');
+  }
+  return redirect('/deliveryCategoria');
+}
+
+public function removeAditional($id){
+    $additional = ListaComplementoDelivery
+    ::where('id', $id)
+    ->first();
+
+    if($additional->delete()){
+
+        session()->flash('mensagem_sucesso', 'Registro removido!');
+    }else{
+
+        session()->flash('mensagem_erro', 'Erro!');
+    }
+    return redirect('/deliveryCategoria/additional/'.$additional->categoria->id);
+}
+
+
+private function _validate(Request $request, $fileExist = true){
+   $rules = [
+      'nome' => 'required|max:30',
+      'descricao' => 'required|max:120',
+      'file' => $fileExist ? 'required' : ''
+  ];
+
+  $messages = [
+      'nome.required' => 'O campo nome é obrigatório.',
+      'nome.max' => '50 caracteres maximos permitidos.',
+      'descricao.required' => 'O campo descricao é obrigatório.',
+      'descricao.max' => '120 caracteres maximos permitidos.',
+      'file.required' => 'O campo imagem é obrigatório.'
+  ];
+  $this->validate($request, $rules, $messages);
+}
+
+private function _validateAdd(Request $request){
+    $rules = [
+        'adicional' => 'required',
+    ];
+
+    $messages = [
+        'adicional.required' => 'Erro, Campo obrigatório, inválido ou complemento já esta presente.'
+    ];
+    $this->validate($request, $rules, $messages);
+}
+
+
+public function saveAditional(Request $request){
+    $adicional = $request->input('adicional');
+    $request->merge([ 'adicional' => $adicional]);
+
+    $tst = ComplementoDelivery::where('id', $adicional)
+    ->first();
+
+    if(!$tst) {
+        $request->merge([ 'adicional' => '']);
     }
 
-    public function delete($id){
-    	$categoria = CategoriaProdutoDelivery
-    	::where('id', $id)
-    	->first();
+    $res = ListaComplementoDelivery::where('categoria_id', $request->categoria)
+    ->where('complemento_id', $adicional)
+    ->first();
 
-        $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-    	if(file_exists($public . 'imagens_categorias/'.$categoria->path))
-    		unlink($public . 'imagens_categorias/'.$categoria->path);
-    	if($categoria->delete()){
-    		session()->flash('color', 'blue');
-    		session()->flash('message', 'Registro removido!');
-    	}else{
-    		session()->flash('color', 'red');
-    		session()->flash('message', 'Erro!');
-    	}
-    	return redirect('/deliveryCategoria');
+    if($res){
+        $request->merge([ 'adicional' => '']);
     }
 
-    public function removeAditional($id){
-        $additional = ListaComplementoDelivery
-        ::where('id', $id)
-        ->first();
+    $this->_validateAdd($request);
 
-        if($additional->delete()){
-            session()->flash('color', 'blue');
-            session()->flash('message', 'Registro removido!');
-        }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro!');
-        }
-        return redirect('/deliveryCategoria/additional/'.$additional->categoria->id);
-    }
+    $result = ListaComplementoDelivery::create([
+        'categoria_id' => $request->categoria,
+        'complemento_id' => $adicional
+    ]);
+
+    session()->flash('mensagem_sucesso', 'Adicional atribuido!');
+
+    return redirect('/deliveryCategoria/additional/' . $request->categoria);
 
 
-    private function _validate(Request $request, $fileExist = true){
-    	$rules = [
-    		'nome' => 'required|max:50',
-    		'descricao' => 'required|max:120',
-    		'file' => $fileExist ? 'required' : ''
-    	];
-
-    	$messages = [
-    		'nome.required' => 'O campo nome é obrigatório.',
-    		'nome.max' => '50 caracteres maximos permitidos.',
-    		'descricao.required' => 'O campo descricao é obrigatório.',
-    		'descricao.max' => '120 caracteres maximos permitidos.',
-    		'file.required' => 'O campo imagem é obrigatório.'
-    	];
-    	$this->validate($request, $rules, $messages);
-    }
-
-    private function _validateAdd(Request $request){
-        $rules = [
-            'adicional' => 'required',
-        ];
-
-        $messages = [
-            'adicional.required' => 'Erro, Campo obrigatório, inválido ou complemento já esta presente.'
-        ];
-        $this->validate($request, $rules, $messages);
-    }
-
-
-    public function saveAditional(Request $request){
-        $adicional = $request->input('adicional');
-        $adicional = explode("-", $adicional);
-        $adicional = $adicional[0];
-        $request->merge([ 'adicional' => $adicional]);
-
-        $tst = ComplementoDelivery::where('id', $adicional)
-        ->first();
-
-        if(!$tst) {
-            $request->merge([ 'adicional' => '']);
-        }
-
-        $res = ListaComplementoDelivery::where('categoria_id', $request->categoria)
-        ->where('complemento_id', $adicional)
-        ->first();
-
-        if($res){
-            $request->merge([ 'adicional' => '']);
-        }
-        
-        $this->_validateAdd($request);
-
-        $result = ListaComplementoDelivery::create([
-            'categoria_id' => $request->categoria,
-            'complemento_id' => $adicional
-        ]);
-
-        return redirect('/deliveryCategoria/additional/' . $request->categoria);
-
-
-    }
+}
 }

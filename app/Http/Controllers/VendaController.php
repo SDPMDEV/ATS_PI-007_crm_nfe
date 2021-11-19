@@ -7,17 +7,23 @@ use App\Venda;
 use App\NaturezaOperacao;
 use App\ItemVenda;
 use App\Produto;
+use App\Pedido;
 use App\Categoria;
 use App\Tributacao;
 use App\ConfigNota;
+use App\Certificado;
 use App\CreditoVenda;
 use App\ContaReceber;
+use App\Transportadora;
 use App\Frete;
+use App\Usuario;
 use App\Cliente;
+use App\ListaPreco;
 use App\Helpers\StockMove;
-use App\Services\NFeService;
+use App\Services\NFService;
 use NFePHP\DA\NFe\Danfe;
 use Dompdf\Dompdf;
+use App\ComissaoVenda;
 
 class VendaController extends Controller
 {
@@ -35,12 +41,12 @@ class VendaController extends Controller
 		$vendas = Venda::
 		where('estado', 'DISPONIVEL')
 		->where('forma_pagamento', '!=', 'conta_crediario')
-		->paginate(10);
+		->paginate(20);
 
 		$menos30 = $this->menos30Dias();
 		$date = date('d/m/Y');
 
-		
+		$certificado = Certificado::first();
 
 		return view("vendas/list")
 		->with('vendas', $vendas)
@@ -48,6 +54,7 @@ class VendaController extends Controller
 		->with('links', true)
 		->with('dataInicial', $menos30)
 		->with('dataFinal', $date)
+		->with('certificado', $certificado)
 		->with('title', "Lista de Vendas");
 
 	}
@@ -55,6 +62,7 @@ class VendaController extends Controller
 	public function nova(){
 		$config = ConfigNota::first();
 		if($config == null){
+			session()->flash("mensagem_erro", "Configure o emitente!");
 			return redirect('configNF');
 		}
 		$lastNF = Venda::lastNF();
@@ -79,12 +87,27 @@ class VendaController extends Controller
 			->with('tributacao', $tributacao)
 			->with('title', "Validação para Emitir");
 		}else{
+
+			$transportadoras = Transportadora::all();
+
+			foreach($clientes as $c){
+				$c->cidade;
+			}
+			foreach($produtos as $p){
+				$p->listaPreco;
+				$p->estoque;
+			}
+
 			return view("vendas/register")
 			->with('naturezas', $naturezas)
 			->with('vendaJs', true)
 			->with('config', $config)
+			->with('clientes', $clientes)
+			->with('produtos', $produtos)
+			->with('transportadoras', $transportadoras)
 			->with('tiposPagamento', $tiposPagamento)
 			->with('lastNF', $lastNF)
+			->with('listaPreco', ListaPreco::all())
 			->with('title', "Nova Venda");
 		}
 	}
@@ -110,8 +133,8 @@ class VendaController extends Controller
 		// $this->removerDuplicadas($venda);
 		$venda->delete();
 		
-		session()->flash('color', 'blue');
-		session()->flash("message", "Venda removida!");
+
+		session()->flash("mensagem_sucesso", "Venda removida!");
 
 		return redirect('/vendas/lista');
 	}
@@ -217,8 +240,39 @@ class VendaController extends Controller
 				'quantidade' => (float) str_replace(",", ".", $i['quantidade']),
 				'valor' => (float) str_replace(",", ".", $i['valor'])
 			]);
-			$stockMove->downStock(
-				(int) $i['codigo'], (float) str_replace(",", ".", $i['quantidade']));
+
+			$prod = Produto
+			::where('id', $i['codigo'])
+			->first();
+
+			if(!empty($prod->receita)){
+				//baixa por receita
+				$receita = $prod->receita; 
+				foreach($receita->itens as $rec){
+
+					if(!empty($rec->produto->receita)){ // se item da receita for receita
+						$receita2 = $rec->produto->receita; 
+
+						foreach($receita2->itens as $rec2){
+							$stockMove->downStock(
+								$rec2->produto_id, 
+								(float) str_replace(",", ".", $i['quantidade']) * 
+								($rec2->quantidade/$receita2->rendimento)
+							);
+						}
+					}else{
+
+						$stockMove->downStock(
+							$rec->produto_id, 
+							(float) str_replace(",", ".", $i['quantidade']) * 
+							($rec->quantidade/$receita->rendimento)
+						);
+					}
+				}
+			}else{
+				$stockMove->downStock(
+					(int) $i['codigo'], (float) str_replace(",", ".", $i['quantidade']));
+			}
 		}
 
 		if(isset($venda['receberContas'])){
@@ -246,10 +300,205 @@ class VendaController extends Controller
 					'status' => false,
 					'referencia' => "Parcela, ".$f['numero'].", da Venda " . $result->id,
 					'categoria_id' => 2,
+					'usuario_id' => get_id_user()
 				]);
 			}
 		}
+
+		//salvar Comissao
+		$usuario = Usuario::find(get_id_user());
+		if(isset($usuario->funcionario)){
+			$percentual_comissao = $usuario->funcionario->percentual_comissao;
+			$valorComissao = ($totalVenda * $percentual_comissao) / 100;
+			ComissaoVenda::create(
+				[
+					'funcionario_id' => $usuario->funcionario->id,
+					'venda_id' => $result->id,
+					'tabela' => 'vendas',
+					'valor' => $valorComissao,
+					'status' => 0
+				]
+			);
+		}
 		echo json_encode($result);
+	}
+
+	public function atualizar(Request $request){
+		$request = $request->venda;
+		$venda_id = $request['venda_id'];
+		$venda = $vendaAnterior = Venda::find($venda_id);
+
+		$valorFrete = str_replace(".", "", $request['valorFrete'] ?? 0);
+		$valorFrete = str_replace(",", ".", $valorFrete );
+
+		$vol = $request['volume'];
+
+		if($vol['pesoL']){
+			$pesoLiquido = str_replace(".", "", $vol['pesoL']);
+			$pesoLiquido = str_replace(",", ".", $pesoLiquido);
+		}else{
+			$pesoLiquido = 0;
+		}
+
+		if($vol['pesoB']){
+			$pesoBruto = str_replace(".", "", $vol['pesoB']);
+			$pesoBruto = str_replace(",", ".", $pesoBruto);
+		}else{
+			$pesoBruto = 0;
+		}
+
+		if($vol['qtdVol']){
+			$qtdVol = str_replace(".", "", $vol['qtdVol']);
+			$qtdVol = str_replace(",", ".", $qtdVol);
+		}else{
+			$qtdVol = 0;
+		}
+
+		$frete = null;
+		if($request['frete'] != '9'){
+			$frete = Frete::create([
+				'placa' => $request['placaVeiculo'],
+				'valor' => $valorFrete,
+				'tipo' => (int)$request['frete'],
+				'qtdVolumes' => $qtdVol,
+				'uf' => $request['ufPlaca'],
+				'numeracaoVolumes' => $vol['numeracaoVol'] ?? '0',
+				'especie' => $vol['especie'] ?? '*',
+				'peso_liquido' => $pesoLiquido,
+				'peso_bruto' => $pesoBruto
+			]);
+		}
+
+		$totalVenda = str_replace(",", ".", $request['total']);
+
+		$desconto = 0;
+		if($request['desconto']){
+			$desconto = str_replace(".", "", $request['desconto']);
+			$desconto = str_replace(",", ".", $desconto);
+		}
+
+		$venda->transportadora_id = $request['transportadora'];
+		$venda->forma_pagamento = $request['formaPagamento'];
+		$venda->tipo_pagamento = $request['tipoPagamento'];
+		$venda->usuario_id = get_id_user();
+		$venda->valor_total = $totalVenda;
+		$venda->desconto = $desconto;
+		$venda->frete_id = $frete != null ? $frete->id : null;
+		$venda->NfNumero = 0;
+		$venda->natureza_id = $request['naturezaOp'];
+		$venda->observacao = $this->sanitizeString($request['observacao']) ?? '';
+
+		$venda->save();
+		$itens = $request['itens'];
+		$this->reverteEstoque($venda->itens);
+		$this->deleteItens($venda);
+		$stockMove = new StockMove();
+		foreach ($itens as $i) {
+			ItemVenda::create([
+				'venda_id' => $venda->id,
+				'produto_id' => (int) $i['codigo'],
+				'quantidade' => (float) str_replace(",", ".", $i['quantidade']),
+				'valor' => (float) str_replace(",", ".", $i['valor'])
+			]);
+
+			$prod = Produto
+			::where('id', $i['codigo'])
+			->first();
+
+			if(!empty($prod->receita)){
+				//baixa por receita
+				$receita = $prod->receita; 
+				foreach($receita->itens as $rec){
+
+					if(!empty($rec->produto->receita)){ // se item da receita for receita
+						$receita2 = $rec->produto->receita; 
+
+						foreach($receita2->itens as $rec2){
+							$stockMove->downStock(
+								$rec2->produto_id, 
+								(float) str_replace(",", ".", $i['quantidade']) * 
+								($rec2->quantidade/$receita2->rendimento)
+							);
+						}
+					}else{
+
+						$stockMove->downStock(
+							$rec->produto_id, 
+							(float) str_replace(",", ".", $i['quantidade']) * 
+							($rec->quantidade/$receita->rendimento)
+						);
+					}
+				}
+			}else{
+				$stockMove->downStock(
+					(int) $i['codigo'], (float) str_replace(",", ".", $i['quantidade']));
+			}
+		}
+
+		$this->deleteFatura($venda);
+		$resultFatura = null;
+		if($request['formaPagamento'] != 'a_vista' && $request['formaPagamento'] != 'conta_crediario'){
+			$fatura = $request['fatura'];
+
+			foreach ($fatura as $f) {
+				$valorParcela = str_replace(",", ".", $f['valor']);
+
+				$resultFatura = ContaReceber::create([
+					'venda_id' => $venda->id,
+					'data_vencimento' => $this->parseDate($f['data']),
+					'data_recebimento' => $this->parseDate($f['data']),
+					'valor_integral' => $valorParcela,
+					'valor_recebido' => 0,
+					'status' => false,
+					'referencia' => "Parcela, ".$f['numero'].", da Venda " . $venda->id,
+					'categoria_id' => 2,
+				]);
+			}
+		}
+
+		echo json_encode($resultFatura);
+		
+	}
+
+	private function reverteEstoque($itens){
+		$stockMove = new StockMove();
+		foreach($itens as $i){
+			if(!empty($i->produto->receita)){
+				//baixa por receita
+				$receita = $i->produto->receita; 
+				foreach($receita->itens as $rec){
+
+					if(!empty($rec->produto->receita)){ // se item da receita for receita
+						$receita2 = $rec->produto->receita; 
+						foreach($receita2->itens as $rec2){
+							$stockMove->pluStock(
+								$rec2->produto_id, 
+								(float) str_replace(",", ".", $i->quantidade) * 
+								($rec2->quantidade/$receita2->rendimento)
+							);
+						}
+					}else{
+
+						$stockMove->pluStock(
+							$rec->produto_id, 
+							(float) str_replace(",", ".", $i->quantidade) * 
+							($rec->quantidade/$receita->rendimento)
+						);
+					}
+				}
+			}else{
+				$stockMove->pluStock(
+					$i->produto_id, (float) str_replace(",", ".", $i->quantidade));
+			}
+		}
+	}
+
+	private function deleteItens($venda){
+		ItemVenda::where('venda_id', $venda->id)->delete();
+	}
+
+	private function deleteFatura($venda){
+		ContaReceber::where('venda_id', $venda->id)->delete();
 	}
 
 	public function salvarCrediario(Request $request){
@@ -284,6 +533,18 @@ class VendaController extends Controller
 			'cliente_id' => $venda['cliente'],
 			'status' => false,	
 		]);
+
+		if($venda['codigo_comanda'] > 0){
+			$pedido = Pedido::
+			where('comanda', $venda['codigo_comanda'])
+			->where('status', 0)
+			->where('desativado', 0)
+			->first();
+
+			$pedido->status = 1;
+			$pedido->desativado = 1;
+			$pedido->save();
+		}
 
 
 		$itens = $venda['itens'];
@@ -347,10 +608,13 @@ class VendaController extends Controller
 			);
 		}
 
+		$certificado = Certificado::first();
+
 		return view("vendas/list")
 		->with('vendas', $vendas)
 		->with('nf', true)
 		->with('cliente', $cliente)
+		->with('certificado', $certificado)
 		->with('dataInicial', $dataInicial)
 		->with('dataFinal', $dataFinal)
 		->with('estado', $estado)
@@ -376,7 +640,7 @@ class VendaController extends Controller
 		$cnpj = str_replace("-", "", $cnpj);
 		$cnpj = str_replace(" ", "", $cnpj);
 
-		$nfe_service = new NFeService([
+		$nfe_service = new NFService([
 			"atualizacao" => date('Y-m-d h:i:s'),
 			"tpAmb" => (int)$config->ambiente,
 			"razaosocial" => $config->razao_social,
@@ -385,24 +649,31 @@ class VendaController extends Controller
 			"schemes" => "PL_009_V4",
 			"versao" => "4.00",
 			"tokenIBPT" => "AAAAAAA",
-			"CSC" => getenv('CSC'),
-			"CSCid" => getenv('CSCid')
-		], 55);
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
+		]);
 		$nfe = $nfe_service->gerarNFe($id);
-		$xml = $nfe['xml'];
+		if(!isset($nfe['erros_xml'])){
+			$xml = $nfe['xml'];
 
-		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
+			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+			$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
 
-		try {
-			$danfe = new Danfe($xml);
-			$id = $danfe->monta();
-			$pdf = $danfe->render();
-			header('Content-Type: application/pdf');
-			echo $pdf;
-		} catch (InvalidArgumentException $e) {
-			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
-		}  
+			try {
+				$danfe = new Danfe($xml);
+				$id = $danfe->monta();
+				$pdf = $danfe->render();
+				header('Content-Type: application/pdf');
+				return response($pdf)
+				->header('Content-Type', 'application/pdf');
+			} catch (InvalidArgumentException $e) {
+				echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+			} 
+		} else{
+			foreach($nfe['erros_xml'] as $e) {
+				echo $e;
+			}
+		}
 
 	}
 
@@ -420,8 +691,241 @@ class VendaController extends Controller
 
 		$domPdf->setPaper("A4");
 		$domPdf->render();
-		$domPdf->stream("relatorio de compras.pdf");
+		$domPdf->stream("relatorio de venda $venda->id.pdf");
 
+	}
+
+	public function baixarXml($id){
+		$venda = Venda::find($id);
+		if($venda){
+			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+			if(file_exists($public.'xml_nfe/'.$venda->chave.'.xml')){
+
+				return response()->download($public.'xml_nfe/'.$venda->chave.'.xml');
+			}else{
+				echo "Arquivo XML não encontrado!!";
+			}
+		}else{
+			echo "Selecione uma venda!!";
+
+		}
+
+	}
+
+	public function edit($id){
+		$venda = Venda::find($id);
+
+
+		$config = ConfigNota::first();
+		if($config == null){
+			return redirect('configNF');
+		}
+		$lastNF = Venda::lastNF();
+
+		$naturezas = NaturezaOperacao::all();
+
+		$config = ConfigNota::first();
+		$categorias = Categoria::all();
+		$produtos = Produto::all();
+		$tributacao = Tributacao::first();
+		$clientes = Cliente::all();
+		$tiposPagamento = Venda::tiposPagamento();
+
+		foreach($venda->itens as $i){
+			$i->produto;
+		}
+		$venda->duplicatas;
+		$venda->natureza;
+		$venda->cliente;
+		$venda->frete;
+
+		$transportadoras = Transportadora::all();
+
+		$produtos = Produto::orderBy('nome')->get();
+		
+		foreach($produtos as $p){
+			$p->listaPreco;
+		}
+
+		return view("vendas/edit")
+		->with('naturezas', $naturezas)
+		->with('vendaJs', true)
+		->with('config', $config)
+		->with('transportadoras', $transportadoras)
+		->with('produtos', $produtos)
+		->with('venda', $venda)
+		->with('tiposPagamento', $tiposPagamento)
+		->with('lastNF', $lastNF)
+		->with('listaPreco', ListaPreco::all())
+		->with('title', "Editar Venda");
+		
+	}
+
+	public function clone($id){
+		$lastNF = Venda::lastNF();
+		$venda = Venda::find($id);
+		$config = ConfigNota::first();
+		$clientes = Cliente::all();
+
+		return view("vendas/clone")
+		->with('vendaJs', true)
+		->with('config', $config)
+		->with('clientes', $clientes)
+		->with('venda', $venda)
+		->with('lastNF', $lastNF)
+		->with('title', "Clonar Venda");
+	}
+
+	public function salvarClone(Request $request){
+		$cliente = $request->cliente;
+		$vendaId = $request->venda_id;
+
+		$clienteId = (int)explode("-", $cliente)[0];
+		if(!$clienteId){
+			session()->flash("mensagem_erro", "Informe o cliente!");
+			return redirect()->back();
+		}
+		$venda = Venda::find($vendaId);
+
+		$freteId = null;
+		if($venda->frete_id != NULL){
+			$frete = Frete::create([
+				'placa' => $venda->frete->placa,
+				'valor' => $venda->frete->valor,
+				'tipo' => $venda->frete->tipo,
+				'qtdVolumes' => $venda->frete->qtdVolumes,
+				'uf' => $venda->frete->uf,
+				'numeracaoVolumes' => $venda->frete->numeracaoVolumes,
+				'especie' => $venda->frete->especie,
+				'peso_liquido' => $venda->frete->peso_liquido,
+				'peso_bruto' => $venda->frete->peso_bruto
+			]);
+			$freteId = $frete->id;
+		}
+
+		$novaVenda = [ 
+			'cliente_id' => $clienteId,
+			'usuario_id' => get_id_user(),
+			'frete_id' => $freteId,
+			'valor_total' => $venda->valor_total,
+			'forma_pagamento' => $venda->forma_pagamento,
+			'NfNumero' => 0,
+			'natureza_id' => $venda->natureza_id,
+			'chave' => '',
+			'path_xml' => '',
+			'estado' => 'DISPONIVEL',
+			'observacao' => $venda->observacao,
+			'desconto' => $venda->desconto,
+			'transportadora_id' => $venda->transportadora_id,
+			'sequencia_cce' => 0,
+			'tipo_pagamento' => $venda->tipo_pagamento
+		];
+
+		$result = Venda::create($novaVenda);
+
+		$itens = $venda->itens;
+		$stockMove = new StockMove();
+		foreach ($itens as $i) {
+			ItemVenda::create([
+				'venda_id' => $result->id,
+				'produto_id' => $i->produto_id,
+				'quantidade' => $i->quantidade,
+				'valor' => $i->valor
+			]);
+
+			$prod = Produto
+			::where('id', $i->produto_id)
+			->first();
+
+			if(!empty($prod->receita)){
+				//baixa por receita
+				$receita = $prod->receita; 
+				foreach($receita->itens as $rec){
+
+					if(!empty($rec->produto->receita)){ // se item da receita for receita
+						$receita2 = $rec->produto->receita; 
+
+						foreach($receita2->itens as $rec2){
+							$stockMove->downStock(
+								$rec2->produto_id, 
+								$i->quantidade * 
+								($rec2->quantidade/$receita2->rendimento)
+							);
+						}
+					}else{
+
+						$stockMove->downStock(
+							$rec->produto_id, 
+							$i->quantidade* 
+							($rec->quantidade/$receita->rendimento)
+						);
+					}
+				}
+			}else{
+				$stockMove->downStock(
+					$i->produto_id, $i->quantidade);
+			}
+		}
+
+		if($venda->forma_pagamento != 'a_vista' && $venda->forma_pagamento != 'conta_crediario'){
+			$fatura = $venda->duplicatas;
+
+			foreach ($fatura as $key => $f) {
+				$valorParcela = str_replace(",", ".", $f['valor']);
+
+				$resultFatura = ContaReceber::create([
+					'venda_id' => $result->id,
+					'data_vencimento' => $f->data_vencimento,
+					'data_recebimento' => $f->data_recebimento,
+					'valor_integral' => $f->valor_integral,
+					'valor_recebido' => 0,
+					'status' => false,
+					'referencia' => "Parcela, ".($key+1).", da Venda " . $result->id,
+					'categoria_id' => 2,
+				]);
+			}
+		}
+
+
+		session()->flash("mensagem_sucesso", "Venda duplicada com sucesso!");
+
+		return redirect('/vendas/lista');
+
+	}
+
+	public function gerarXml($id){
+		$venda = Venda::find($id);
+		$config = ConfigNota::first();
+
+		$cnpj = str_replace(".", "", $config->cnpj);
+		$cnpj = str_replace("/", "", $cnpj);
+		$cnpj = str_replace("-", "", $cnpj);
+		$cnpj = str_replace(" ", "", $cnpj);
+
+		$nfe_service = new NFService([
+			"atualizacao" => date('Y-m-d h:i:s'),
+			"tpAmb" => (int)$config->ambiente,
+			"razaosocial" => $config->razao_social,
+			"siglaUF" => $config->UF,
+			"cnpj" => $cnpj,
+			"schemes" => "PL_009_V4",
+			"versao" => "4.00",
+			"tokenIBPT" => "AAAAAAA",
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
+		]);
+		$nfe = $nfe_service->gerarNFe($id);
+		if(!isset($nfe['erros_xml'])){
+			$xml = $nfe['xml'];
+
+			return response($xml)
+			->header('Content-Type', 'application/xml');
+			
+		} else{
+			foreach($nfe['erros_xml'] as $e) {
+				echo $e;
+			}
+		}
 	}
 
 }

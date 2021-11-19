@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Push;
 use App\TokenClienteDelivery;
+use App\ClienteDelivery;
 use App\TokenWeb;
 use App\ProdutoDelivery;
 
@@ -35,8 +36,10 @@ class PushController extends Controller
 	}
 
 	public function new(){
+		$clientes = ClienteDelivery::orderBy('nome')->get();
 		return view('push/new')
 		->with('pushJs', true)
+		->with('clientes', $clientes)
 		->with('title', 'Nova Push');
 	}
 
@@ -55,11 +58,9 @@ class PushController extends Controller
 		]);
 
 		if($res){
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Push adicionado!');
+			session()->flash('mensagem_sucesso', 'Push adicionado!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/push');
 	}
@@ -104,11 +105,9 @@ class PushController extends Controller
 		$push->path_img = $request->path_img;
 		$push->referencia_produto = $request->referencia_produto;
 		if($push->save()){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Push editado!');
+			session()->flash('mensagem_sucesso', 'Push editado!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 
 		return redirect('/push');
@@ -127,7 +126,6 @@ class PushController extends Controller
 
 				if(!in_array($t->user_id, $tkTemp)){
 
-
 					array_push($tkTemp, $t->user_id);
 				}
 			}
@@ -144,8 +142,7 @@ class PushController extends Controller
 			];
 
 			$this->sendMessageOneSignal($data, $tkTemp);
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Push enviado!');
+			session()->flash('mensagem_sucesso', 'Push enviado!');
 
 			$push->status = true;
 			$push->save();
@@ -170,8 +167,8 @@ class PushController extends Controller
 			
 			$push->status = true;
 			$push->save();
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Pushs enviados!');
+
+			session()->flash('mensagem_sucesso', 'Pushs enviados!');
 			return redirect('/push');
 		}
 	}
@@ -237,12 +234,12 @@ class PushController extends Controller
 		->delete();
 
 		if($res){
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Push removido!');
+
+			session()->flash('mensagem_sucesso', 'Push removido!');
 		}else{
 
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/push');
 	}

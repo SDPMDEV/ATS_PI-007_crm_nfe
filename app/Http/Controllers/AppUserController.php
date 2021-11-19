@@ -74,9 +74,11 @@ class AppUserController extends Controller
 			$result = ClienteDelivery::find($res->id);
 			$tokan = null;
 			if(getenv("AUTENTICACAO_SMS") == 1){
-				$this->sendSms($celular, $cod);
+				// $this->sendSms($celular, $cod);
+				$result->autentica_sms = 1;
 			}else if(getenv("AUTENTICACAO_EMAIL") == 1) {
 				$this->sendEmailLink($request->email, $cod);
+				$result->autentica_email = 1;
 			}else{
 
 				$result->ativo = 1;
@@ -145,7 +147,17 @@ class AppUserController extends Controller
 				return response()->json(['erro' => 'Credenciais inválidas'], 400);
 			}else{
 				if(!$cliente->ativo){
-					if(getenv("AUTENTICACAO_EMAIL") == 1) $this->sendEmailLink($cliente->email, $cliente->token);
+
+
+					if(getenv("AUTENTICACAO_SMS") == 1){
+				// $this->sendSms($celular, $cod);
+						$cliente->autentica_sms = 1;
+					}
+					if(getenv("AUTENTICACAO_EMAIL") == 1) {
+						$this->sendEmailLink($request->email, $cod);
+						$cliente->autentica_email = 1;
+					}
+
 					return response()->json($cliente, 403);
 				}
 				$b64 = base64_encode("$cliente->nome;$cliente->id;$cliente->email");
@@ -170,11 +182,24 @@ class AppUserController extends Controller
 	}
 
 	public function novoEndereco(Request $request){
+
+		$bairroNome = '';
+		$bairroId = 0;
+
+		$bairro = explode(":", $request->bairro);
+		if(isset($bairro[0]) && $bairro[0] == 'id'){
+			$bairroId = $bairro[1];
+		}else{
+			$bairroNome = $request->bairro;
+		}
 		$result = EnderecoDelivery::create([
 			'cliente_id' => $request->cliente, 
 			'rua' => $request->rua,
 			'numero' => $request->numero,
-			'bairro' => $request->bairro, 
+
+			'bairro' => $bairroNome,
+			'bairro_id' => $bairroId,
+			
 			'referencia' => $request->referencia,
 			'latitude' => $request->latitude ? substr($request->latitude, 0, 10) : '',
 			'longitude' => $request->longitude ? substr($request->longitude, 0, 10) : ''
@@ -203,6 +228,16 @@ class AppUserController extends Controller
 			$res = TokenClienteDelivery::
 			where('token', $request->token)
 			->first();
+		}
+
+		if($res == null){
+			$result = TokenClienteDelivery::create([
+				'cliente_id' => null, 
+				'user_id' => $request->user_id,
+				'token' => $request->token
+			]);
+
+			if($result) return response()->json($result, 200);
 		}
 
 		if($res){

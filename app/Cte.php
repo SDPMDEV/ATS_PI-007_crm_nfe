@@ -87,7 +87,7 @@ class Cte extends Model
         ->orderBy('cte_numero', 'desc')
         ->first();
 
-        if($cte == null) return ConfigNota::first()->ultimo_numero_cte;
+        if($cte == null) return ConfigNota::first()->ultimo_numero_cte ?? 0;
         else return $cte->cte_numero;
     }
 
@@ -96,7 +96,8 @@ class Cte extends Model
             '00' => 'M3',
             '01' => 'KG',
             '02' => 'TON',
-            '03' => 'UNIDADE' 
+            '03' => 'UNIDADE',
+            '04' => 'M2',
         ];
     }
 

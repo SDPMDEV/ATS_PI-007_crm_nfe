@@ -38,16 +38,19 @@ class CategoryController extends Controller
     public function save(Request $request){
 
 
-
         $category = new Categoria();
         $this->_validate($request);
-
-        $result = $category->create($request->all());
-
         $atribuir_delivery = $request->atribuir_delivery;
-        $msgSucesso = "Categoria cadastrada com sucesso";
+        
         if($atribuir_delivery){
             $this->_validateDelivery($request);
+        }
+        $result = $category->create($request->all());
+
+        $msgSucesso = "Categoria cadastrada com sucesso";
+
+        if($atribuir_delivery){
+
             $file = $request->file('file');
 
             $extensao = $file->getClientOriginalExtension();
@@ -55,8 +58,8 @@ class CategoryController extends Controller
             $upload = $file->move(public_path('imagens_categorias'), $nomeImagem);
 
             if(!$upload){
-                session()->flash('color', 'red');
-                session()->flash('message', 'Erro ao realizar upload da imagem.');
+
+                session()->flash('mensagem_sucesso', 'Erro ao realizar upload da imagem.');
             }else{
 
                 $result = CategoriaProdutoDelivery::create(
@@ -70,18 +73,15 @@ class CategoryController extends Controller
                     $msgSucesso = "Categoria cadastrada e atribuida ao delivery com sucesso";
                 }
             }
-
         }
 
-
-
+        
 
         if($result){
-            session()->flash('color', 'blue');
-            session()->flash("message", $msgSucesso);
+
+            session()->flash("mensagem_sucesso", $msgSucesso);
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao cadastrar categoria.');
+            session()->flash('mensagem_erro', 'Erro ao cadastrar categoria.');
         }
 
         return redirect('/categorias');
@@ -113,11 +113,11 @@ class CategoryController extends Controller
 
         $result = $resp->save();
         if($result){
-            session()->flash('color', 'green');
-            session()->flash('message', 'Categoria editada com sucesso!');
+
+            session()->flash('mensagem_sucesso', 'Categoria editada com sucesso!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao editar categoria!');
+
+            session()->flash('mensagem_erro', 'Erro ao editar categoria!');
         }
 
         return redirect('/categorias'); 
@@ -129,11 +129,11 @@ class CategoryController extends Controller
             ::where('id', $id)
             ->delete();
             if($delete){
-                session()->flash('color', 'blue');
-                session()->flash('message', 'Registro removido!');
+
+                session()->flash('mensagem_sucesso', 'Registro removido!');
             }else{
-                session()->flash('color', 'red');
-                session()->flash('message', 'Erro!');
+
+                session()->flash('mensagem_erro', 'Erro!');
             }
             return redirect('/categorias');
         }catch(\Exception $e){

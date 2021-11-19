@@ -15,7 +15,7 @@ use App\Produto;
 
 class PurchaseController extends Controller
 {
-	public function __construct(){
+    public function __construct(){
         $this->middleware(function ($request, $next) {
             $value = session('user_logged');
             if(!$value){
@@ -143,8 +143,8 @@ class PurchaseController extends Controller
         $diferencaDatas = null;
 
         if($dataInicial == null || $dataFinal == null || $fornecedor == null){
-            session()->flash('color', 'red');
-            session()->flash('message', 'Informe o fornecedor, data inicial e data final!');
+
+            session()->flash('mensagem_erro', 'Informe o fornecedor, data inicial e data final!');
             return redirect('/compras');
         }
         if(isset($fornecedor) && isset($dataInicial) && isset($dataFinal)){
@@ -195,6 +195,13 @@ class PurchaseController extends Controller
         else return response()->download($public.'xml_entrada_emitida/'.$compra->chave. '.xml');
     }
 
+    public function downloadXmlCancela($id){
+        $compra = Compra::
+        where('id', $id)
+        ->first();
+        $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+        return response()->download($public.'xml_nfe_entrada_cancelada/'.$compra->chave. '.xml');
+    }
 
     public function detalhes($id){
         $compra = Compra::
@@ -213,8 +220,8 @@ class PurchaseController extends Controller
 
         $stockMove = new StockMove();
         $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-        echo $public."xml_entrada/$compra->xml_path";
-        if(file_exists($public."xml_entrada/$compra->xml_path")){
+
+        if($compra->xml_path != "" && file_exists($public."xml_entrada/$compra->xml_path")){
             unlink($public."xml_entrada/$compra->xml_path");
         }
         foreach($compra->itens as $i){
@@ -224,11 +231,9 @@ class PurchaseController extends Controller
         } 
 
         if($compra->delete()){
-            session()->flash('color', 'blue');
-            session()->flash('message', 'Registro removido!');
+            session()->flash('mensagem_sucesso', 'Registro removido!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro!');
+            session()->flash('mensagem_erro', 'Erro!');
         }
         return redirect('/compras');
     }
@@ -263,15 +268,15 @@ class PurchaseController extends Controller
             "schemes" => "PL_009_V4",
             "versao" => "4.00",
             "tokenIBPT" => "AAAAAAA",
-            "CSC" => getenv('CSC'),
-            "CSCid" => getenv('CSCid')
+            "CSC" => $config->csc,
+            "CSCid" => $config->csc_id
         ], 55);
 
         header('Content-type: text/html; charset=UTF-8');
         $natureza = NaturezaOperacao::find($request->natureza);
 
         $nfe = $nfe_service->gerarNFe($compra, $natureza, $request->tipo_pagamento);
-
+        
         $signed = $nfe_service->sign($nfe['xml']);
         $resultado = $nfe_service->transmitir($signed, $nfe['chave']);
         if(substr($resultado, 0, 4) != 'Erro'){
@@ -295,8 +300,15 @@ class PurchaseController extends Controller
         $compra = Compra::find($id);
 
         $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-
-        $xml = file_get_contents($public.'xml_entrada_emitida/'.$compra->chave.'.xml');
+        $xml = null;
+        if(file_exists($public.'xml_entrada_emitida/'.$compra->chave.'.xml')){
+            $xml = file_get_contents($public.'xml_entrada_emitida/'.$compra->chave.'.xml');
+        }else if(file_exists($public.'xml_entrada/'.$compra->chave.'.xml')){
+            $xml = file_get_contents($public.'xml_entrada/'.$compra->chave.'.xml');
+        }else{
+            session()->flash('mensagem_erro', 'Xml não encontrado!');
+            return redirect('/compras');
+        }
         $logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.jpg'));
         // $docxml = FilesFolders::readFile($xml);
 
@@ -309,6 +321,46 @@ class PurchaseController extends Controller
         } catch (InvalidArgumentException $e) {
             echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
         }  
+    }
+
+    public function cancelarEntrada(Request $request){
+
+        $config = ConfigNota::first();
+
+        $cnpj = str_replace(".", "", $config->cnpj);
+        $cnpj = str_replace("/", "", $cnpj);
+        $cnpj = str_replace("-", "", $cnpj);
+        $cnpj = str_replace(" ", "", $cnpj);
+
+        $nfe_service = new NFeEntradaService([
+            "atualizacao" => date('Y-m-d h:i:s'),
+            "tpAmb" => (int)$config->ambiente,
+            "razaosocial" => $config->razao_social,
+            "siglaUF" => $config->UF,
+            "cnpj" => $cnpj,
+            "schemes" => "PL_009_V4",
+            "versao" => "4.00",
+            "tokenIBPT" => "AAAAAAA",
+            "CSC" => $config->csc,
+            "CSCid" => $config->csc_id
+        ], 55);
+
+        $compra = Compra::find($request->compra_id);
+        $nfe = $nfe_service->cancelar($compra, $request->justificativa);
+        if($this->isJson($nfe)){
+
+            $compra->estado = 'CANCELADO';
+            $compra->save();
+
+        }
+        
+        echo json_encode($nfe);
+
+    }
+
+    private function isJson($string) {
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
     }
 
     public function produtosSemValidade(){
@@ -353,11 +405,9 @@ class PurchaseController extends Controller
             }
         }
         if($contErro == 0){
-            session()->flash('color', 'green');
-            session()->flash('message', 'Validades inseridas para os itens!');
+            session()->flash('mensagem_sucesso', 'Validades inseridas para os itens!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro no formulário para os itens abaixo!');
+            session()->flash('mensagem_erro', 'Erro no formulário para os itens abaixo!');
         }
         return redirect('/compras/produtosSemValidade');
         

@@ -82,7 +82,7 @@ class ReceitaController extends Controller
 			session()->flash('message', 'Erro ao atualizar!');
 		}
 
-		return redirect("/produtos/receita/$request->receita_id");
+		return redirect("/produtos/receita/" . $receita->produto->id);
 	}
 
 	public function saveItem(Request $request){
@@ -130,7 +130,7 @@ class ReceitaController extends Controller
 
 	private function _validateItem(Request $request){
 		$rules = [
-			'produto' => 'required|min:5',
+			'produto' => 'required',
 			'quantidade' => 'required',
 		];
 

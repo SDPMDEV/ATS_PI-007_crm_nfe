@@ -57,7 +57,7 @@ $('#enviar-sms').click(() => {
 			$('.sms-enviado').css('display', 'block')
 			$('#cod1').focus();
 		}else{
-			alert('Erro ao enviar código de autenticação!')
+			swal("Erro", "Erro ao enviar código de autenticação!", "error")
 		}
 	})
 	.fail((err) => {
@@ -74,7 +74,7 @@ function validaCodigo(){
 		codToken: codToken
 	})
 	.done((res) => {
-		console.log(res)
+
 		location.href=path;
 	})
 	.fail((err) => {

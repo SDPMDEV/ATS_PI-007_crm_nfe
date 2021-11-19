@@ -1,45 +1,123 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="card col s12">
-		<div class="row">
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 
-			<br>
-			<h5>Novo Apontamento</h5>
-			<form class="" method="post" action="/estoque/saveApontamentoManual">
-				<input type="hidden" name="_token" value="{{ csrf_token() }}">
-				<div class="row">
-					<div class="input-field col s6">
-						<input autocomplete="off" type="text" name="produto" id="autocomplete-produto" class="autocomplete-produto">
-						<label for="autocomplete-produto">Produto</label>
-						@if($errors->has('produto'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('produto') }}</span>
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
+
+				<form method="post" action="/estoque/saveApontamentoManual" enctype="multipart/form-data">
+
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">Novo Apontamento</h3>
 						</div>
-						@endif
+
 					</div>
-					<br>
-					<p class="red-text">*Produto não composto!</p>
-				</div>
-				<div class="row">
-					<div class="input-field col s4">
-						<input type="text" value="{{old('quantidade')}}" id="quantidade" name="quantidade">
-						<label>Quantidade</label>
-						@if($errors->has('quantidade'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('quantidade') }}</span>
+					@csrf
+
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
+
+									<div class="row">
+										<div class="form-group validated col-lg-8 col-md-8 col-sm-10">
+											<label class="col-form-label text-left col-lg-4 col-sm-12">Produto</label>
+											<select class="form-control select2" id="kt_select2_1" name="produto">
+												@foreach($produtos as $p)
+												<option value="{{$p->id}}">{{$p->id}} - {{$p->nome}}</option>
+												@endforeach
+											</select>
+											@if($errors->has('produto'))
+											<div class="invalid-feedback">
+												{{ $errors->first('produto') }}
+											</div>
+											@endif
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-6 col-lg-4">
+											<label class="col-form-label">Quantiade</label>
+											<div class="">
+												<input type="text" id="quantidade" class="form-control @if($errors->has('quantidade')) is-invalid @endif" name="quantidade" value="{{{ old('quantidade') }}}">
+												@if($errors->has('quantidade'))
+												<div class="invalid-feedback">
+													{{ $errors->first('quantidade') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-6 col-lg-4">
+											<label class="col-form-label">Tipo</label>
+											<div class="">
+
+												<select class="custom-select form-control" id="tipo" name="tipo">
+													<option value="reducao">Redução de estoque</option>
+													<option value="incremento">Incremento de estoque</option>
+												</select>
+
+												@if($errors->has('tipo'))
+												<div class="invalid-feedback">
+													{{ $errors->first('tipo') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-lg-8 col-md-8 col-sm-10">
+											<label class="col-form-label text-left col-lg-4 col-sm-12">Observação</label>
+											
+											<input type="text" id="observacao" class="form-control @if($errors->has('observacao')) is-invalid @endif" name="observacao" value="{{{ old('observacao') }}}">
+											@if($errors->has('observacao'))
+											<div class="invalid-feedback">
+												{{ $errors->first('observacao') }}
+											</div>
+											@endif
+										</div>
+									</div>
+
+
+
+								</div>
+							</div>
 						</div>
-						@endif
 					</div>
+					<div class="card-footer">
 
-					<div class="col s4">
-						<button class="btn-large green accent-3" type="submit">Salvar</button>
+						<div class="row">
+							<div class="col-xl-2">
 
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Salvar</span>
+								</button>
+							</div>
+
+						</div>
 					</div>
-				</div>
-			</form>
+				</form>
+			</div>
 		</div>
 	</div>
 </div>
-@endsection	
+
+@endsection
+

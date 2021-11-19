@@ -1,99 +1,137 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
+	<div class="card-body">
 
-		<h4>Controle de Comandas</h4>
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
 
-		<div class="row">
-			<br>
+			<input type="hidden" id="_token" value="{{ csrf_token() }}">
 			<form method="get" action="/pedidos/filtroComanda">
-				<div class="row">
+				<div class="row align-items-center">
 
-
-					<div class="col s2 input-field">
-						<input value="{{{ isset($comanda) ? $comanda : '' }}}" type="text" class="validate" name="numero_comanda">
-						<label>Comanda</label>
+					<div class="form-group col-lg-3 col-md-4 col-sm-6">
+						<label class="col-form-label">Comanda</label>
+						<div class="">
+							<div class="input-group">
+								<input type="text" name="numero_comanda" class="form-control" value="{{{isset($comanda) ? $comanda : ''}}}" />
+							</div>
+						</div>
 					</div>
 
-					<div class="col s2 input-field">
-						<input value="{{{ isset($dataInicial) ? $dataInicial : '' }}}" type="text" class="datepicker" name="data_inicial">
-						<label>Data Inicial</label>
-					</div>
-					<div class="col s2 input-field">
-						<input value="{{{ isset($dataFinal) ? $dataFinal : '' }}}" type="text" class="datepicker" name="data_final">
-						<label>Data Final</label>
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Data Inicial</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="data_inicial" class="form-control" readonly value="{{{isset($comanda) ? $comanda : ''}}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
 					</div>
 
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Data Final</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="data_final" class="form-control" readonly value="{{{isset($dataFinal) ? $dataFinal : ''}}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
 
-					<div class="col s2">
-						<button type="submit" class="btn-large black">
-							<i class="material-icons">search</i>
-						</button>
+					<div class="col-lg-2 col-xl-2 mt-2 mt-lg-0">
+						<button style="margin-top: 15px;" class="btn btn-light-primary px-6 font-weight-bold">Pesquisa</button>
 					</div>
 				</div>
 			</form>
+			<br>
+			<h4>Controle de Comandas</h4>
+			<label>Numero de registros: {{count($comandas)}}</label>	
+			<p class="text-danger">{{$mensagem}}</p>				
+			<p class="text-danger">*Comanda em vermelho contém produtos deletados</p>		
 
-			@if(session()->has('message'))
-			<div class="row">
-				<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-					<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
+			<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+				<div class="row">
+					<div class="col-xl-12">
+
+						<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+
+							<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+								<thead class="datatable-head">
+									<tr class="datatable-row" style="left: 0px;">
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 70px;">#</span></th>
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Comanda</span></th>
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Observação</span></th>
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Valor</span></th>
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Data de Criação</span></th>
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Data de Finalização</span></th>
+										<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 100px;">Ações</span></th>
+									</tr>
+								</thead>
+								<tbody id="body" class="datatable-body">
+									@foreach($comandas as $v)
+									<tr class="datatable-row @if($v->temItemDeletetado()) bg-danger @endif">
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 70px;">
+												{{$v->id}}
+											</span>
+										</td>
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												{{$v->comanda}}
+											</span>
+										</td>
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												<a href="#!" onclick='swal("", "{{$v->observacao}}", "info")' class="btn btn-light-info @if(!$v->observacao) disabled @endif">
+													Ver
+												</a>
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												{{number_format($v->somaItems(), 2)}}
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												{{ \Carbon\Carbon::parse($v->created_at)->format('d/m/Y H:i:s')}}
+											</span>
+										</td>
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												{{ \Carbon\Carbon::parse($v->updated_at)->format('d/m/Y H:i:s')}}
+											</span>
+										</td>
+
+										<td class="datatable-cell">
+											<span class="codigo" style="width: 100px;">
+												<a target="_blank" href="/pedidos/verDetalhes/{{$v->id}}" class="btn btn-sm btn-info">
+													<i class="la la-list"></i>
+												</a>
+											</span>
+										</td>
+
+										
+									</tr>
+									@endforeach
+								</tbody>
+							</table>
+						</div>
+					</div>
 				</div>
 			</div>
-			@endif
-			<div class="col s12">
-				<label>Numero de registros: {{count($comandas)}}</label>	
-				<p class="red-text">{{$mensagem}}</p>				
-				<p class="red-text">*Comanda em vermelho contém produtos deletados</p>				
-			</div>
-
-			<table class="col s12">
-				<thead>
-					<tr>
-						<th>ID</th>
-						<th>Comanda</th>
-						<th>Obs</th>
-						<th>Valor</th>
-						<th>Data de Criação</th>
-						<th>Data de Finalização</th>
-						<th>Ações</th>
-					</tr>
-				</thead>
-
-				<tbody id="body">
-					<?php 
-					$total = 0;
-					?>
-					@foreach($comandas as $v)
-
-					<tr class="@if($v->temItemDeletetado()) red lighten-4 @endif">
-						<td>{{$v->id}}</td>
-						<td>{{$v->comanda}}</td>
-						<td>{{$v->observacao}}</td>
-						<td>{{number_format($v->somaItems(), 2)}}</td>
-						<td>{{ \Carbon\Carbon::parse($v->created_at)->format('d/m/Y H:i:s')}}</td>
-						<td>{{ \Carbon\Carbon::parse($v->updated_at)->format('d/m/Y H:i:s')}}</td>
-							
-						<td>
-							<a target="_blank" href="/pedidos/verDetalhes/{{$v->id}}">
-								<i class="material-icons">list</i>
-							</a>
-						</td>
-					</tr>
-					@endforeach
-				</tbody>
-			</table>
 		</div>
-
-
-
-		@if(isset($links))
-		<ul class="pagination center-align">
-			<li class="waves-effect">{{$comandas->links()}}</li>
-		</ul>
-		@endif
-
 	</div>
 </div>
 

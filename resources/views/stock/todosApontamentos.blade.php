@@ -1,92 +1,150 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
 
-		<h4>Todos os Apontamentos</h4>
 
-		<form method="get" action="/estoque/filtroApontamentos">
-			<div class="row">
-				<div class="input-field col s3">
-					<input value="{{isset($dataInicial) ? $dataInicial : ''}}" type="text" class="datepicker" name="dataInicial">
-					<label>Data Inicial</label>
-				</div>
-				<div class="input-field col s3">
-					<input value="{{isset($dataFinal) ? $dataFinal : ''}}" type="text" class="datepicker" name="dataFinal">
-					<label>Data Final</label>
-				</div>
-				<div class="col s2">
-					<button class="btn-large black" type="submit">
-						<i class="material-icons">search</i>
-					</button>
-				</div>
-			</div>
-		</form>
+	<div class="card-body">
 
-		<div class="row">
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
+
 			<br>
-			<div class="col s12">
-				<label>Numero de registros: {{count($apontamentos)}}</label>					
+			<form method="get" action="/estoque/filtroApontamentos">
+				<div class="row align-items-center">
+
+					<div class="form-group col-lg-3 col-md-4 col-sm-6">
+						<label class="col-form-label">Data Inicial</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="dataInicial" class="form-control" readonly value="{{isset($dataInicial) ? $dataInicial : ''}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group col-lg-3 col-md-4 col-sm-6">
+						<label class="col-form-label">Data de Final</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="dataFinal" class="form-control" readonly value="{{isset($dataFinal) ? $dataFinal : ''}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-lg-2 col-xl-2 mt-2 mt-lg-0">
+						<button style="margin-top: 15px;" class="btn btn-light-primary px-6 font-weight-bold">Pesquisa</button>
+					</div>
+				</div>
+			</form>
+
+			<br>
+			<h4>Todos os Apontamentos</h4>
+			<label>Total de registros: {{count($apontamentos)}}</label>
+			<div class="row">
+
+
+				<div class="col-xl-12">
+					<div class="row">
+						<div class="col-xl-12">
+							<div id="kt_datatable" class="datatable datatable-bordered datatable-head-custom datatable-default datatable-primary datatable-loaded">
+								<br>
+
+								<table class="datatable-table" style="max-width: 100%; overflow: scroll">
+									<thead class="datatable-head">
+										<tr class="datatable-row" style="left: 0px;">
+
+											<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 150px;">Produto</span></th>
+											<th data-field="OrderID" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Quantidade</span></th>
+											<th data-field="Country" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Data de registro</span></th>
+											<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Un. Compra</span></th>
+
+											<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Un. Venda</span></th>
+											<th data-field="ShipDate" class="datatable-cell datatable-cell-sort"><span style="width: 80px;">Valor de venda</span></th>
+
+
+										</tr>
+									</thead>
+									<tbody class="datatable-body">
+										<?php 
+										$somaQuatidade = 0;
+										?>
+										@foreach($apontamentos as $a)
+										<tr class="datatable-row" style="left: 0px;">
+											<td class="datatable-cell"><span class="codigo" style="width: 150px;">
+												{{$a->produto->nome}}
+											</span></td>
+											<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+												{{$a->quantidade}}
+											</span></td>
+											<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+												{{ \Carbon\Carbon::parse($a->data_registro)->format('d/m/Y H:i:s')}}
+											</span></td>
+											<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+												{{$a->produto->unidade_compra}}
+											</span></td>
+											<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+												{{$a->produto->unidade_venda}}
+											</span></td>
+											
+
+											<td class="datatable-cell"><span class="codigo" style="width: 80px;">
+												{{number_format($a->produto->valor_venda, 2, ',', '.') }}
+											</span></td>
+
+											<?php 
+											$somaQuatidade += $a->quantidade;
+											?>
+
+										</tr>
+										@endforeach
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="d-flex justify-content-between align-items-center flex-wrap">
+						<div class="d-flex flex-wrap py-2 mr-3">
+							@if(isset($links))
+							{{$apontamentos->links()}}
+							@endif
+						</div>
+					</div>
+
+					<div class="card-body">
+						<div class="row">
+							<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+								<div class="card card-custom gutter-b example example-compact">
+									<div class="card-header">
+
+										<div class="card-body">
+											<h3 class="card-title">Quantidade Total: <strong style="margin-left: 5px;"> {{ number_format($somaQuatidade, 3) }}</strong></h3>
+
+										</div>
+
+									</div>
+								</div>
+							</div>
+
+						</div>
+					</div>
+
+
+				</div>
 			</div>
 
-			<table class="col s12 striped">
-				<thead>
-					<tr>
-						<th>Produto</th>
-						<th>Quantidade</th>
-						<th>Data do Registro</th>
-						<th>Un. Compra</th>
-						<th>Un. Venda</th>
-						<th>Valor de Venda</th>
-						<th>Ações</th>
-					</tr>
-				</thead>
 
-				<tbody>
-					<?php 
-					$somaQuatidade = 0;
-					?>
-					@foreach($apontamentos as $a)
-
-					<tr>
-
-						<td>{{$a->produto->nome}}</td>
-						<td>{{$a->quantidade}}</td>
-						<td>{{ \Carbon\Carbon::parse($a->data_registro)->format('d/m/Y H:i:s')}}</td>
-						<td>{{$a->produto->unidade_compra}}</td>
-						<td>{{$a->produto->unidade_venda}}</td>
-						<td>{{number_format($a->produto->valor_venda, 2, ',', '.') }}</td>
-						<td>
-							<a onclick = "if (! confirm('Deseja excluir este registro? O estoque de produtos será alterado!')) { return false; }" title="Remover Apontamento" 
-							href="/estoque/deleteApontamento/{{$a->id}}">
-							<i class="material-icons red-text">delete</i>
-						</a>
-					</td>
-					<?php 
-					$somaQuatidade += $a->quantidade;
-					?>
-
-				</tr>
-				@endforeach
-				<tr class="red lighten-4 gray-text">
-					<td class="center-align">Total</td>
-					<td>{{ number_format($somaQuatidade, 3, ',', '.') }}</td>
-					<td colspan="5"></td>
-				</tr>
-			</tbody>
-		</table>
+		</div>
 	</div>
-
-	<!-- links -->
-	@if($links)
-	<ul class="pagination center-align">
-		<li class="waves-effect">{{$apontamentos->links()}}</li>
-	</ul>
-	@endif
-	<!-- fim links -->
-
-	
 </div>
 </div>
-@endsection	
+
+@endsection

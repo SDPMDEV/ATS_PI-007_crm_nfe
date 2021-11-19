@@ -1,161 +1,202 @@
 @extends('default.layout')
 @section('content')
-<div class="row">
-	<div class="col s12">
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
+
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
+
+				<form method="post" action="/escritorio/save">
+
+					<input type="hidden" name="id" value="{{{ isset($escritorio) ? $escritorio->id : 0 }}}">
+
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">{{{ isset($escritorio) ? "Editar": "Cadastrar" }}} Escritório</h3>
+						</div>
+
+					</div>
+					@csrf
+
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
+
+									<div class="row">
+										<div class="form-group validated col-sm-12 col-lg-12">
+											<label class="col-form-label">Razao Social</label>
+											<div class="">
+												<input id="razao_social" type="text" class="form-control @if($errors->has('razao_social')) is-invalid @endif" name="razao_social" value="{{{ isset($escritorio) ? $escritorio->razao_social : old('razao_social') }}}">
+												@if($errors->has('razao_social'))
+												<div class="invalid-feedback">
+													{{ $errors->first('razao_social') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-12 col-lg-12">
+											<label class="col-form-label">Nome Fantasia</label>
+											<div class="">
+												<input id="nome_fantasia" type="text" class="form-control @if($errors->has('nome_fantasia')) is-invalid @endif" name="nome_fantasia" value="{{{ isset($escritorio) ? $escritorio->nome_fantasia : old('nome_fantasia') }}}">
+												@if($errors->has('nome_fantasia'))
+												<div class="invalid-feedback">
+													{{ $errors->first('nome_fantasia') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-6 col-lg-6">
+											<label class="col-form-label">CNPJ</label>
+											<div class="">
+												<input id="cnpj" type="text" class="form-control @if($errors->has('cnpj')) is-invalid @endif" name="cnpj" value="{{{ isset($escritorio) ? $escritorio->cnpj : old('cnpj') }}}">
+												@if($errors->has('cnpj'))
+												<div class="invalid-feedback">
+													{{ $errors->first('cnpj') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-6 col-lg-6">
+											<label class="col-form-label">Inscrição Estadual</label>
+											<div class="">
+												<input id="ie" type="text" class="form-control @if($errors->has('ie')) is-invalid @endif" name="ie" value="{{{ isset($escritorio) ? $escritorio->ie : old('ie') }}}">
+												@if($errors->has('ie'))
+												<div class="invalid-feedback">
+													{{ $errors->first('ie') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<hr>
+									<h5>Endereço</h5>
+
+									<div class="row">
+
+										<div class="form-group validated col-sm-10 col-lg-10">
+											<label class="col-form-label">Logradouro</label>
+											<div class="">
+												<input id="logradouro" type="text" class="form-control @if($errors->has('logradouro')) is-invalid @endif" name="logradouro" value="{{{ isset($escritorio) ? $escritorio->logradouro : old('logradouro') }}}">
+												@if($errors->has('logradouro'))
+												<div class="invalid-feedback">
+													{{ $errors->first('logradouro') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-2 col-lg-2">
+											<label class="col-form-label">Nº</label>
+											<div class="">
+												<input id="numero" type="text" class="form-control @if($errors->has('numero')) is-invalid @endif" name="numero" value="{{{ isset($escritorio) ? $escritorio->numero : old('numero') }}}">
+												@if($errors->has('numero'))
+												<div class="invalid-feedback">
+													{{ $errors->first('numero') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+
+										<div class="form-group validated col-sm-5 col-lg-5">
+											<label class="col-form-label">Bairro</label>
+											<div class="">
+												<input id="bairro" type="text" class="form-control @if($errors->has('bairro')) is-invalid @endif" name="bairro" value="{{{ isset($escritorio) ? $escritorio->bairro : old('bairro') }}}">
+												@if($errors->has('bairro'))
+												<div class="invalid-feedback">
+													{{ $errors->first('bairro') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-5 col-lg-5">
+											<label class="col-form-label">CEP</label>
+											<div class="">
+												<input id="cep" type="text" class="form-control @if($errors->has('cep')) is-invalid @endif" name="cep" value="{{{ isset($escritorio) ? $escritorio->cep : old('cep') }}}">
+												@if($errors->has('cep'))
+												<div class="invalid-feedback">
+													{{ $errors->first('cep') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+
+										<div class="form-group validated col-sm-5 col-lg-5">
+											<label class="col-form-label">Email</label>
+											<div class="">
+												<input id="email" type="text" class="form-control @if($errors->has('email')) is-invalid @endif" name="email" value="{{{ isset($escritorio) ? $escritorio->email : old('email') }}}">
+												@if($errors->has('email'))
+												<div class="invalid-feedback">
+													{{ $errors->first('email') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-5 col-lg-5">
+											<label class="col-form-label">Telefone</label>
+											<div class="">
+												<input id="telefone" type="text" class="form-control @if($errors->has('fone')) is-invalid @endif" name="fone" value="{{{ isset($escritorio) ? $escritorio->fone : old('fone') }}}">
+												@if($errors->has('fone'))
+												<div class="invalid-feedback">
+													{{ $errors->first('fone') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+
+								</div>
+							</div>
+
+						</div>
+
+					</div>
+					<div class="card-footer">
+
+						<div class="row">
+							<div class="col-xl-2">
+
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="/escritorio">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Salvar</span>
+								</button>
+							</div>
+
+						</div>
+					</div>
+				</form>
 			</div>
 		</div>
-		
-		@endif
-		<h4>{{{ isset($config) ? "Editar": "Cadastrar" }}} Escritório</h4>
-		<form method="post" action="/escritorio/save" enctype="multipart/form-data">
-			<input type="hidden" name="id" value="{{{ isset($escritorio->id) ? $escritorio->id : 0 }}}">
-
-			<section class="section-1">
-				<div class="row">
-					<div class="input-field col s7">
-						<input value="{{{ isset($escritorio->razao_social) ? $escritorio->razao_social : old('razao_social') }}}" id="razao_social" name="razao_social" type="text" class="validate upper-input">
-						<label for="razao_social">Razao Social</label>
-
-						@if($errors->has('razao_social'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('razao_social') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s7">
-						<input value="{{{ isset($escritorio->nome_fantasia) ? $escritorio->nome_fantasia : old('nome_fantasia') }}}" id="nome_fantasia" name="nome_fantasia" type="text" class="validate upper-input">
-						<label for="nome_fantasia">Nome Fantasia</label>
-
-						@if($errors->has('nome_fantasia'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('nome_fantasia') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col s3">
-						<input value="{{{ isset($escritorio->cnpj) ? $escritorio->cnpj : old('cnpj') }}}" id="cnpj" name="cnpj" type="text" class="validate">
-						<label>CNPJ</label>
-
-						@if($errors->has('cnpj'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('cnpj') }}</span>
-						</div>
-						@endif
-					</div>
-
-					<div class="input-field col s3">
-						<input value="{{{ isset($escritorio->ie) ? $escritorio->ie : old('ie') }}}" id="ie" name="ie" type="text" class="validate">
-						<label>Inscrição Estadual</label>
-
-						@if($errors->has('ie'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('ie') }}</span>
-						</div>
-						@endif
-					</div>
-				</div>
-			</section>
-			<section class="section-2">
-
-				<div class="row">
-					<div class="input-field col s5">
-						<input value="{{{ isset($escritorio->logradouro) ? $escritorio->logradouro : old('logradouro') }}}" id="logradouro" name="logradouro" type="text" class="validate upper-input">
-						<label for="logradouro">Logradouro</label>
-
-						@if($errors->has('logradouro'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('logradouro') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col s2">
-						<input value="{{{ isset($escritorio->numero) ? $escritorio->numero : old('numero') }}}" id="numero" name="numero" type="text" class="validate upper-input">
-						<label for="numero">Numero</label>
-
-						@if($errors->has('numero'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('numero') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-
-					<div class="input-field col s3">
-						<input value="{{{ isset($escritorio->bairro) ? $escritorio->bairro : old('bairro') }}}" id="bairro" name="bairro" type="text" class="validate upper-input">
-						<label for="bairro">Bairro</label>
-
-						@if($errors->has('bairro'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('bairro') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col s3">
-						<input value="{{{ isset($escritorio->cep) ? $escritorio->cep : old('cep') }}}" id="cep" name="cep" type="text" class="validate">
-						<label for="cep">CEP</label>
-
-						@if($errors->has('cep'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('cep') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-				<div class="row">
-					<div class="input-field col s3">
-						<input value="{{{ isset($escritorio->email) ? $escritorio->email : old('email') }}}" id="email" name="email" type="text" class="validate upper-input">
-						<label for="email">Email</label>
-
-						@if($errors->has('email'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('email') }}</span>
-						</div>
-						@endif
-
-					</div>
-
-					<div class="input-field col s3">
-						<input value="{{{ isset($escritorio->fone) ? $escritorio->fone : old('fone') }}}" id="telefone" name="fone" type="text" class="validate upper-input">
-						<label for="fone">Telefone</label>
-
-						@if($errors->has('fone'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('fone') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<input type="hidden" name="_token" value="{{ csrf_token() }}">
-
-			</section>
-
-
-			<br>
-			<div class="row">
-				<a class="btn-large red lighten-2" href="/">Cancelar</a>
-				<input type="submit" value="Salvar" class="btn-large green accent-3">
-			</div>
-		</form>
 	</div>
 </div>
+
 @endsection

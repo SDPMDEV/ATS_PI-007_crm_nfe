@@ -35,6 +35,11 @@ class ServiceController extends Controller
 
     public function new(){
         $categorias = CategoriaServico::all();
+        if(sizeof($categorias) == 0){
+
+            session()->flash('mensagem_sucesso', 'Cadastre uma categoria primeiramente!');
+            return redirect('/categoriasServico');
+        }
         return view('servicos/register')
         ->with('categorias', $categorias)
         ->with('title', 'Cadastrar Servico');
@@ -50,11 +55,9 @@ class ServiceController extends Controller
         $result = $servico->create($request->all());
 
         if($result){
-            session()->flash('color', 'blue');
-            session()->flash("message", "Serviço cadastrado com sucesso!");
+            session()->flash("mensagem_sucesso", "Serviço cadastrado com sucesso!");
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao cadastrar serviço!');
+            session()->flash('mensagem_erro', 'Erro ao cadastrar serviço!');
         }
         
         return redirect('/servicos');
@@ -91,11 +94,9 @@ class ServiceController extends Controller
 
         $result = $resp->save();
         if($result){
-            session()->flash('color', 'Serviço');
-            session()->flash('message', 'Categoria editada com sucesso!');
+            session()->flash('mensagem_sucesso', 'Categoria editada com sucesso!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao editar serviço!');
+            session()->flash('mensagem_erro', 'Erro ao editar serviço!');
         }
         
         return redirect('/servicos'); 
@@ -107,11 +108,9 @@ class ServiceController extends Controller
             ::where('id', $id)
             ->delete();
             if($delete){
-                session()->flash('color', 'blue');
-                session()->flash('message', 'Serviço removido!');
+                session()->flash('mensagem_sucesso', 'Serviço removido!');
             }else{
-                session()->flash('color', 'red');
-                session()->flash('message', 'Erro!');
+                session()->flash('mensagem_erro', 'Erro!');
             }
             return redirect('/servicos');
         }catch(\Exception $e){

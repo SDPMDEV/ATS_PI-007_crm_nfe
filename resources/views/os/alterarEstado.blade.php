@@ -1,58 +1,67 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
 
-		<h3>Alterar Estado da OS <strong>{{$ordem->id}}</strong></h3>
-		<h4>Estado Atual: <strong>
-			@if($ordem->estado == 'pd') 
-			PENDENTE
-			@elseif($ordem->estado == 'ap')
-			APROVADO
-			@elseif($ordem->estado == 'rp')
-			REPROVADO
-			@else
-			FINALIZADO
-			@endif
-		</strong>
+	<div class="card-body">
+		<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+			<h3 style="font-weight: bold;">Alterar Estado da OS 
+				<strong style="font-weight: bold;" class="text-success">{{$ordem->id}}</strong>
+			</h3>
+			<h4>Estado Atual: 
+				@if($ordem->estado == 'pd') 
+				<span class="label label-xl label-inline label-light-warning">PENDENTE</span>
+				@elseif($ordem->estado == 'ap')
+				<span class="label label-xl label-inline label-light-success">APROVADO</span>
+				@elseif($ordem->estado == 'rp')
+				<span class="label label-xl label-inline label-light-danger">REPROVADO</span>
+				@else
+				<span class="label label-xl label-inline label-light-info">FINALIZADO</span>
+				@endif
 
-		@if($ordem->estado != 'fz' && $ordem->estado != 'rp')
+			</h4>
 
-		<form method="post" action="/ordemServico/alterarEstado">
-			<input type="hidden" name="_token" value="{{ csrf_token() }}">
-			<input type="hidden" name="id" value="{{$ordem->id}}">
-			<div class="row">
-				<div class="col s4 input-field">
-					@if($ordem->estado == 'pd')
-					<select name="novo_estado">
-						<option value="ap">APROVADO</option>
-						<option value="rp">REPROVADO</option>
-					</select>
+			@if($ordem->estado != 'fz' && $ordem->estado != 'rp')
 
-					@elseif($ordem->estado == 'ap')
-					<select name="novo_estado">
-						<option value="fz">FINALIZADO</option>
-					</select>
-					@endif
+			<form method="post" action="/ordemServico/alterarEstado">
+				<input type="hidden" name="_token" value="{{ csrf_token() }}">
+				<input type="hidden" name="id" value="{{$ordem->id}}">
+				<div class="row">
+					<div class="form-group validated col-sm-4 col-lg-4">
+
+						@if($ordem->estado == 'pd')
+						<select class="custom-select form-control" id="sigla_uf" name="novo_estado">
+							<option value="ap">APROVADO</option>
+							<option value="rp">REPROVADO</option>
+						</select>
+
+						@elseif($ordem->estado == 'ap')
+						<select class="custom-select form-control" id="sigla_uf" name="novo_estado">
+							<option value="fz">FINALIZADO</option>
+						</select>
+						@endif
+					</div>
+
+					<div class="form-group validated col-sm-4 col-lg-4">
+						<button type="submit" class="btn btn-success">Alterar</button>
+					</div>
 				</div>
-			</div>
 
-			<button type="submit" class="btn green accent-3">Alterar</button>
-		</form>
-		@elseif($ordem->estado == 'fz')
-		<h5>Ordem de Serviço finalizada!</h5>
+			</form>
+			@elseif($ordem->estado == 'fz')
+			<h5 class="text-success">Ordem de Serviço finalizada!</h5>
 
-		<a href="/ordemServico" class="btn orange">Voltar</a>
+			<a href="/ordemServico" class="btn btn-info">Voltar</a>
 
-		@else
-		<h5>Ordem de Serviço reprovada!</h5>
+			@else
+			<h5 class="text-danger">Ordem de Serviço reprovada!</h5>
 
-		<a href="/ordemServico" class="btn red">Voltar</a>
+			<a href="/ordemServico" class="btn btn-danger">Voltar</a>
 
-		@endif
-		
-	</h4>
+			@endif
+		</div>
+
+	</div>
 </div>
-</div>
+
 @endsection	

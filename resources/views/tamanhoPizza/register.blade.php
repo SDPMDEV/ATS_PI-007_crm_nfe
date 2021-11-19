@@ -1,59 +1,97 @@
 @extends('default.layout')
 @section('content')
-	<div class="row">
-		<div class="col s12">
-			<h4>{{{ isset($tamanho) ? "Editar": "Cadastrar" }}} Tamanho de Pizza</h4>
-			<form method="post" action="{{{ isset($tamanho) ? '/tamanhosPizza/update': '/tamanhosPizza/save' }}}">
-				<input type="hidden" name="id" value="{{{ isset($tamanho->id) ? $tamanho->id : 0 }}}">
-				
-				<div class="row">
-					<div class="input-field col s6">
-			          <input value="{{{ isset($tamanho->nome) ? $tamanho->nome : old('nome') }}}" id="nome" name="nome" type="text" class="validate">
-			          <label for="nome">Nome</label>
-			          
-			          @if($errors->has('nome'))
-			          <div class="center-align red lighten-2">
-			          	<span class="white-text">{{ $errors->first('nome') }}</span>
-			          </div>
-			          @endif
 
-			        </div>
-				</div>
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 
-				<div class="row">
-					<div class="input-field col s3">
-			          <input value="{{{ isset($tamanho->pedacos) ? $tamanho->pedacos : old('pedacos') }}}" id="pedacos" name="pedacos" type="text" class="validate">
-			          <label for="pedacos">Pedaços</label>
-			          
-			          @if($errors->has('pedacos'))
-			          <div class="center-align red lighten-2">
-			          	<span class="white-text">{{ $errors->first('pedacos') }}</span>
-			          </div>
-			          @endif
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
 
-			        </div>
-			        <div class="input-field col s3">
-			          <input value="{{{ isset($tamanho->maximo_sabores) ? $tamanho->maximo_sabores : old('maximo_sabores') }}}" id="maximo_sabores" name="maximo_sabores" type="text" class="validate">
-			          <label for="maximo_sabores">Maximo de Sabores</label>
-			          
-			          @if($errors->has('maximo_sabores'))
-			          <div class="center-align red lighten-2">
-			          	<span class="white-text">{{ $errors->first('maximo_sabores') }}</span>
-			          </div>
-			          @endif
+				<form method="post" action="{{{ isset($tamanho) ? '/tamanhosPizza/update': '/tamanhosPizza/save' }}}">
+					<input type="hidden" name="id" value="{{{ isset($tamanho->id) ? $tamanho->id : 0 }}}">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
 
-			        </div>
-				</div>
+							<h3 class="card-title">{{isset($tamanho) ? 'Editar' : 'Novo'}} Tamanho de Pizza</h3>
+						</div>
 
-				<input type="hidden" name="_token" value="{{ csrf_token() }}">
+					</div>
+					@csrf
 
-				
-				<br>
-				<div class="row">
-					<a class="btn-large red lighten-2" href="/tamanhosPizza">Cancelar</a>
-					<input type="submit" value="Salvar" class="btn-large green accent-3">
-				</div>
-			</form>
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
+
+									<div class="row">
+										<div class="form-group validated col-sm-8 col-lg-8">
+											<label class="col-form-label">Nome</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('nome')) is-invalid @endif" name="nome" value="{{{ isset($tamanho) ? $tamanho->nome : old('nome') }}}">
+												@if($errors->has('nome'))
+												<div class="invalid-feedback">
+													{{ $errors->first('nome') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-4 col-lg-4 col-6">
+											<label class="col-form-label">Pedaços</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('pedacos')) is-invalid @endif" name="pedacos" value="{{{ isset($tamanho) ? $tamanho->pedacos : old('pedacos') }}}">
+												@if($errors->has('pedacos'))
+												<div class="invalid-feedback">
+													{{ $errors->first('pedacos') }}
+												</div>
+												@endif
+											</div>
+										</div>
+										<div class="form-group validated col-sm-4 col-lg-4 col-6">
+											<label class="col-form-label">Maximo de sabores</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('maximo_sabores')) is-invalid @endif" name="maximo_sabores" value="{{{ isset($tamanho) ? $tamanho->maximo_sabores : old('maximo_sabores') }}}">
+												@if($errors->has('maximo_sabores'))
+												<div class="invalid-feedback">
+													{{ $errors->first('maximo_sabores') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="card-footer">
+
+						<div class="row">
+							<div class="col-xl-2">
+
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="/tamanhosPizza">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Salvar</span>
+								</button>
+							</div>
+
+						</div>
+					</div>
+				</form>
+			</div>
 		</div>
 	</div>
+</div>
 @endsection

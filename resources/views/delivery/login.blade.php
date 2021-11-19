@@ -47,10 +47,29 @@
 						Ainda não tem cadastro?
 						<a href="/autenticar/registro">Criar agora!</a>
 					</p>
+
+					@if($config->politica_privacidade)
+					<p class="account-w3ls text-center text-da">
+						<a href="#gal2" style="color: red" href="/autenticar/registro">Politica de privacidade!</a>
+					</p>
+					@endif
+
 				</form>
 
 			</div>
 		</div>
+	</div>
+</div>
+
+<div id="gal2" class="pop-overlay">
+	<div id="endereco-modal" class="popup">
+
+		<h4>Politica de privacidade</h4>
+
+		<div id="form-endereco">
+			<p>{{$config->politica_privacidade}}</p>
+		</div>
+		<a class="close" href="#!">×</a>
 	</div>
 </div>
 

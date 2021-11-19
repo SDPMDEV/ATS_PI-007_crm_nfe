@@ -1,37 +1,88 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="container">
+<style type="text/css">
+	.btn-file {
+		position: relative;
+		overflow: hidden;
+	}
 
-		@if(session()->has('message'))
-		<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-			<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-		</div>
-		@endif
+	.btn-file input[type=file] {
+		position: absolute;
+		top: 0;
+		right: 0;
+		min-width: 100%;
+		min-height: 100%;
+		font-size: 100px;
+		text-align: right;
+		filter: alpha(opacity=0);
+		opacity: 0;
+		outline: none;
+		background: white;
+		cursor: inherit;
+		display: block;
+	}
+</style>
 
-		
-		<div class="col s12">
-			<h4 class="center-align">Nova Devolução</h4>
-			<form method="post" enctype="multipart/form-data" action="/devolucao/new">
-				<input type="hidden" name="_token" value="{{ csrf_token() }}">
-				<div class="col s10">
-					<div class="file-field input-field">
-						<div class="btn red">
-							<span>XML</span>
-							<input accept=".xml" name="file" type="file">
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+	<form method="post" enctype="multipart/form-data" action="/devolucao/new">
+
+		<div class="container">
+			<div class="card card-custom gutter-b example example-compact">
+				<div class="col-lg-12">
+					<!--begin::Portlet-->
+
+
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">Nova Devolução</h3>
 						</div>
-						<div class="file-path-wrapper">
-							<input class="file-path validate" type="text">
+
+					</div>
+					@csrf
+
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+
+
+							<input type="hidden" name="_token" value="{{ csrf_token() }}">
+							<div class="form-group validated col-sm-10 col-lg-10">
+								<label class="col-form-label">XML</label>
+								<div class="">
+									<span class="btn btn-primary btn-file">
+										Procurar arquivo<input accept=".xml" name="file" type="file">
+
+									</span>
+								</div>
+							</div>
+
 						</div>
 					</div>
-				</div>
-				<div class="s2">
-					<input class="btn-large red" type="submit" value="OK">
-				</div>
-			</form>
-		</div>
-	</div>
 
+				</div>
+
+				<div class="card-footer">
+
+					<div class="row">
+						<div class="col-xl-2">
+
+						</div>
+
+						<div class="col-lg-3 col-sm-6 col-md-4">
+							<button style="width: 100%" type="submit" class="btn btn-danger">
+								<i class="la la-check"></i>
+								<span class="">Importar XML</span>
+							</button>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
 </div>
+
+
 @endsection	

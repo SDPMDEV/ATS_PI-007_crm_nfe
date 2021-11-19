@@ -1,154 +1,178 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
+	<div class="card-body">
 
-		<h4>Lista de Compras</h4>
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
 
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-		</div>
-		@endif
-
-		<nav class="cyan">
-			<div class="nav-wrapper">
-				<form method="get" action="/compras/pesquisa">
-					<div class="input-field">
-						<input placeholder="Pesquisa por Produto" id="search" name="pesquisa" 
-						type="search" required>
-						<label class="label-icon" for="search">
-							<i class="material-icons">search</i></label>
-							<i class="material-icons">close</i>
+			<form method="get" action="/compras/pesquisa">
+				<div class="row align-items-center">
+					<div class="col-lg-5 col-xl-5">
+						<div class="row align-items-center">
+							<div class="col-md-12 my-2 my-md-0">
+								<div class="input-icon">
+									<input type="text" name="pesquisa" class="form-control" placeholder="Pesquisa por Produto" id="kt_datatable_search_query">
+									<span>
+										<i class="fa fa-search"></i>
+									</span>
+								</div>
+							</div>
 						</div>
-
-					</form>
-				</div>
-			</nav>
-			<br>
-			<form method="get" action="/compras/filtro">
-				<div class="row">
-					<div class="col s4 input-field">
-						<input value="{{{ isset($fornecedor) ? $fornecedor : '' }}}" type="text" class="validate" name="fornecedor">
-						<label>Fornecedor</label>
 					</div>
 
-					<div class="col s2 input-field">
-						<input value="{{{ isset($dataInicial) ? $dataInicial : '' }}}" type="text" class="datepicker" name="data_inicial">
-						<label>Data Inicial</label>
-					</div>
-					<div class="col s2 input-field">
-						<input value="{{{ isset($dataFinal) ? $dataFinal : '' }}}" type="text" class="datepicker" name="data_final">
-						<label>Data Final</label>
-					</div>
-
-					<div class="col s2">
-						<button type="submit" class="btn-large">
-							<i class="material-icons">search</i>
-						</button>
+					<div class="col-lg-2 col-xl-2 mt-2 mt-lg-0">
+						<button class="btn btn-light-primary px-6 font-weight-bold">Pesquisa</button>
 					</div>
 				</div>
 			</form>
-			<label><i class="material-icons left green-text">nfc</i>Emitir Entrada</label><br><br>
+			<br>
+			<form method="get" action="/compras/filtro">
+				<div class="row align-items-center">
+
+					<div class="form-group col-lg-4 col-xl-4">
+						<div class="row align-items-center">
+
+							<div class="col-md-12 my-2 my-md-0">
+								<label class="col-form-label">Fornecedor</label>
+
+								<div class="input-icon">
+									<input type="text" name="fornecedor" value="{{{ isset($fornecedor) ? $fornecedor : '' }}}" class="form-control" placeholder="Fornecedor" id="kt_datatable_search_query">
+									<span>
+										<i class="fa fa-search"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Data de Registro</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="data_inicial" class="form-control" readonly value="{{{ isset($dataInicial) ? $dataInicial : '' }}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Data de Final</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="data_final" class="form-control" readonly value="{{{ isset($dataFinal) ? $dataFinal : '' }}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-lg-2 col-xl-2 mt-2 mt-lg-0">
+						<button style="margin-top: 15px;" class="btn btn-light-primary px-6 font-weight-bold">Pesquisa</button>
+					</div>
+				</div>
+			</form>
+
+			<br>
+			<h4>Lista de Compras</h4>
+			<label>Total de registros: {{count($compras)}}</label>
 			<div class="row">
-				<div class="col s12">
-					<label>Numero de registros: {{count($compras)}} 
-						@if(isset($totalRegistros))
-						de 
-					{{$totalRegistros}} @endif</label>					
+				@foreach($compras as $c)
+
+
+				<div class="col-sm-12 col-lg-6 col-md-6 col-xl-4">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+							<div class="card-title">
+								<h3 style="width: 230px; font-size: 12px; height: 10px;" class="card-title">{{$c->id}} - {{substr($c->fornecedor->razao_social, 0, 30)}}
+								</h3>
+							</div>
+
+							<div class="card-toolbar">
+								<div class="dropdown dropdown-inline" data-toggle="tooltip" title="" data-placement="left" data-original-title="Ações">
+									<a href="#" class="btn btn-hover-light-primary btn-sm btn-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<i class="fa fa-ellipsis-h"></i>
+									</a>
+									<div class="dropdown-menu p-0 m-0 dropdown-menu-md dropdown-menu-right">
+										<!--begin::Navigation-->
+										<ul class="navi navi-hover">
+											<li class="navi-header font-weight-bold py-4">
+												<span class="font-size-lg">Ações:</span>
+											</li>
+											<li class="navi-separator mb-3 opacity-70"></li>
+											<li class="navi-item">
+												<a href="/compras/detalhes/{{ $c->id }}" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-primary">Detalhes</span>
+													</span>
+												</a>
+											</li>
+											<li class="navi-item">
+												<a onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/compras/delete/{{ $c->id }}" }else{return false} })' href="#!" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-danger">Excluir</span>
+													</span>
+												</a>
+											</li>
+											<li class="navi-item">
+												<a href="/compras/emitirEntrada/{{ $c->id }}" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-success">Emitir NF-e entrada</span>
+													</span>
+												</a>
+											</li>
+
+										</ul>
+										<!--end::Navigation-->
+									</div>
+								</div>
+
+							</div>
+
+							<div class="card-body">
+
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Valor:</span>
+									<a target="_blank" class="kt-widget__data text-success">{{ number_format($c->valor, 2, ',', '.') }}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">NF-e:</span>
+									<a class="kt-widget__data text-success">{{ $c->nf > 0 ? $c->nf : '--' }}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Usuário:</span>
+									<a class="kt-widget__data text-success">{{ $c->usuario->nome }}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Desconto:</span>
+									<a target="_blank" class="kt-widget__data text-success">{{ number_format($c->desconto, 2, ',', '.') }}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Data:</span>
+									<a target="_blank" class="kt-widget__data text-success">
+										{{ \Carbon\Carbon::parse($c->date_register)->format('d/m/Y H:i:s')}}
+									</a>
+								</div>
+
+							</div>
+
+						</div>
+
+					</div>
+
 				</div>
-				<table class="col s12">
-					<thead>
-						<tr>
-							<th>#</th>
-							<th>Fornecedor</th>
-							<th>Data</th>
-							<th>Observacao</th>
-							<th>NF</th>
-							<th>Usuário</th>
-							<th>Valor</th>
-							<th>Desconto</th>
-						</tr>
-					</thead>
 
-					<tbody>
-						<?php 
-						$total = 0;
-						$totalDesconto = 0;
-						?>
-						@foreach($compras as $c)
-						<tr>
-							<th>{{ $c->id }}</th>
-							<th>{{ $c->fornecedor->razao_social }}</th>
-							<th>{{ \Carbon\Carbon::parse($c->date_register)->format('d/m/Y H:i:s')}}</th>
-							<th>
-								<a class="btn brown lighten-2 tooltipped" data-position="bottom" data-delay="50" data-tooltip="{{$c->observacao}}"
-									@if(empty($c->observacao))
-									disabled
-									@endif
-									>
-									<i class="material-icons">message</i>
-
-								</a>
-							</th>
-
-							<th>{{ $c->nf > 0 ? $c->nf : '--' }}</th>
-							<th>{{ $c->usuario->nome }}</th>
-							<th>{{ number_format($c->valor, 2, ',', '.') }}</th>
-							<th>{{ number_format($c->desconto, 2, ',', '.') }}</th>
-
-							<th>
-								<a title="Detalhes" href="/compras/detalhes/{{ $c->id }}">
-									<i class="material-icons left">list</i>					
-								</a>
-								<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/compras/delete/{{ $c->id }}">
-									<i class="material-icons left red-text">delete</i>					
-								</a>
-
-								<a title="Detalhes" href="/compras/emitirEntrada/{{ $c->id }}">
-									<i class="material-icons left green-text">nfc</i>					
-								</a>
-							</th>
-						</tr>
-
-						<?php
-						$total += $c->valor;
-						$totalDesconto += $c->desconto;
-						?>
-						@endforeach
-						<tr class="red lighten-3">
-							<th class="center-align" colspan="6">TOTAL</th>
-							<th>{{ number_format($total, 2, ',', '.') }}</th>
-							<th>{{ number_format($totalDesconto, 2, ',', '.') }}</th>
-							<th></th>
-						</tr>
-					</tbody>
-				</table>
+				@endforeach
 			</div>
-			@if(isset($links))
-			<ul class="pagination center-align">
-				<li class="waves-effect">{{$compras->links()}}</li>
-			</ul>
-			@endif
-
-			<input type="hidden" id="somaContas" value="{{json_encode($somaCompraMensal)}}">
-
-			@if(count($compras) > 0)
-			<div class="row">
-				<h4 class="center-align">Graficos</h4>
-				<div class="col s6">
-					<div style="height: 400px; width: 100%;" id="pizza"></div>
-
-				</div>
-				<div class="col s6">
-					<div style="height: 400px; width: 100%;" id="coluna"></div>
-
-				</div>
-			</div>
-			@endif
 		</div>
 	</div>
-	@endsection	
+</div>
+
+@endsection

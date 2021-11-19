@@ -25,6 +25,18 @@ $(function () {
 
 });
 
+$('#tipo_lucro').change(() => {
+	let tipo = $('#tipo_lucro').val()
+	if(tipo == 'detalhado'){
+		$('.dt').html('Data')
+		$('#lucro_col').css('display', 'none')
+	}else{
+		$('.dt').html('Data inicial')
+		$('#lucro_col').css('display', 'block')
+
+	}
+})
+
 function getProdutos(data){
 	$.ajax
 	({

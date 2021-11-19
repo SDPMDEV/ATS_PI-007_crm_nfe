@@ -59,7 +59,7 @@ class Mdfe extends Model
 		->first();
 
 		if($mdfe == null) {
-			return ConfigNota::first()->ultimo_numero_mdfe;
+			return ConfigNota::first()->ultimo_numero_mdfe ?? 0;
 		}
 		else{ 
 			$configNum = ConfigNota::first()->ultimo_numero_mdfe;

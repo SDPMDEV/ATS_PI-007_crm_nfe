@@ -8,6 +8,7 @@ use App\ItemCompra;
 use App\Compra;
 use App\Produto;
 use App\ContaPagar;
+use App\Fornecedor;
 use App\Helpers\StockMove;
 use Carbon\Carbon;
 
@@ -28,8 +29,12 @@ class CompraManualController extends Controller
 	}
 
 	public function index(){
+		$fornecedores = Fornecedor::orderBy('razao_social')->get();
+		$produtos = Produto::orderBy('nome')->get();
 		return view('compraManual/register')
 		->with('compraManual', true)
+		->with('fornecedores', $fornecedores)
+		->with('produtos', $produtos)
 		->with('title', 'Compra Manual');
 	}
 

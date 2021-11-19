@@ -1,251 +1,276 @@
 @extends('default.layout')
 @section('content')
-<div class="row">
-	<div class="col s12">
-		<h4>{{{ isset($forn) ? "Editar": "Cadastrar" }}} Fornecedor</h4>
-		<form method="post" action="{{{ isset($forn) ? '/fornecedores/update': '/fornecedores/save' }}}" enctype="multipart/form-data">
-			<input type="hidden" name="id" value="{{{ isset($forn->id) ? $forn->id : 0 }}}">
 
-			<section class="section-1">
-				<div class="row">
-					<div class="input-field col l7 m12 s12">
-						<input value="{{{ isset($forn->razao_social) ? $forn->razao_social : old('razao_social') }}}" id="razao_social" name="razao_social" type="text" class="validate">
-						<label for="razao_social">Razao Social</label>
 
-						@if($errors->has('razao_social'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('razao_social') }}</span>
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
+
+				<form method="post" action="/fornecedores/{{{ isset($forn) ? 'update' : 'save' }}}">
+
+					<input type="hidden" name="id" value="{{{ isset($forn) ? $forn->id : 0 }}}">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">{{isset($forn) ? 'Editar' : 'Novo'}} Fornecedor</h3>
 						</div>
-						@endif
 
 					</div>
-				</div>
+					@csrf
 
-				<div class="row">
-					<div class="input-field col l7 m12 s12">
-						<input value="{{{ isset($forn->nome_fantasia) ? $forn->nome_fantasia : old('nome_fantasia') }}}" id="nome_fantasia" name="nome_fantasia" type="text" class="validate">
-						<label for="nome_fantasia">Nome Fantasia</label>
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
 
-						@if($errors->has('nome_fantasia'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('nome_fantasia') }}</span>
-						</div>
-						@endif
+									<div class="row">
+										<div class="form-group col-sm-12 col-lg-12">
+											<label>Pessoa:</label>
+											<div class="radio-inline">
+												<label class="radio radio-success">
+													<input name="group1" type="radio" id="pessoaFisica" @if(isset($forn)) @if(strlen($forn->cpf_cnpj)
+													< 15) checked @endif @endif />
+													<span></span>
+													FISICA
+												</label>
+												<label class="radio radio-success">
+													<input name="group1" type="radio" id="pessoaJuridica" @if(isset($forn)) @if(strlen($forn->cpf_cnpj) > 15) checked @endif @endif/>
+													<span></span>
+													JURIDICA
+												</label>
 
-					</div>
-				</div>
+											</div>
 
-				<div class="row">
-					<div class="col l2 m6 s6">
-						<p>
-							<input class="with-gap"  name="group1" type="radio" id="pessoaFisica" 
-							{{isset($forn) ? strlen($forn->cpf_cnpj) < 15 ? 'checked' : '' : 'checked'}}/>
-							<label for="pessoaFisica">Pessoa Fisica</label>
-						</p>
-					</div>
-					<div class="col l2 m6 s6">
-						<p>
-							<input class="with-gap"  name="group1" type="radio" id="pessoaJuridica"
-							{{isset($forn) ? strlen($forn->cpf_cnpj) > 15 ? 'checked' : '' : ''}} />
-							<label for="pessoaJuridica">Pessoa Juridica</label>
-						</p>
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col l3 m6 s8">
-						<input value="{{{ isset($forn->cpf_cnpj) ? $forn->cpf_cnpj : old('cpf_cnpj') }}}" id="cpf_cnpj" name="cpf_cnpj" type="text" class="validate">
-						<label id="lbl_cpf_cnpj" for="cpf_cnpj">CPF</label>
-
-						@if($errors->has('cpf_cnpj'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('cpf_cnpj') }}</span>
-						</div>
-						@endif
-					</div>
-
-					<div class="col s2" id="sintegra">
-						<div class="col s6 input-field">
-							<select id="sigla_uf">
-								<option value="--">--</option>
-								<option value="AC">AC</option>
-								<option value="AL">AL</option>
-								<option value="AM">AM</option>
-								<option value="AP">AP</option>
-								<option value="BA">BA</option>
-								<option value="CE">CE</option>
-								<option value="DF">DF</option>
-								<option value="ES">ES</option>
-								<option value="GO">GO</option>
-								<option value="MA">MA</option>
-								<option value="MG">MG</option>
-								<option value="MS">MS</option>
-								<option value="MT">MT</option>
-								<option value="PA">PA</option>
-								<option value="PB">PB</option>
-								<option value="PE">PE</option>
-								<option value="PI">PI</option>
-								<option value="PR">PR</option>
-								<option value="RJ">RJ</option>
-								<option value="RN">RN</option>
-								<option value="RS">RS</option>
-								<option value="RO">RO</option>
-								<option value="RR">RR</option>
-								<option value="SC">SC</option>
-								<option value="SE">SE</option>
-								<option value="SP">SP</option>
-								<option value="TO">TO</option>
-							</select>
-							<label>UF</label>
-						</div>
-						<div class="col s6"><br>
-							<a href="#!" class="btn" onclick="consultaCadastro()">
-								<i class="material-icons">memory</i>
-							</a>
-						</div>
-					</div>
-
-					<div id="preloader1" class="col s1" style="display: none">
-						<div class="col s12 center-align">
-							<div class="preloader-wrapper active">
-								<div class="spinner-layer spinner--only">
-									<div class="circle-clipper left">
-										<div class="circle"></div>
-									</div><div class="gap-patch">
-										<div class="circle"></div>
-									</div><div class="circle-clipper right">
-										<div class="circle"></div>
+										</div>
 									</div>
+									<div class="row">
+
+										<div class="form-group validated col-sm-3 col-lg-4">
+											<label class="col-form-label" id="lbl_cpf_cnpj">CPF</label>
+											<div class="">
+												<input type="text" id="cpf_cnpj" class="form-control @if($errors->has('cpf_cnpj')) is-invalid @endif" name="cpf_cnpj" value="{{{ isset($forn) ? $forn->cpf_cnpj : old('cpf_cnpj') }}}">
+												@if($errors->has('cpf_cnpj'))
+												<div class="invalid-feedback">
+													{{ $errors->first('cpf_cnpj') }}
+												</div>
+												@endif
+											</div>
+										</div>
+										<div class="form-group validated col-lg-2 col-md-2 col-sm-6">
+											<label class="col-form-label text-left col-lg-12 col-sm-12">UF</label>
+
+											<select class="custom-select form-control" id="sigla_uf" name="sigla_uf">
+												@foreach($estados as $c)
+												<option value="{{$c}}">{{$c}}</option>
+												@endforeach
+											</select>
+
+										</div>
+										<div class="form-group validated col-lg-2 col-md-2 col-sm-6">
+											<br><br>
+											<a type="button" id="btn-consulta-cadastro" onclick="consultaCadastro()" class="btn btn-success spinner-white spinner-right">
+												<span>
+													<i class="fa fa-search"></i>
+												</span>
+											</a>
+										</div>
+
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-10 col-lg-10">
+											<label class="col-form-label">Razao Social/Nome</label>
+											<div class="">
+												<input id="razao_social" type="text" class="form-control @if($errors->has('razao_social')) is-invalid @endif" name="razao_social" value="{{{ isset($forn) ? $forn->razao_social : old('razao_social') }}}">
+												@if($errors->has('razao_social'))
+												<div class="invalid-feedback">
+													{{ $errors->first('razao_social') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-10 col-lg-10">
+											<label class="col-form-label">Nome Fantasia</label>
+											<div class="">
+												<input id="nome_fantasia" type="text" class="form-control @if($errors->has('nome_fantasia')) is-invalid @endif" name="nome_fantasia" value="{{{ isset($forn) ? $forn->nome_fantasia : old('nome_fantasia') }}}">
+												@if($errors->has('nome_fantasia'))
+												<div class="invalid-feedback">
+													{{ $errors->first('nome_fantasia') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+
+									<div class="row">
+
+										<div class="form-group validated col-sm-3 col-lg-4">
+											<label class="col-form-label" id="lbl_ie_rg">RG</label>
+											<div class="">
+												<input type="text" id="ie_rg" class="form-control @if($errors->has('ie_rg')) is-invalid @endif" name="ie_rg" value="{{{ isset($forn) ? $forn->ie_rg : old('ie_rg') }}}">
+												@if($errors->has('ie_rg'))
+												<div class="invalid-feedback">
+													{{ $errors->first('ie_rg') }}
+												</div>
+												@endif
+											</div>
+										</div>
+										
+
+									</div>
+									<hr>
+
+									<div class="row">
+										<div class="form-group validated col-sm-8 col-lg-8">
+											<label class="col-form-label">Rua</label>
+											<div class="">
+												<input id="rua" type="text" class="form-control @if($errors->has('rua')) is-invalid @endif" name="rua" value="{{{ isset($forn) ? $forn->rua : old('rua') }}}">
+												@if($errors->has('rua'))
+												<div class="invalid-feedback">
+													{{ $errors->first('rua') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-2 col-lg-2">
+											<label class="col-form-label">Número</label>
+											<div class="">
+												<input id="numero" type="text" class="form-control @if($errors->has('numero')) is-invalid @endif" name="numero" value="{{{ isset($forn) ? $forn->numero : old('numero') }}}">
+												@if($errors->has('numero'))
+												<div class="invalid-feedback">
+													{{ $errors->first('numero') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+									</div>
+									<div class="row">
+										<div class="form-group validated col-sm-8 col-lg-5">
+											<label class="col-form-label">Bairro</label>
+											<div class="">
+												<input id="bairro" type="text" class="form-control @if($errors->has('bairro')) is-invalid @endif" name="bairro" value="{{{ isset($forn) ? $forn->bairro : old('bairro') }}}">
+												@if($errors->has('bairro'))
+												<div class="invalid-feedback">
+													{{ $errors->first('bairro') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-8 col-lg-3">
+											<label class="col-form-label">CEP</label>
+											<div class="">
+												<input id="cep" type="text" class="form-control @if($errors->has('cep')) is-invalid @endif" name="cep" value="{{{ isset($forn) ? $forn->cep : old('cep') }}}">
+												@if($errors->has('cep'))
+												<div class="invalid-feedback">
+													{{ $errors->first('cep') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-8 col-lg-4">
+											<label class="col-form-label">Email</label>
+											<div class="">
+												<input id="email" type="text" class="form-control @if($errors->has('email')) is-invalid @endif" name="email" value="{{{ isset($forn) ? $forn->email : old('email') }}}">
+												@if($errors->has('email'))
+												<div class="invalid-feedback">
+													{{ $errors->first('email') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-lg-6 col-md-6 col-sm-10">
+											<label class="col-form-label text-left col-lg-4 col-sm-12">Cidade</label>
+
+											<select class="form-control select2" id="kt_select2_1" name="cidade">
+												@foreach($cidades as $c)
+												<option value="{{$c->id}}" @isset($forn) @if($c->id == $forn->cidade_id)
+													selected
+													@endif
+													@endisset >{{$c->nome}} ({{$c->uf}})</option>
+												@endforeach
+											</select>
+											@if($errors->has('cidade'))
+											<div class="invalid-feedback">
+												{{ $errors->first('cidade') }}
+											</div>
+											@endif
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="form-group validated col-sm-8 col-lg-3">
+											<label class="col-form-label">Telefone (Opcional)</label>
+											<div class="">
+												<input id="telefone" type="text" class="form-control @if($errors->has('telefone')) is-invalid @endif" name="telefone" value="{{{ isset($forn) ? $forn->telefone : old('telefone') }}}">
+												@if($errors->has('telefone'))
+												<div class="invalid-feedback">
+													{{ $errors->first('telefone') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-8 col-lg-3">
+											<label class="col-form-label">Celular (Opcional)</label>
+											<div class="">
+												<input id="celular" type="text" class="form-control @if($errors->has('celular')) is-invalid @endif" name="celular" value="{{{ isset($forn) ? $forn->celular : old('celular') }}}">
+												@if($errors->has('celular'))
+												<div class="invalid-feedback">
+													{{ $errors->first('celular') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+
 								</div>
+
 							</div>
 						</div>
 					</div>
-
-					<div class="input-field col l3 m6 s8">
-						<input value="{{{ isset($forn->ie_rg) ? $forn->ie_rg : old('ie_rg') }}}" id="ie_rg" name="ie_rg" type="text" class="validate">
-						<label id="lbl_ie_rg" for="ie_rg">RG</label>
-
-						@if($errors->has('ie_rg'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('ie_rg') }}</span>
-						</div>
-						@endif
-					</div>
-				</div>
-			</section>
-			<section class="section-2">
-				<div class="row">
-					<div class="input-field col l5 m8 s12">
-						<input value="{{{ isset($forn->rua) ? $forn->rua : old('rua') }}}" id="rua" name="rua" type="text" class="validate">
-						<label for="rua">Rua</label>
-
-						@if($errors->has('rua'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('rua') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col l2 m4 s6">
-						<input value="{{{ isset($forn->numero) ? $forn->numero : old('numero') }}}" id="numero" name="numero" type="text" class="validate">
-						<label for="numero">Numero</label>
-
-						@if($errors->has('numero'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('number') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col l3 m12 s12">
-						<input value="{{{ isset($forn->bairro) ? $forn->bairro : old('bairro') }}}" id="bairro" name="bairro" type="text" class="validate">
-						<label for="bairro">Bairro</label>
-
-						@if($errors->has('bairro'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('bairro') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col l3 m12 s12">
-						<input value="{{{ isset($forn->email) ? $forn->email : old('email') }}}" id="email" name="email" type="text" class="validate">
-						<label for="email">Email</label>
-
-						@if($errors->has('email'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('email') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col l3 m6 s12">
-						<input value="{{{ isset($forn->cep) ? $forn->cep : old('cep') }}}" id="cep" name="cep" type="text" class="validate">
-						<label for="cep">CEP</label>
-
-						@if($errors->has('cep'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('cep') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col l3 m6 s12">
-						<input autocomplete="off" type="text" name="cidade" id="autocomplete-cidade" class="autocomplete-cidade">
-						<label for="autocomplete-cidade">Cidade</label>
-						<input type="hidden" id="cidadeId" value="{{{ isset($forn) ? $forn->cidade_id : 0 }}}">
-						@if($errors->has('cidade'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('cidade') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<div class="row">
-					<div class="input-field col l3 m6 s8">
-						<input value="{{{ isset($forn->telefone) ? $forn->telefone : old('telefone') }}}" id="telefone" name="telefone" type="text" class="validate">
-						<label for="telefone">Telefone</label>
-
-						@if($errors->has('telefone'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('telefone') }}</span>
-						</div>
-						@endif
-
-					</div>
-					<div class="input-field col l3 m6 s8">
-						<input value="{{{ isset($forn->celular) ? $forn->celular : old('celular') }}}" id="celular" name="celular" type="text" class="validate">
-						<label for="celular">Celular</label>
-
-						@if($errors->has('celular'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('celular') }}</span>
-						</div>
-						@endif
-
-					</div>
-				</div>
-
-				<input type="hidden" name="_token" value="{{ csrf_token() }}">
-
-			</section>
-
-			<input type="hidden" name="_token" value="{{ csrf_token() }}">
-
-			<br>
-			<div class="row">
-				<a class="btn-large red lighten-2" href="/fornecedores">Cancelar</a>
-				<input type="submit" value="Salvar" class="btn-large green accent-3">
 			</div>
-		</form>
+			<div class="card-footer">
+
+				<div class="row">
+					<div class="col-xl-2">
+
+					</div>
+					<div class="col-lg-3 col-sm-6 col-md-4">
+						<a style="width: 100%" class="btn btn-danger" href="/fornecedores">
+							<i class="la la-close"></i>
+							<span class="">Cancelar</span>
+						</a>
+					</div>
+					<div class="col-lg-3 col-sm-6 col-md-4">
+						<button style="width: 100%" type="submit" class="btn btn-success">
+							<i class="la la-check"></i>
+							<span class="">Salvar</span>
+						</button>
+					</div>
+
+				</div>
+			</div>
+			</form>
+		</div>
 	</div>
 </div>
+</div>
+
+
 @endsection

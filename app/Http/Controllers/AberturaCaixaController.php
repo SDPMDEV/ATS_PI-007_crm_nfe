@@ -7,7 +7,6 @@ use App\AberturaCaixa;
 
 class AberturaCaixaController extends Controller
 {
-
 	public function __construct(){
 		$this->middleware(function ($request, $next) {
 			$value = session('user_logged');
@@ -20,7 +19,7 @@ class AberturaCaixaController extends Controller
 
 	public function abrir(Request $request){
 		$verify = $this->verificaAberturaCaixa();
-		if($verify == false){
+		if($verify == -1){
 			$result = AberturaCaixa::create([
 				'usuario_id' => get_id_user(),
 				'valor' => str_replace(",", ".", $request->valor) 
@@ -54,18 +53,24 @@ class AberturaCaixaController extends Controller
 	}
 
 	private function verificaAberturaCaixa(){
-		date_default_timezone_set('America/Sao_Paulo');
-		$dataHoje = date("Y-m-d");
-		$ab = AberturaCaixa::
-		orderBy('id', 'desc')
-		->first();
-		if($ab){
-			$ultimaDataAbertura = substr($ab->data_registro, 0, 10);
-			if($ultimaDataAbertura == $dataHoje) return $ab->valor;
-			else return false;
-		}else{
-			return false;
-		}
+
+		$ab = AberturaCaixa::where('ultima_venda', 0)->orderBy('id', 'desc')->first();
+
+		if($ab != null) return $ab->valor;
+		else return -1;
+
+		// date_default_timezone_set('America/Sao_Paulo');
+		// $dataHoje = date("Y-m-d");
+		// $ab = AberturaCaixa::
+		// orderBy('id', 'desc')
+		// ->first();
+		// if($ab){
+		// 	$ultimaDataAbertura = substr($ab->data_registro, 0, 10);
+		// 	if($ultimaDataAbertura == $dataHoje) return $ab->valor;
+		// 	else return -1;
+		// }else{
+		// 	return -1;
+		// }
 	}
 
 }

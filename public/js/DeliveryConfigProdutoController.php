@@ -30,11 +30,13 @@ class DeliveryConfigProdutoController extends Controller
   }
 
   public function new(){
+    $produtos = Produto::orderBy('nome')->get();
     $tamanhos = TamanhoPizza::all();
     $categorias = CategoriaProdutoDelivery::all();
     return view('produtoDelivery/register')
     ->with('title', 'Cadastrar Produto para Delivery')
     ->with('categorias', $categorias)
+    ->with('produtos', $categorias)
     ->with('tamanhos', $tamanhos)
     ->with('produtoJs', true);
 }
@@ -85,11 +87,10 @@ if(strpos($categoria->nome, 'izza') !== false){
 
 
 if($result){
-    session()->flash('color', 'blue');
-    session()->flash("message", "Produto cadastrado com sucesso!");
+
+    session()->flash("mensagem_sucesso", "Produto cadastrado com sucesso!");
 }else{
-    session()->flash('color', 'red');
-    session()->flash('message', 'Erro ao cadastrar produto!');
+    session()->flash('mensagem_erro', 'Erro ao cadastrar produto!');
 }
 
 return redirect('/deliveryProduto');
@@ -287,9 +288,9 @@ private function _validate(Request $request, $fileExist = true){
 
     if(strpos($categoria->nome, 'izza') !== false){
         $catPizza = true;
-    }
+    }   
     $rules = [
-        'produto' => $request->id > 0 ? '' : 'required|min:5',
+        'produto' => $request->id > 0 ? '' : 'required',
         'ingredientes' => 'max:255',
         'descricao' => 'max:255',
         'valor' => $catPizza ? 'required' : '',

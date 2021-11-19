@@ -28,8 +28,10 @@ class CodigoDescontoController extends Controller
 	}
 
 	public function new(){
+		$clientes = ClienteDelivery::orderBy('nome')->get();
 		return view('codigoDesconto/register')
 		->with('title', 'Novo Código Promocional')
+		->with('clientes', $clientes)
 		->with('codigoJs', true);
 	}
 
@@ -50,11 +52,10 @@ class CodigoDescontoController extends Controller
 		]);
 
 		if($res){
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Código Promocional adicionado!');
+			session()->flash('mensagem_sucesso', 'Código Promocional adicionado!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/codigoDesconto');
 	}
@@ -81,11 +82,11 @@ class CodigoDescontoController extends Controller
 		$codigo->valor = str_replace(",", ".", $request->valor);
 		$codigo->ativo = $request->ativo ? true : false;
 		if($codigo->save()){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Código de promocional editado!');
+
+			session()->flash('mensagem_sucesso', 'Código de promocional editado!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 
 		return redirect('/codigoDesconto');
@@ -115,12 +116,10 @@ class CodigoDescontoController extends Controller
 		->delete();
 
 		if($res){
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Codigo removido!');
+			session()->flash('mensagem_sucesso', 'Codigo removido!');
 		}else{
 
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/codigoDesconto');
 	}
@@ -186,12 +185,11 @@ class CodigoDescontoController extends Controller
 		if($res){
 			$cupom->sms = true;
 			$cupom->save();
-			session()->flash('color', 'green');
-			session()->flash('message', "SMS enviado para $envios pessoa(s)!");
+
+			session()->flash('mensagem_sucesso', "SMS enviado para $envios pessoa(s)!");
 		}else{
 
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/codigoDesconto');
 
@@ -252,12 +250,11 @@ class CodigoDescontoController extends Controller
 		if($res){
 			$cupom->push = true;
 			$cupom->save();
-			session()->flash('color', 'green');
-			session()->flash('message', "Push enviado para $envios pessoa(s)!");
+
+			session()->flash('mensagem_sucesso', "Push enviado para $envios pessoa(s)!");
 		}else{
 
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao enviar Push!');
+			session()->flash('mensagem_erro', 'Erro ao enviar Push!');
 		}
 
 		return redirect('/codigoDesconto');
@@ -303,8 +300,7 @@ class CodigoDescontoController extends Controller
 
 		$codigo->ativo = !$codigo->ativo; 
 		$codigo->save();
-		session()->flash('color', 'blue');
-		session()->flash('message', "$codigo->codigo alterado para ".(!$codigo->ativo ? "desativado" : "ativado"));
+		session()->flash('mensagem_sucesso', "$codigo->codigo alterado para ".(!$codigo->ativo ? "desativado" : "ativado"));
 		return redirect('/codigoDesconto');
 	}
 }

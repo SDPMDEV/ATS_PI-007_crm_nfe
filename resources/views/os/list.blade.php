@@ -1,151 +1,196 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
 
-		<h4>Lista de Ordens de Serviço</h4>
 
-		@if(session()->has('message'))
+	<div class="card-body">
 		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
+			<div class="col-sm-12 col-lg-12 col-md-12 col-xl-12">
+
+				<a href="/ordemServico/new" class="btn btn-lg btn-success">
+					<i class="fa fa-plus"></i>Nova Ordem de Serviço
+				</a>
 			</div>
+			
 		</div>
-		@endif
+		<br>
 
-		<div class="row">
-			<form method="get" action="/ordemServico/filtro" class="row col s12">
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
 
-				<div class="input-field col s3">
-					<input type="text" name="cliente">
-					<label>Cliente</label>
-				</div>
-				<div class="input-field col s2">
-					<input id="data_inicio" name="data_inicio" type="text" class="datepicker">
-					<label for="data_inicio">Data Inicio</label>
-				</div>
-				<div class="input-field col s2">
-					<input id="data_fim" name="data_fim" type="text" class="datepicker">
-					<label for="data_fim">Data Final</label>
-				</div>
 
-				<div class="input-field col s2">
-					<select>
-						<option value="pd">PENDENTE</option>
-						<option value="ap">APROVADO</option>
-						<option value="rp">REPROVADO</option>
-						<option value="fz">FINALIZADO</option>
-					</select>
-					<label for="estado">Estado</label>
-				</div>
+			<form method="get" action="/ordemServico/filtro">
+				<div class="row align-items-center">
 
-				<button class="btn-large col s1 black" type="submit">
-					<i class="material-icons">search</i>	
-				</button>
+					<div class="form-group col-lg-4 col-xl-4">
+						<div class="row align-items-center">
+
+							<div class="col-md-12 my-2 my-md-0">
+								<label class="col-form-label">Cliente</label>
+
+								<div class="input-icon">
+									<input type="text" name="cliente" value="{{{ isset($cliente) ? $cliente : '' }}}" class="form-control" placeholder="Cliente" id="kt_datatable_search_query">
+									<span>
+										<i class="fa fa-search"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Data Inicial</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="data_inicio" class="form-control" readonly value="{{{ isset($data_inicio) ? $data_inicio : '' }}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group col-lg-2 col-md-4 col-sm-6">
+						<label class="col-form-label">Data Final</label>
+						<div class="">
+							<div class="input-group date">
+								<input type="text" name="data_fim" class="form-control" readonly value="{{{ isset($data_fim) ? $data_fim : '' }}}" id="kt_datepicker_3" />
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="la la-calendar"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="form-group validated col-lg-2 col-md-2 col-sm-6">
+						<label class="col-form-label text-left col-lg-12 col-sm-12">Estado</label>
+
+						<select class="custom-select form-control" id="estado" name="estado">
+							<option value="pd">PENDENTE</option>
+							<option value="ap">APROVADO</option>
+							<option value="rp">REPROVADO</option>
+							<option value="fz">FINALIZADO</option>
+						</select>
+
+					</div>
+
+					<div class="col-lg-2 col-xl-2 mt-2 mt-lg-0">
+						<button style="margin-top: 15px;" class="btn btn-light-primary px-6 font-weight-bold">Pesquisa</button>
+					</div>
+				</div>
 			</form>
-		</div>
+
+			<br>
+			<h4>Lista de Ordens de Serviço</h4>
+			<label>Total de registros: {{count($orders)}}</label>
 
 
-		<div class="row">
-			<a href="/ordemServico/new" class="btn green accent-3">
-				<i class="material-icons left">add</i>	
-				Nova Ordem de Serviço	
-			</a>
-		</div>
+			<div class="row">
+				@foreach($orders as $o)
 
-		<input type="hidden" id="_token" value="{{ csrf_token() }}">
-		<div class="row">
-			<div class="col s12">
-				<label>Numero de registros: {{count($orders)}}</label>					
+
+				<div class="col-sm-12 col-lg-6 col-md-6 col-xl-4">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+							<div class="card-title">
+								<h3 style="width: 230px; font-size: 12px; height: 10px;" class="card-title">{{$o->id}} - {{substr($o->cliente->razao_social, 0, 30)}}
+								</h3>
+							</div>
+
+							<div class="card-toolbar">
+								<div class="dropdown dropdown-inline" data-toggle="tooltip" title="" data-placement="left" data-original-title="Ações">
+									<a href="#" class="btn btn-hover-light-primary btn-sm btn-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<i class="fa fa-ellipsis-h"></i>
+									</a>
+									<div class="dropdown-menu p-0 m-0 dropdown-menu-md dropdown-menu-right">
+										<!--begin::Navigation-->
+										<ul class="navi navi-hover">
+											<li class="navi-header font-weight-bold py-4">
+												<span class="font-size-lg">Ações:</span>
+											</li>
+											<li class="navi-separator mb-3 opacity-70"></li>
+											@if(is_adm())
+											<li class="navi-item">
+												<a onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/ordemServico/delete/{{ $o->id }}" }else{return false} })' href="#!" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-danger">Delete</span>
+													</span>
+												</a>
+											</li>
+											
+											@endif
+											
+
+											<li class="navi-item">
+												<a href="/ordemServico/servicosordem/{{$o->id}}" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-primary">Ver</span>
+													</span>
+												</a>
+											</li>
+
+										</ul>
+										<!--end::Navigation-->
+									</div>
+								</div>
+
+							</div>
+
+							<div class="card-body">
+
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Valor:</span>
+									<a target="_blank" class="kt-widget__data text-success">{{ number_format($o->valor, 2)}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Data:</span>
+									<a class="kt-widget__data text-success">{{ \Carbon\Carbon::parse($o->created_at)->format('d/m/Y H:i')}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Usuario:</span>
+									<a class="kt-widget__data text-success">{{ $o->usuario->nome }}</a>
+								</div>
+
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Estado</span>
+
+									@if($o->estado == 'pd')
+									<a class="kt-widget__data text-primary">PENDENTE</a>
+									@elseif($o->estado == 'ap')
+									<a class="kt-widget__data text-success">APROVADO</a>
+									@elseif($o->estado == 'rp')
+									<a class="kt-widget__data text-danger">REPROVADO</a>
+									@else
+									<a class="kt-widget__data text-info">FINALIZADO</a>
+									@endif
+								</div>
+
+
+							</div>
+
+						</div>
+
+					</div>
+
+				</div>
+
+				@endforeach
 			</div>
-			<table class="col s12">
-				<thead>
-					<tr>
-						<th>Código</th>
-						<th>Cliente</th>
-						<th>Valor</th>
-						<th>Descrição</th>
-						<th>Usuario</th>
-						<th>Data de Registro</th>
-						<th>NFSe</th>
-						<th>Estado</th>
-						<th>Ações</th>
-					</tr>
-				</thead>
 
-				<tbody>
-					<?php 
-					$total = 0;
-					?>
-					@foreach($orders as $o)
-					<tr>
-						<th>{{ $o->id }}</th>
-						<th>{{ $o->cliente->razao_social }}</th>
-						<th>{{ number_format($o->valor, 2, ',', '.') }}</th>
-						<th>
-							<a class="btn brown lighten-2 tooltipped" data-position="bottom" data-delay="50" data-tooltip="{{$o->descricao}}"
-								@if(empty($o->descricao))
-								disabled
-								@endif
-								>
-								<i class="material-icons">message</i>
-
-							</a>
-						</th>
-						<th>{{ $o->usuario->nome }}</th>
-						<th>{{ \Carbon\Carbon::parse($o->data_registro)->format('d/m/Y H:i:s')}}</th>
-						<th>{{ $o->NfNumero}}</th>
-
-						<th>
-							
-							@if($o->estado == 'pd')
-							PENDENTE
-							@elseif($o->estado == 'ap')
-							APROVADO
-							@elseif($o->estado == 'rp')
-							REPROVADO
-							@else
-							FINALIZADO
-							@endif
-
-						</th>
-
-						<th>
-							@if(is_adm())
-							<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/ordemServico/delete/{{ $o->id }}">
-								<i class="material-icons left red-text">delete</i>					
-							</a>
-							@endif
-							<!-- <a href="#" onclick="printOs({{$o->id}})">
-								<i class="material-icons left blue-text">print</i>	
-							</a> -->
-
-							<a href="/ordemServico/servicosordem/{{$o->id}}">
-								<i class="material-icons left green-text">list</i>	
-							</a>
-						</th>
-
-						<?php 
-						$total += $o->valor;
-						?>
-					</tr>
-
-					@endforeach
-
-					<tr class="red lighten-5">
-						<td colspan="2"></td>
-						<td><strong class="green-text">{{number_format($total , 2, ',', '.')}}</strong></td>
-						<td colspan="6"></td>
-					</tr>
-				</tbody>
-			</table>
+			<div class="d-flex justify-content-between align-items-center flex-wrap">
+				<div class="d-flex flex-wrap py-2 mr-3">
+					@if(isset($links))
+					{{$orders->links()}}
+					@endif
+				</div>
+			</div>
 		</div>
-		@if(isset($orders))
-		<ul class="pagination center-align">
-			<li class="waves-effect">{{$orders->links()}}</li>
-		</ul>
-		@endif
 	</div>
 </div>
+
+
 @endsection	

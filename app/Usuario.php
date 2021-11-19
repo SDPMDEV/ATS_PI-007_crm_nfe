@@ -18,7 +18,7 @@ class Usuario extends Authenticatable
     protected $fillable = [
         'nome', 'email', 'senha', 'login', 'adm', 'acesso_cliente', 'acesso_fornecedor',
         'acesso_produto', 'acesso_financeiro', 'acesso_caixa', 'acesso_estoque',
-        'acesso_compra', 'acesso_fiscal', 'ativo'
+        'acesso_compra', 'acesso_fiscal', 'ativo', 'venda_nao_fiscal', 'img'
     ];
 
     /**
@@ -29,4 +29,8 @@ class Usuario extends Authenticatable
     protected $hidden = [
         'senha'
     ];
+
+    public function funcionario(){
+        return $this->hasOne('App\Funcionario', 'usuario_id', 'id');
+    }
 }

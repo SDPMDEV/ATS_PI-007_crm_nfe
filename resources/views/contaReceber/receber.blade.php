@@ -1,54 +1,90 @@
 @extends('default.layout')
 @section('content')
-<div class="row">
-	<div class="col s12">
-		<h4>Receber Conta</h4>
 
-		<form method="post" action="/contasReceber/receber" enctype="multipart/form-data">
-			<input type="hidden" name="id" value="{{$conta->id}}">
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 
-			<section class="section-1">
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
 
-				<div class="row">
-					<div class="col s12">
-						@if($conta->venda_id != null)
-						<h5>Cliente: <strong>{{$conta->venda->cliente->razao_social}}</strong></h5>
-						@endif
+				<form method="post" action="/contasReceber/receber" enctype="multipart/form-data">
 
-						<h5>Data de registro: <strong>{{ \Carbon\Carbon::parse($conta->data_registro)->format('d/m/Y')}}</strong></h5>
-						<h5>Data de vencimento: <strong>{{ \Carbon\Carbon::parse($conta->data_vencimento)->format('d/m/Y')}}</strong></h5>
-						<h5>Valor: <strong>{{ number_format($conta->valor_integral, 2, ',', '.') }}</strong></h5>
-						<h5>Categoria: <strong>{{$conta->categoria->nome}}</strong></h5>
-						<h5>Referencia: <strong>{{$conta->referencia}}</strong></h5>
-					</div>
-				</div>
 
-				<div class="row">
+					<input type="hidden" name="id" value="{{$conta->id}}">
 
-					<div class="col s3 input-field">
-						<input type="text" id="valor" name="valor" class="text">
-						<label>Valor Recebido</label>
-						@if($errors->has('valor'))
-						<div class="center-align red lighten-2">
-							<span class="white-text">{{ $errors->first('valor') }}</span>
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+
+							<h3 class="card-title">Receber Conta</h3>
 						</div>
-						@endif
+
 					</div>
+					@csrf
 
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
 
-				</div>
+							<div class="row">
+								<div class="col s12">
+									@if($conta->compra_id != null)
+									<h5>Fornecedor: <strong>{{$conta->compra->fornecedor->razao_social}}</strong></h5>
+									@endif
 
-				<input type="hidden" name="_token" value="{{ csrf_token() }}">
+									<h5>Data de registro: <strong>{{ \Carbon\Carbon::parse($conta->data_registro)->format('d/m/Y')}}</strong></h5>
+									<h5>Data de vencimento: <strong>{{ \Carbon\Carbon::parse($conta->data_vencimento)->format('d/m/Y')}}</strong></h5>
+									<h5>Valor: <strong>{{ number_format($conta->valor_integral, 2, ',', '.') }}</strong></h5>
+									<h5>Categoria: <strong>{{$conta->categoria->nome}}</strong></h5>
+									<h5>Referencia: <strong>{{$conta->referencia}}</strong></h5>
+								</div>
+							</div>
 
-			</section>
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
 
+									<div class="row">
+										<div class="form-group validated col-sm-6 col-lg-6">
+											<label class="col-form-label">Valor Recebido</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('valor')) is-invalid @endif money" name="valor" value="">
+												@if($errors->has('valor'))
+												<div class="invalid-feedback">
+													{{ $errors->first('valor') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="card-footer">
 
-			<br>
-			<div class="row">
-				<a class="btn-large red lighten-2" href="/contasReceber">Cancelar</a>
-				<input type="submit" value="Salvar" class="btn-large green accent-3">
+						<div class="row">
+							<div class="col-xl-2">
+
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="/contasReceber">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Receber</span>
+								</button>
+							</div>
+
+						</div>
+					</div>
+				</form>
 			</div>
-		</form>
+		</div>
 	</div>
 </div>
+
 @endsection

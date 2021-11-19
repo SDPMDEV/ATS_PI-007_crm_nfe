@@ -21,8 +21,8 @@
 			<thead>
 				<tr>
 					<th width="150">DATA</th>
-					<th width="150">TOTAL</th>
-					<th width="150">ITENS VENDIDOS</th>
+					<th width="150">TOTAL R$</th>
+					<th width="150">QTD COMPRAS</th>
 				</tr>
 			</thead>
 
@@ -33,7 +33,7 @@
 				<tr class="@if($key%2 == 0) pure-table-odd @endif">
 					<td>{{$c->data}}</td>
 					<td>{{number_format($c->total, 2)}}</td>
-					<td>{{number_format($c->itens, 2)}}</td>
+					<td>{{number_format($c->compras_diarias, 2)}}</td>
 				</tr>
 				@endforeach
 			</tbody>

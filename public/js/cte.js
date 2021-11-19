@@ -5,89 +5,148 @@ var TOTALQTD = 0;
 var REMETENTE = null;
 var DESTINATARIO = null;
 var xmlValido = false;
+var SOMACOMPONENTES = 0;
+var CTEDID = 0;
 
+var CLIENTES = []
 $(function () {
 
-	getCidades(function(data){
-		$('input.autocomplete-cidade-envio').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-			},
-			minLength: 1,
-		});
-		$('input.autocomplete-cidade-inicio').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-			},
-			minLength: 1,
-		});
-		$('input.autocomplete-cidade-final').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-			},
-			minLength: 1,
-		});
-		$('input.autocomplete-cidade-tomador').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-			},
-			minLength: 1,
-		});
-	});
-	getClientes(function(data){
-		$('input.autocomplete-remetente').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-				var cliente = $('#autocomplete-remetente').val().split('-');
-				getCliente(cliente[0], (d) => {
-					console.log(d)
-					REMETENTE = d;
-					
-					$('#info-remetente').css('display', 'block');
-					$('#nome-remetente').html(d.razao_social)
-					$('#cnpj-remetente').html(d.cpf_cnpj)
-					$('#ie-remetente').html(d.ie_rg)
-					$('#rua-remetente').html(d.rua)
-					$('#nro-remetente').html(d.numero)
-					$('#bairro-remetente').html(d.bairro)
-					$('#cidade-remetente').html(d.cidade.nome + "-"+ d.cidade.uf)
-					
-					habilitaBtnSalarCTe();
-				})
-			},
-			minLength: 1,
-		});
 
-		$('input.autocomplete-destinatario').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-				var cliente = $('#autocomplete-destinatario').val().split('-');
-				getCliente(cliente[0], (d) => {
-					console.log(d)
-					DESTINATARIO = d;
-					$('#info-destinatario').css('display', 'block');
-					$('#nome-destinatario').html(d.razao_social)
-					$('#cnpj-destinatario').html(d.cpf_cnpj)
-					$('#ie-destinatario').html(d.ie_rg)
-					$('#rua-destinatario').html(d.rua)
-					$('#nro-destinatario').html(d.numero)
-					$('#bairro-destinatario').html(d.bairro)
-					$('#cidade-destinatario').html(d.cidade.nome + "-"+ d.cidade.uf)
-					
+	CLIENTES = JSON.parse($('#clientes').val())
+	console.log(CLIENTES)
+
+	var remetente = $('#kt_select2_1').val();
+	if(remetente != 'null'){
+		CLIENTES.map((c) => {
+			if(c.id == remetente){
+				REMETENTE = c
+
+				$('#info-remetente').css('display', 'block');
+				$('#nome-remetente').html(c.razao_social)
+				$('#cnpj-remetente').html(c.cpf_cnpj)
+				$('#ie-remetente').html(c.ie_rg)
+				$('#rua-remetente').html(c.rua)
+				$('#nro-remetente').html(c.numero)
+				$('#bairro-remetente').html(c.bairro)
+				$('#cidade-remetente').html(c.cidade.nome + "("+ c.cidade.uf + ")")
+			}
+		})
+	}else{
+		$('#kt_select2_1').val('null').change()
+	}
+
+	var destinatario = $('#kt_select2_2').val();
+	if(destinatario != 'null'){
+
+		CLIENTES.map((c) => {
+			if(c.id == destinatario){
+				DESTINATARIO = c
+
+				$('#info-destinatario').css('display', 'block');
+				$('#nome-destinatario').html(c.razao_social)
+				$('#cnpj-destinatario').html(c.cpf_cnpj)
+				$('#ie-destinatario').html(c.ie_rg)
+				$('#rua-destinatario').html(c.rua)
+				$('#nro-destinatario').html(c.numero)
+				$('#bairro-destinatario').html(c.bairro)
+				$('#cidade-destinatario').html(c.cidade.nome + "("+ c.cidade.uf + ")")
+			}
+		})
+	}else{
+		$('#kt_select2_2').val('null').change()
+	}
+
+
+	if($('#cte_id').val()) {
+		CTEDID = $('#cte_id').val()
+	}
+
+	if(CTEDID > 0){
+		COMPONENTES = JSON.parse($('#componentes_cte').val())
+		MEDIDAS = JSON.parse($('#medidas_cte').val())
+		console.log("COMPONENTES", COMPONENTES)
+		let t = montaTabelaComponentes();
+		$('#componentes tbody').html(t)
+		habilitaBtnSalarCTe();
+
+		t = montaTabela2();
+		$('#prod tbody').html(t)
+
+		habilitaBtnSalarCTe()
+	}
+
+	let chave = removeEspacoChave();
+
+	if(chave){
+		chaveNfeDuplicada(chave, (chRes) => {
+			if(chRes == false){
+				$.get(path+'cte/consultaChave', {chave: chave})
+				.done((data) => {
+					data = JSON.parse(data);
+					console.log(data)
+
+					if(data.xMotivo == 'Autorizado o uso da NF-e'){
+						xmlValido = true;
+						$('#chave_nfe').attr('disabled', true)
+					}else{
+						swal("Erro", data.xMotivo, "error")
+						xmlValido = false;
+
+					}
 					habilitaBtnSalarCTe();
 				})
-			},
-			minLength: 1,
+				.fail(function(err){
+					console.log(err)
+					xmlValido = false;
+				})
+			}else{
+				$('#chave_nfe').val('');
+				// $('#chave-referenciada').css('display', 'block')
+				swal('Erro', 'Esta chave ja esta referênciada em outra CT-e', 'error')
+
+			}
 		});
-	});
+	}
+
+
 
 });
+
+$('#kt_select2_1').change(() => {
+	let remetente = $('#kt_select2_1').val()
+	CLIENTES.map((c) => {
+		if(c.id == remetente){
+			REMETENTE = c
+
+			$('#info-remetente').css('display', 'block');
+			$('#nome-remetente').html(c.razao_social)
+			$('#cnpj-remetente').html(c.cpf_cnpj)
+			$('#ie-remetente').html(c.ie_rg)
+			$('#rua-remetente').html(c.rua)
+			$('#nro-remetente').html(c.numero)
+			$('#bairro-remetente').html(c.bairro)
+			$('#cidade-remetente').html(c.cidade.nome + "("+ c.cidade.uf + ")")
+		}
+	})
+})
+
+$('#kt_select2_2').change(() => {
+	let dest = $('#kt_select2_2').val()
+	CLIENTES.map((c) => {
+		if(c.id == dest){
+			DESTINATARIO = c
+
+			$('#info-destinatario').css('display', 'block');
+			$('#nome-destinatario').html(c.razao_social)
+			$('#cnpj-destinatario').html(c.cpf_cnpj)
+			$('#ie-destinatario').html(c.ie_rg)
+			$('#rua-destinatario').html(c.rua)
+			$('#nro-destinatario').html(c.numero)
+			$('#bairro-destinatario').html(c.bairro)
+			$('#cidade-destinatario').html(c.cidade.nome + "("+ c.cidade.uf + ")")
+		}
+	})
+})
 
 function removeEspacoChave(){
 	let chave = $('#chave_nfe').val();
@@ -99,6 +158,10 @@ function removeEspacoChave(){
 $('.type-ref').on('keyup', () => {
 	habilitaBtnSalarCTe();
 })
+
+$('#file').change(function() {
+	$('#form-import').submit();
+});
 
 $('#chave_nfe').on('keyup', () => {
 	console.log('passou');
@@ -129,7 +192,9 @@ $('#chave_nfe').on('keyup', () => {
 				})
 			}else{
 				$('#chave_nfe').val('');
-				$('#chave-referenciada').css('display', 'block')
+				// $('#chave-referenciada').css('display', 'block')
+				swal('Erro', 'Esta chave ja esta referênciada em outra CT-e', 'error')
+
 
 			}
 		});
@@ -145,6 +210,10 @@ $('.ref-nfe').click(() => {
 $('.ref-out').click(() => {
 	$('#chave_nfe').val("")
 
+})
+
+$('.select-mun').change(() => {
+	habilitaBtnSalarCTe()
 })
 
 function chaveNfeDuplicada(chave, call){
@@ -203,29 +272,32 @@ function habilitaBtnSalarCTe(){
 	let tipoDocumento = false;
 	let inputs = false;
 
-	if(!xmlValido && $('#descOutros').val() != "" && $('#nDoc').val() != "" && 
-		$('#vDocFisc').val() != ""){
+	if(!xmlValido && $('#descOutros').val() != "" && $('#nDoc').val() != "" && $('#vDocFisc').val() != ""){
 		tipoDocumento = true;
 	}else if(xmlValido && $('#descOutros').val() == "" && $('#nDoc').val() == "" && 
 		$('#vDocFisc').val() == ""){
 		tipoDocumento = true
 	}
 
+	console.log(tipoDocumento)
+	console.log(xmlValido)
+
 	if($('#prod_predominante').val() != "" && $('#valor_carga').val() != ""
 		&& $('#valor_transporte').val() != "" && $('#valor_receber').val() != ""
-		&& $('#autocomplete-cidade-envio').val() != "" && $('#autocomplete-cidade-inicio').val() != "" 
-		&& $('#autocomplete-cidade-final').val() != ""){
+		&& $('#kt_select2_5').val() != 'null' && $('#kt_select2_8').val() != 'null' 
+		&& $('#kt_select2_7').val() != 'null'){
 		inputs = true;
-	}
+}
 
-	console.log(tipoDocumento)
+console.log(tipoDocumento)
+console.log(inputs)
 
-	if(MEDIDAS.length > 0 && COMPONENTES.length > 0 && DESTINATARIO != null && 
-		REMETENTE != null &&
-		tipoDocumento && inputs){
-		$('#finalizar').removeClass('disabled')
+if(MEDIDAS.length > 0 && COMPONENTES.length > 0 && DESTINATARIO != null && 
+	REMETENTE != null &&
+	tipoDocumento && inputs){
+	$('#finalizar').removeClass('disabled')
 
-	}
+}
 }
 
 $('#endereco-destinatario').click(() => {
@@ -237,13 +309,14 @@ $('#endereco-destinatario').click(() => {
 			$('#numero_tomador').val(DESTINATARIO.numero)
 			$('#bairro_tomador').val(DESTINATARIO.bairro)
 			$('#cep_tomador').val(DESTINATARIO.cep)
-			$('#autocomplete-cidade-tomador').val(DESTINATARIO.cidade.id +' - '+
-				DESTINATARIO.cidade.nome)
+			$('#kt_select2_4').val(DESTINATARIO.cidade.id).change()
 
 			habilitaCampos();
 
 		}else{
-			alert('Destinatário não selecionado!');
+			// alert('Destinatário não selecionado!');
+			swal("Erro!", "Destinatário não selecionado!", "warning")
+
 			$('#endereco-destinatario').prop('checked', false); 
 			
 		}
@@ -261,13 +334,14 @@ $('#endereco-remetente').click(() => {
 			$('#numero_tomador').val(REMETENTE.numero)
 			$('#bairro_tomador').val(REMETENTE.bairro)
 			$('#cep_tomador').val(REMETENTE.cep)
-			$('#autocomplete-cidade-tomador').val(REMETENTE.cidade.id +' - '+
-				REMETENTE.cidade.nome)
-
+			$('#kt_select2_4').val(REMETENTE.cidade.id).change()
+			
 			habilitaCampos();
 
 		}else{
-			alert('Remetente não selecionado!');
+			// alert('Remetente não selecionado!');
+			swal("Erro!", "Remetente não selecionado!", "warning")
+
 			$('#endereco-remetente').prop('checked', false); 
 		}
 	}else{
@@ -331,36 +405,113 @@ $('#addMedida').click(() => {
 
 		habilitaBtnSalarCTe()
 	}else{
-		alert('Quantidade inválida, utilize 4 casas decimais exemplo: 1,0000')
+		// alert('Quantidade inválida, utilize 4 casas decimais exemplo: 1,0000')
+		swal("Erro!", "Quantidade inválida, utilize 4 casas decimais exemplo: 1,0000", "warning")
+
+
 	}
 });
 
 function montaTabela(){
 	let t = ""; 
 	MEDIDAS.map((v) => {
-		t += "<tr>";
-		t += "<td>"+v.id+"</td>";
-		t += "<td>"+v.unidade_medida+"</td>";
-		t += "<td>"+v.tipo_medida+"</td>";
-		t += "<td>"+v.quantidade+"</td>";
-		t += "<td><a href='#prod tbody' onclick='deleteItem("+v.id+")'>"
-		t += "<i class=' material-icons red-text'>delete</i></a></td>";
+		console.log(v)
+		t += '<tr class="datatable-row">'
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 150px;" id="id">'
+		t += v.id
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += v.unidade_medida
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += v.tipo_medida
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += v.quantidade
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += '<a onclick="deleteItem('+v.id+')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		t += '</span></td>'
+
 		t+= "</tr>";
 	});
 	return t;
 }
 
-function montaTabelaComponentes(){
+function montaTabela2(){
 	let t = ""; 
-	COMPONENTES.map((v) => {
-		t += "<tr>";
-		t += "<td>"+v.id+"</td>";
-		t += "<td>"+v.nome+"</td>";
-		t += "<td>"+v.valor+"</td>";
-		t += "<td><a href='#componentes tbody' onclick='deleteComponente("+v.id+")'>"
-		t += "<i class=' material-icons red-text'>delete</i></a></td>";
+	MEDIDAS.map((v) => {
+		console.log(v)
+		t += '<tr class="datatable-row">'
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 150px;" id="id">'
+		t += v.id
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += v.cod_unidade
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += v.tipo_medida
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += v.quantidade_carga
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += '<a onclick="deleteItem('+v.id+')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		t += '</span></td>'
+
 		t+= "</tr>";
 	});
+	return t;
+}
+
+$('#autocomplete-remetente').focus(() => {
+	$('#info-remetente').css('display', 'none');
+	REMETENTE = null;
+})
+
+$('#autocomplete-destinatario').focus(() => {
+	$('#info-destinatario').css('display', 'none');
+	DESTINATARIO = null;
+})
+
+function montaTabelaComponentes(){
+	let t = ""; 
+	SOMACOMPONENTES = 0;
+	COMPONENTES.map((v) => {
+
+		t += '<tr class="datatable-row">'
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 150px;" id="id">'
+		t += v.id
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += v.nome
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += v.valor
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+		t += '<a onclick="deleteComponente('+v.id+')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		t += '</span></td>'
+
+		t+= "</tr>";
+
+
+
+		SOMACOMPONENTES += parseFloat(v.valor.replace(',', '.'));
+	});
+	$('#valor_receber').val(SOMACOMPONENTES.toFixed(2));
+	$('#valor_transporte').val(SOMACOMPONENTES.toFixed(2));
 	return t;
 }
 
@@ -420,7 +571,7 @@ function salvarCTe(){
 	let valorTransporte = $('#valor_transporte').val();
 	let valorCarga = $('#valor_carga').val();
 	let valorReceber = $('#valor_receber').val();
-	let data = $('#data_prevista_entrega').val();
+	let data = $('#kt_datepicker_3').val();
 	if(valorTransporte == 0 || valorTransporte.length == 0){
 		msg += "\nInforme o valor de transporte";
 	}
@@ -437,31 +588,28 @@ function salvarCTe(){
 		msg += "\nInforme a data de entrega";
 	}
 
-
 	if(msg == ""){
 		let js = {
+			cte_id: CTEDID,
 			chave_nfe: removeEspacoChave(),
 			remetente: parseInt(REMETENTE.id),
 			destinatario: parseInt(DESTINATARIO.id),
 			tomador: $('#tomador').val(),
-			municipio_envio: $('#cidade_envio').val(),
-			municipio_inicio: $('#cidade_inicio').val(),
-			municipio_fim: $('#cidade_fim').val(),
+			municipio_envio: $('#kt_select2_5').val(),
+			municipio_inicio: $('#kt_select2_8').val(),
+			municipio_fim: $('#kt_select2_7').val(),
 			numero_tomador: $('#numero_tomador').val(),
 			bairro_tomador: $('#bairro_tomador').val(),
-			municipio_tomador: $('#autocomplete-cidade-tomador').val(),
+			municipio_tomador: $('#kt_select2_4').val(),
 			logradouro_tomador: $('#rua_tomador').val(),
 			cep_tomador: $('#cep_tomador').val(),
-			municipio_envio: $('#autocomplete-cidade-envio').val(),
-			municipio_inicio: $('#autocomplete-cidade-inicio').val(),
-			municipio_fim: $('#autocomplete-cidade-final').val(),
 			medidias: MEDIDAS,
 			componentes: COMPONENTES,
 			valor_carga: valorCarga,
 			valor_receber: $('#valor_receber').val(),
 			valor_transporte: valorTransporte,
 			produto_predominante: $('#prod_predominante').val(),
-			data_prevista_entrega: $('#data_prevista_entrega').val(),
+			data_prevista_entrega: $('#kt_datepicker_3').val(),
 			natureza: $('#natureza').val(),
 			obs: $('#obs').val(),
 			retira: $('#retira').val(),
@@ -476,7 +624,9 @@ function salvarCTe(){
 
 		}
 		console.log(js)
-		$.post(path+'cte/salvar', {data: js, _token: $('#_token').val()})
+		let url = 'cte/salvar'
+		if(CTEDID > 0) url = 'cte/update'
+		$.post(path+url, {data: js, _token: $('#_token').val()})
 		.done(function(v){
 			console.log(v)
 			sucesso();
@@ -485,7 +635,9 @@ function salvarCTe(){
 			console.log(err)
 		})
 	}else{
-		alert("Informe corretamente os campos para continuar!"+msg)
+		// alert("Informe corretamente os campos para continuar!"+msg)
+		swal("Erro!", "Informe corretamente os campos para continuar!"+msg, "warning")
+		
 
 	}
 }

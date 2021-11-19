@@ -19,6 +19,9 @@ class CreateContaRecebersTable extends Migration
             $table->integer('venda_id')->nullable()->unsigned();
             $table->foreign('venda_id')->references('id')->on('vendas')->onDelete('cascade');
 
+            $table->integer('usuario_id')->nullable()->unsigned();
+            $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
+
             $table->integer('categoria_id')->unsigned();
             $table->foreign('categoria_id')->references('id')->on('categoria_contas')->onDelete('cascade');
 

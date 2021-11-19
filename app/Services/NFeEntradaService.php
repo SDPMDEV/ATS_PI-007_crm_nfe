@@ -188,13 +188,13 @@ class NFeEntradaService {
 			$natureza->CFOP_entrada_inter_estadual : $natureza->CFOP_entrada_estadual;
 			$stdProd->uCom = $i->produto->unidade_compra;
 			$stdProd->qCom = $i->quantidade;
-			$stdProd->vUnCom = $this->format($i->valor);
-			$stdProd->vProd = $this->format(($i->quantidade * $i->valor));
+			$stdProd->vUnCom = $this->format($i->valor_unitario);
+			$stdProd->vProd = $this->format(($i->quantidade * $i->valor_unitario));
 			$stdProd->uTrib = $i->produto->unidade_compra;
 			$stdProd->qTrib = $i->quantidade;
-			$stdProd->vUnTrib = $this->format($i->valor);
+			$stdProd->vUnTrib = $this->format($i->valor_unitario);
 			$stdProd->indTot = 1;
-			$somaProdutos += ($i->quantidade * $i->valor);
+			$somaProdutos += ($i->quantidade * $i->valor_unitario);
 
 			// if($venda->desconto > 0){
 			// 	$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
@@ -228,7 +228,7 @@ class NFeEntradaService {
 				$stdICMS->modBC = 0;
 				$stdICMS->vBC = $this->format($i->valor * $i->quantidade);
 				$stdICMS->pICMS = $this->format($i->produto->perc_icms);
-				$stdICMS->vICMS = $this->format(($i->valor * $i->quantidade) 
+				$stdICMS->vICMS = $this->format(($i->valor_unitario * $i->quantidade) 
 					* ($stdICMS->pICMS/100));
 
 				$somaICMS += (($i->valor * $i->quantidade) 
@@ -372,47 +372,39 @@ class NFeEntradaService {
 		// }
 
 
-
-		$stdResp = new \stdClass();
-		$stdResp->CNPJ = '08543628000145'; 
-		$stdResp->xContato= 'Slym';
-		$stdResp->email = 'marcos05111993@gmail.com'; 
-		$stdResp->fone = '43996347016'; 
-
-		$nfe->taginfRespTec($stdResp);
-
-
 	//Fatura
+		if($tipoPagamento == '90'){
+			$stdFat = new \stdClass();
+			$stdFat->nFat = $stdIde->nNF;
+			$stdFat->vOrig = $this->format($compra->valor);
+			$stdFat->vDesc = $this->format(0.00);
+			$stdFat->vLiq = $this->format($compra->valor);
 
-		$stdFat = new \stdClass();
-		$stdFat->nFat = $stdIde->nNF;
-		$stdFat->vOrig = $this->format($compra->valor);
-		$stdFat->vDesc = $this->format(0.00);
-		$stdFat->vLiq = $this->format($compra->valor);
-
-		$fatura = $nfe->tagfat($stdFat);
+			$fatura = $nfe->tagfat($stdFat);
+		}
 
 
 	//Duplicata
+		if($tipoPagamento == '90'){
+			if(sizeof($compra->fatura) > 0){
+				$contFatura = 1;
+				foreach($compra->fatura as $ft){
+					$stdDup = new \stdClass();
+					$stdDup->nDup = "00".$contFatura;
+					$stdDup->dVenc = substr($ft->data_vencimento, 0, 10);
+					$stdDup->vDup = $this->format($ft->valor_integral);
 
-		if(sizeof($compra->fatura) > 0){
-			$contFatura = 1;
-			foreach($compra->fatura as $ft){
+					$nfe->tagdup($stdDup);
+					$contFatura++;
+				}
+			}else{
 				$stdDup = new \stdClass();
-				$stdDup->nDup = "00".$contFatura;
-				$stdDup->dVenc = substr($ft->data_vencimento, 0, 10);
-				$stdDup->vDup = $this->format($ft->valor_integral);
+				$stdDup->nDup = '001';
+				$stdDup->dVenc = Date('Y-m-d');
+				$stdDup->vDup =  $this->format($compra->valor);
 
 				$nfe->tagdup($stdDup);
-				$contFatura++;
 			}
-		}else{
-			$stdDup = new \stdClass();
-			$stdDup->nDup = '001';
-			$stdDup->dVenc = Date('Y-m-d');
-			$stdDup->vDup =  $this->format($compra->valor);
-
-			$nfe->tagdup($stdDup);
 		}
 
 
@@ -424,9 +416,7 @@ class NFeEntradaService {
 
 
 		$stdDetPag->tPag = $tipoPagamento;
-		$stdDetPag->vPag = $this->format($stdProd->vProd); 
-
-		
+		$stdDetPag->vPag = $tipoPagamento == '90' ? 0.00 : $this->format($stdProd->vProd); 
 		$stdDetPag->indPag = '0'; 
 
 		$detPag = $nfe->tagdetPag($stdDetPag);
@@ -510,6 +500,49 @@ class NFeEntradaService {
 		}
 
 	}	
+
+	public function cancelar($compra, $justificativa){
+		try {
+			
+			$chave = $compra->chave;
+			$response = $this->tools->sefazConsultaChave($chave);
+			$stdCl = new Standardize($response);
+			$arr = $stdCl->toArray();
+			sleep(1);
+				// return $arr;
+			$xJust = $justificativa;
+
+
+			$nProt = $arr['protNFe']['infProt']['nProt'];
+
+			$response = $this->tools->sefazCancela($chave, $xJust, $nProt);
+			sleep(2);
+			$stdCl = new Standardize($response);
+			$std = $stdCl->toStd();
+			$arr = $stdCl->toArray();
+			$json = $stdCl->toJson();
+
+			if ($std->cStat != 128) {
+        //TRATAR
+			} else {
+				$cStat = $std->retEvento->infEvento->cStat;
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+				if ($cStat == '101' || $cStat == '135' || $cStat == '155' ) {
+            //SUCESSO PROTOCOLAR A SOLICITAÇÂO ANTES DE GUARDAR
+					$xml = Complements::toAuthorize($this->tools->lastRequest, $response);
+					file_put_contents($public.'xml_nfe_entrada_cancelada/'.$chave.'.xml',$xml);
+
+					return $json;
+				} else {
+
+					return $json;	
+				}
+			}    
+		} catch (\Exception $e) {
+			echo $e->getMessage();
+
+		}
+	}
 
 	
 	

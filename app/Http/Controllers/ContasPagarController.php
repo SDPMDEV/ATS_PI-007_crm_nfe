@@ -27,6 +27,7 @@ class ContasPagarController extends Controller
 		$contas = ContaPagar::
 		whereBetween('data_vencimento', [date("Y-m-d"), 
 			date('Y-m-d', strtotime('+1 month'))])
+		->orderBy('data_vencimento', 'asc')
 		->get();
 		$somaContas = $this->somaCategoriaDeContas($contas);
 		return view('contaPagar/list')
@@ -133,10 +134,8 @@ class ContasPagarController extends Controller
 		
 		if(strlen($request->recorrencia) == 5){
 			$valid = $this->validaRecorrencia($request->recorrencia);
-			echo $valid;
 			if(!$valid){
-				session()->flash('color', 'red');
-				session()->flash('message', 'Valor recorrente inválido!');
+				session()->flash('mensagem_erro', 'Valor recorrente inválido!');
 				return redirect('/contasPagar/new');
 			}
 		}
@@ -163,6 +162,7 @@ class ContasPagarController extends Controller
 			while($loopRecorrencia > 0){
 				$proximoMes = $proximoMes == 12 ? 1 : $proximoMes+1;
 				$proximoMes = $proximoMes < 10 ? "0".$proximoMes : $proximoMes;
+				
 				if($proximoMes == 1)  $ano++;
 				$d = $diaVencimento . "/".$proximoMes . "/" . $ano;
 
@@ -180,8 +180,7 @@ class ContasPagarController extends Controller
 			}
 		}
 
-		session()->flash('color', 'green');
-		session()->flash('message', 'Registro inserido!');
+		session()->flash('mensagem_sucesso', 'Registro inserido!');
 
 		return redirect('/contasPagar');
 	}
@@ -200,11 +199,11 @@ class ContasPagarController extends Controller
 		$result = $conta->save();
 
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Registro editado!');
+
+			session()->flash('mensagem_sucesso', 'Registro editado!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Ocorreu um erro!');
+
+			session()->flash('mensagem_erro', 'Ocorreu um erro!');
 		}
 
 		return redirect('/contasPagar');
@@ -228,7 +227,7 @@ class ContasPagarController extends Controller
 		$anoAtual = date('y');
 		$temp = explode("/", $rec);
 		if($anoAtual > $temp[1]) return false;
-		if($temp[0] <= $mesAutal) return false;
+		if((int)$temp[0] <= $mesAutal && $anoAtual == $temp[1]) return false;
 
 		return true;
 	}
@@ -284,20 +283,19 @@ class ContasPagarController extends Controller
 		where('id', $request->id)
 		->first();
 
-		$valor = str_replace(".", "", $request->valor);
-		$valor = str_replace(",", ".", $valor);
+		// $valor = str_replace(".", "", $request->valor);
+		// $valor = str_replace(",", ".", $valor);
 
 		$conta->status = true;
-		$conta->valor_pago = $valor;
+		$conta->valor_pago = $request->valor;
 		$conta->data_pagamento = date("Y-m-d");
 
 		$result = $conta->save();
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Conta paga!');
+			session()->flash('mensagem_sucesso', 'Conta paga!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/contasPagar');
 	}
@@ -307,11 +305,11 @@ class ContasPagarController extends Controller
 		::where('id', $id)
 		->delete();
 		if($delete){
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Registro removido!');
+
+			session()->flash('mensagem_sucesso', 'Registro removido!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/contasPagar');
 	}

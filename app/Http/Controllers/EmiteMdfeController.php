@@ -72,7 +72,7 @@ class EmiteMdfeController extends Controller
 			}
 			echo json_encode($resultado);
 		}else{
-			return response()->json("aprovado", 500);
+			return response()->json("erro", 401);
 		}
 
 	}
@@ -106,15 +106,31 @@ class EmiteMdfeController extends Controller
 		$naoEncerrados = [];
 
 		if($resultados['xMotivo'] != 'Consulta não encerrados não localizou MDF-e nessa situação'){
-			$array = [
-				'chave' => $resultados['infMDFe']['chMDFe'],
-				'protocolo' => $resultados['infMDFe']['nProt'],
-				'numero' => 0,
-				'data' => ''
-			];
+			if(sizeof($resultados['infMDFe']) > 1){
+				$array = [
+					'chave' => $resultados['infMDFe']['chMDFe'],
+					'protocolo' => $resultados['infMDFe']['nProt'],
+					'numero' => 0,
+					'data' => ''
+				];
+				array_push($naoEncerrados, $array);
 
-			array_push($naoEncerrados, $array);
+			}else{
+
+				foreach($resultados['infMDFe'] as $inf){
+
+					$array = [
+						'chave' => $inf['chMDFe'],
+						'protocolo' => $inf['nProt'],
+						'numero' => 0,
+						'data' => ''
+					];
+					array_push($naoEncerrados, $array);
+
+				}
+			}
 		}
+
 
 		$naoEncerrados = $this->percorreDatabaseNaoEncerrados($naoEncerrados);
 
@@ -183,20 +199,37 @@ class EmiteMdfeController extends Controller
 		$mdfe = Mdfe::find($id);
 
 		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-		$xml = file_get_contents($public.'xml_mdfe/'.$mdfe->chave.'.xml');
-		$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.png'));
+		if(file_exists($public.'xml_mdfe/'.$mdfe->chave.'.xml')){
+			$xml = file_get_contents($public.'xml_mdfe/'.$mdfe->chave.'.xml');
+			$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.png'));
 
 
-		try {
-			$damdfe = new Damdfe($xml);
-			$damdfe->debugMode(true);
-			$damdfe->creditsIntegratorFooter('WEBNFe Sistemas - http://www.webenf.com.br');
-			$pdf = $damdfe->render($logo);
-			header('Content-Type: application/pdf');
-			echo $pdf;
-		} catch (Exception $e) {
-			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
-		} 
+			try {
+				$damdfe = new Damdfe($xml);
+				$damdfe->debugMode(true);
+				$damdfe->creditsIntegratorFooter('WEBNFe Sistemas - http://www.webenf.com.br');
+				$pdf = $damdfe->render($logo);
+				header('Content-Type: application/pdf');
+				echo $pdf;
+			} catch (Exception $e) {
+				echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+			} 
+		}else{
+			echo "Arquivo XML não encontrado!";
+		}
+	}
+
+	public function baixarXml($id){
+
+		$mdfe = Mdfe::find($id);
+
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		if(file_exists($public.'xml_mdfe/'.$mdfe->chave.'.xml')){
+			return response()->download($public.'xml_mdfe/'.$mdfe->chave.'.xml');
+		}else{
+			echo "Arquivo XML não encontrado!!";
+		}
+		
 	}
 
 	public function consultar(Request $request){
@@ -256,6 +289,8 @@ class EmiteMdfeController extends Controller
 			$result = $mdfe_service->cancelar($mdfe->chave, $mdfe->protocolo, $request->justificativa);
 
 			if($result->infEvento->cStat == '101' || $result->infEvento->cStat == '135' || $result->infEvento->cStat == '155'){
+				$mdfe->estado = 'CANCELADO';
+				$mdfe->save();
 				return response()->json($result, 200);
 
 			}else{
@@ -276,7 +311,7 @@ class EmiteMdfeController extends Controller
 		$value = session('user_logged');
 		Mail::send('mail.xml_send_mdfe', ['emissao' => $mdfe->created_at, 'mdfe' => $mdfe->numero, 'usuario' => $value['nome']], function($m) use ($mdfe, $email){
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-			$nomeEmpresa = getenv('SMS_NOME_EMPRESA');
+			$nomeEmpresa = getenv('MAIL_NAME');
 			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
 			$nomeEmpresa = str_replace("_", " ",  $nomeEmpresa);
 			$emailEnvio = getenv('MAIL_USERNAME');
@@ -309,6 +344,28 @@ class EmiteMdfeController extends Controller
 		} catch (InvalidArgumentException $e) {
 			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
 		}  
+	}
+
+	public function imprimirPorChave($chave){
+		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+		if(file_exists($public.'xml_mdfe/'.$chave.'.xml')){
+			$xml = file_get_contents($public.'xml_mdfe/'.$chave.'.xml');
+			$logo = 'data://text/plain;base64,'. base64_encode(file_get_contents($public.'imgs/logo.png'));
+
+
+			try {
+				$damdfe = new Damdfe($xml);
+				$damdfe->debugMode(true);
+				$damdfe->creditsIntegratorFooter('WEBNFe Sistemas - http://www.webenf.com.br');
+				$pdf = $damdfe->render();
+				header('Content-Type: application/pdf');
+				echo $pdf;
+			} catch (Exception $e) {
+				echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
+			} 
+		}else{
+			echo "Arquivo XML não encontrado!";
+		}
 	}
 
 }

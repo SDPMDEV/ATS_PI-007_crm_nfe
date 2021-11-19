@@ -1,12 +1,24 @@
 
+var pedidosPendentes = []
+var pedidosFinalizados = []
 $(document).ready(function(){
+	let uri = window.location.pathname;
+	$('#select-filtro').val('pendentes').change()
+	if(uri.split('/')[1] == 'pedidosDelivery'){
 
-	getVars((res) => {
-		console.log(res)
-		if(res){
-			initMap(res);
-		}
-	})
+		pedidosPendentes = JSON.parse($('#pedidosPendentes').val())
+		pedidosFinalizados = JSON.parse($('#pedidosFinalizados').val())
+		
+		montaEntregasPendentes()
+		
+	}else{
+		getVars((res) => {
+			console.log(res)
+			if(res){
+				initMap(res);
+			}
+		})
+	}
 })
 
 function getVars(call){
@@ -63,8 +75,105 @@ function initMap(positions){
 			}
 			else
 				$("#error").append("Unable to retrieve your route<br />");
-		}
-		);
-
+		});
 
 }
+
+function montaEntregasPendentes(){
+	let latLocal = parseFloat($('#lat_local').val());
+	let lngLocal = parseFloat($('#lng_local').val());
+	var myLatLng = {lat: latLocal, lng: lngLocal};
+
+	var map = new google.maps.Map(document.getElementById('map'), {
+		zoom: 14,
+		center: myLatLng
+	});
+
+	pedidosPendentes.map((p) => {
+		console.log(p)
+		var myLatLng = {lat: parseFloat(p.endereco.latitude), lng: parseFloat(p.endereco.longitude)};
+		new google.maps.Marker({
+			position: myLatLng,
+			map,
+			title: p.cliente.nome + " R$ " + p.valor_total,
+			icon: {
+				url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+			}
+		});
+
+	})
+}
+
+function montaEntregasFinalizados(){
+	let latLocal = parseFloat($('#lat_local').val());
+	let lngLocal = parseFloat($('#lng_local').val());
+	var myLatLng = {lat: latLocal, lng: lngLocal};
+
+	var map = new google.maps.Map(document.getElementById('map'), {
+		zoom: 14,
+		center: myLatLng
+	});
+
+	pedidosFinalizados.map((p) => {
+		console.log(p)
+		var myLatLng = {lat: parseFloat(p.endereco.latitude), lng: parseFloat(p.endereco.longitude)};
+		new google.maps.Marker({
+			position: myLatLng,
+			map,
+			title: p.cliente.nome + " R$ " + p.valor_total,
+			icon: {
+				url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+			}
+		});
+
+	})
+}
+
+function montaEntregasAmbos(){
+	let latLocal = parseFloat($('#lat_local').val());
+	let lngLocal = parseFloat($('#lng_local').val());
+	var myLatLng = {lat: latLocal, lng: lngLocal};
+
+	var map = new google.maps.Map(document.getElementById('map'), {
+		zoom: 14,
+		center: myLatLng
+	});
+
+	pedidosPendentes.map((p) => {
+		console.log(p)
+		var myLatLng = {lat: parseFloat(p.endereco.latitude), lng: parseFloat(p.endereco.longitude)};
+		new google.maps.Marker({
+			position: myLatLng,
+			map,
+			title: p.cliente.nome + " R$ " + p.valor_total,
+			icon: {
+				url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+			}
+		});
+
+	})
+	pedidosFinalizados.map((p) => {
+		console.log(p)
+		var myLatLng = {lat: parseFloat(p.endereco.latitude), lng: parseFloat(p.endereco.longitude)};
+		new google.maps.Marker({
+			position: myLatLng,
+			map,
+			title: p.cliente.nome + " R$ " + p.valor_total,
+			icon: {
+				url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+			}
+		});
+
+	})
+}
+
+$('#select-filtro').change(() => {
+	let filtro = $('#select-filtro').val()
+	if(filtro == 'pendentes'){
+		montaEntregasPendentes()
+	}else if(filtro == 'finalizados'){
+		montaEntregasFinalizados()
+	}else{
+		montaEntregasAmbos();
+	}
+})

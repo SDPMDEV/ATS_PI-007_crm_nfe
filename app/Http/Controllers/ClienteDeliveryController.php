@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\ClienteDelivery;
 use App\EnderecoDelivery;
+use App\BairroDelivery;
 use App\Rules\CelularDup;
 use App\DeliveryConfig;
 use App\ProdutoFavoritoDelivery;
@@ -74,6 +75,14 @@ class ClienteDeliveryController extends Controller
 		return $messages[rand(0,2)];
 	}
 
+	public function pesquisa(Request $request){
+		$pesquisa = $request->input('pesquisa');
+		$clientes = ClienteDelivery::where('nome', 'LIKE', "%$pesquisa%")->get();
+		return view('clienteDelivery/list')
+		->with('clientes', $clientes)
+		->with('title', 'Filtro Clientes');
+	}
+
 	public function edit($id){
 		$cliente = ClienteDelivery::
 		where('id', $id)
@@ -90,12 +99,10 @@ class ClienteDeliveryController extends Controller
 		->first();
 
 		if($cliente->delete()){
-			session()->flash('color', 'green');
-            session()->flash("message", "Cliente removido com sucesso!");
-        }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao remover cliente!');
-        }
+			session()->flash("mensagem_sucesso", "Cliente removido com sucesso!");
+		}else{
+			session()->flash('mensagem_erro', 'Erro ao remover cliente!');
+		}
 		return redirect('/clientesDelivery');
 	}
 
@@ -111,12 +118,10 @@ class ClienteDeliveryController extends Controller
 		$cliente->sobre_nome = $request->sobre_nome;
 
 		if($cliente->save()){
-			session()->flash('color', 'green');
-            session()->flash("message", "Cliente editado com sucesso!");
-        }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao editar cliente!');
-        }
+			session()->flash("mensagem_sucesso", "Cliente editado com sucesso!");
+		}else{
+			session()->flash('mensagem_erro', 'Erro ao editar cliente!');
+		}
 		return redirect('/clientesDelivery');
 	}
 
@@ -145,8 +150,12 @@ class ClienteDeliveryController extends Controller
 		where('id', $id)
 		->first();
 
+		$bairros = BairroDelivery::orderBy('nome')->get();
+		$config = DeliveryConfig::first();
 		return view('clienteDelivery/enderecoEdit')
 		->with('title', 'Editar endereço')
+		->with('bairros', $bairros)
+		->with('config', $config)
 		->with('endereco', $endereco);
 	}
 
@@ -171,18 +180,17 @@ class ClienteDeliveryController extends Controller
 		$this->_validateEnd($request);
 		$end->rua = $request->rua;
 		$end->numero = $request->numero;
-		$end->bairro = $request->bairro;
+		$end->bairro = $request->bairro ?? '';
 		$end->referencia = $request->referencia;
+		$end->bairro_id = $request->bairro_id;
 		$end->latitude = $request->latitude ?? '';
 		$end->latitude = $request->latitude ?? '';
 
 		if($end->save()){
-			session()->flash('color', 'green');
-            session()->flash("message", "Endereço editado com sucesso!");
-        }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao editar endereço!');
-        }
+			session()->flash("mensagem_sucesso", "Endereço editado com sucesso!");
+		}else{
+			session()->flash('mensagem_erro', 'Erro ao editar endereço!');
+		}
 		return redirect('clientesDelivery/enderecos/'.$end->cliente->id);
 	}
 
@@ -218,7 +226,7 @@ class ClienteDeliveryController extends Controller
 		$rules = [
 			'rua' => 'required|max:50',
 			'numero' => 'required|max:10',
-			'bairro' => 'required|max:30',
+			'bairro' => $request->bairro ? 'required|max:30' : '',
 			'referencia' => 'required|max:30',
 		];
 
@@ -234,5 +242,16 @@ class ClienteDeliveryController extends Controller
 
 		];
 		$this->validate($request, $rules, $messages);
+	}
+
+	public function alterarStatus($id){
+		$cliente = ClienteDelivery::find($id);
+		$cliente->ativo = !$cliente->ativo;
+		if($cliente->save()){
+			session()->flash("mensagem_sucesso", "Status de cliente $cliente->nome alterado!");
+		}else{
+			session()->flash('mensagem_erro', 'Erro!');
+		}
+		return redirect('/clientesDelivery');
 	}
 }

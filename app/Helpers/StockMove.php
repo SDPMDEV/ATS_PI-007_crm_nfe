@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Estoque;
+use App\Produto;
 
 class StockMove {
 	private function existStock($productId){
@@ -18,6 +19,9 @@ class StockMove {
 	}
 
 	public function pluStock($productId, $quantity, $value = -1){
+
+		$produto = Produto::find($productId);
+		$quantity = (float)$quantity * $produto->conversao_unitaria;
 		$stock = $this->existStock($productId);
 		if($stock){ // update
 			$stock->quantidade += $quantity;
@@ -32,6 +36,8 @@ class StockMove {
 	}
 
 	public function downStock($productId, $quantity){
+		$produto = Produto::find($productId);
+		$quantity = (float)$quantity * $produto->conversao_unitaria;
 		$stock = $this->existStock($productId);
 		if($stock){ // update
 			$stock->quantidade -= $quantity;

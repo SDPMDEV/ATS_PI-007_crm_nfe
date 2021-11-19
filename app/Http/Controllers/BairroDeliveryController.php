@@ -37,15 +37,16 @@ class BairroDeliveryController extends Controller
 		$this->_validate($request);
 
 		$request->merge(['valor_entrega' => str_replace(",", ".", $request->valor_entrega)]);
+		$request->merge(['valor_repasse' => $request->valor_repasse ? str_replace(",", ".", $request->valor_repasse) : 0]);
 
 		$result = $bairro->create($request->all());
 
 		if($result){
-			session()->flash('color', 'blue');
-			session()->flash("message", "Bairro cadastrado com sucesso.");
+
+			session()->flash("mensagem_sucesso", "Bairro cadastrado com sucesso.");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao cadastrar bairro.');
+
+			session()->flash('mensagem_erro', 'Erro ao cadastrar bairro.');
 		}
 
 		return redirect('/bairrosDelivery');
@@ -76,14 +77,15 @@ class BairroDeliveryController extends Controller
 
 		$resp->nome = $request->input('nome');
 		$resp->valor_entrega = $request->input('valor_entrega');
+		$resp->valor_repasse = $request->input('valor_repasse');
 
 		$result = $resp->save();
 		if($result){
-			session()->flash('color', 'green');
-			session()->flash('message', 'Bairro editado com sucesso!');
+
+			session()->flash('mensagem_sucesso', 'Bairro editado com sucesso!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao editar bairro!');
+
+			session()->flash('mensagem_erro', 'Erro ao editar bairro!');
 		}
 
 		return redirect('/bairrosDelivery'); 
@@ -95,11 +97,11 @@ class BairroDeliveryController extends Controller
 		::where('id', $id)
 		->delete();
 		if($delete){
-			session()->flash('color', 'blue');
-			session()->flash('message', 'Registro removido!');
+
+			session()->flash('mensagem_sucesso', 'Registro removido!');
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro!');
+
+			session()->flash('mensagem_erro', 'Erro!');
 		}
 		return redirect('/bairrosDelivery');
 

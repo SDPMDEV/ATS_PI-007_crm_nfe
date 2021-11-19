@@ -1,8 +1,9 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
+<div class="card card-custom gutter-b">
+
+	<div class="card-body">
 		<h5>Para acessar o PDV é necessario ter cadastrado:</h5>
 		<h4>* Emitente fiscal com certificado digital</h4>
 		<h4>* Natureza de operação cadastrado</h4>

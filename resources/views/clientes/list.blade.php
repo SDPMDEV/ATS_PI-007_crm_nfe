@@ -1,91 +1,143 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
-		<nav class="black">
-			<div class="nav-wrapper">
-				<form method="get" action="/clientes/pesquisa">
-					<div class="input-field">
-						<input placeholder="Pesquisa de Cliente" id="search" name="pesquisa" 
-						type="search" required>
-						<label class="label-icon" for="search">
-							<i class="material-icons">search</i></label>
-							<i class="material-icons">close</i>
-						</div>
+<div class="card card-custom gutter-b">
 
-					</form>
-				</div>
-			</nav>
-			<h4>Lista de Clientes</h4>
 
-			@if(session()->has('message'))
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-			@endif
+	<div class="card-body">
+		<div class="">
+			<div class="col-sm-12 col-lg-4 col-md-6 col-xl-4">
 
-			<div class="row"></div>
-			<div class="row">
-				<a href="/clientes/new" class="btn green accent-3">
-					<i class="material-icons left">add</i>	
-					Novo Cliente		
+				<a href="/clientes/new" class="btn btn-lg btn-success">
+					<i class="fa fa-plus"></i>Novo Cliente
 				</a>
 			</div>
+		</div>
+		<br>
 
-			
 
-			<div class="row">
-				<div class="col s12">
-					<label>Numero de registros: {{count($clientes)}}</label>					
+		<div class="" id="kt_user_profile_aside" style="margin-left: 10px; margin-right: 10px;">
+
+			<form method="get" action="/clientes/pesquisa">
+				<div class="row align-items-center">
+					<div class="col-lg-5 col-xl-5">
+						<div class="row align-items-center">
+							<div class="col-md-12 my-2 my-md-0">
+								<div class="input-icon">
+									<input type="text" name="pesquisa" class="form-control" placeholder="Cliente..." id="kt_datatable_search_query">
+									<span>
+										<i class="fa fa-search"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="col-lg-2 col-xl-2 mt-2 mt-lg-0">
+						<button class="btn btn-light-primary px-6 font-weight-bold">Pesquisa</button>
+					</div>
 				</div>
-				<table class="col s12">
-					<thead>
-						<tr>
-							<th>Código</th>
-							<th>Nome</th>
-							<th>CPF/CNPJ</th>
-							<th>Rua</th>
-							<th>Número</th>
-							<th>Bairro</th>
-							<th>Telefone</th>
-							<th>Cidade</th>
-							<th>Email</th>
-							<th>Ações</th>
-						</tr>
-					</thead>
 
-					<tbody>
-						@foreach($clientes as $c)
-						<tr>
-							<th>{{ $c->id }}</th>
-							<th>{{ $c->razao_social }}</th>
-							<th>{{ $c->cpf_cnpj }}</th>
-							<th>{{ $c->rua }}</th>
-							<th>{{ $c->numero }}</th>
-							<th>{{ $c->bairro }}</th>
-							<th>{{ $c->telefone }}</th>
-							<th>{{ $c->cidade->nome }}</th>
-							<th>{{ $c->email }}</th>
+			</form>
+			<br>
+			<h4>Lista de Clientes</h4>
+			<label>Total de registros: {{count($clientes)}}</label>
+			<div class="row">
 
-							<th>
-								<a href="/clientes/edit/{{ $c->id }}">
-									<i class="material-icons left">edit</i>					
-								</a>
-								<a onclick = "if (! confirm('Deseja excluir este registro?')) { return false; }" href="/clientes/delete/{{ $c->id }}">
-									<i class="material-icons left red-text">delete</i>					
-								</a>
-							</th>
-						</tr>
-						@endforeach
-					</tbody>
-				</table>
+				@foreach($clientes as $c)
+
+
+				<div class="col-sm-12 col-lg-6 col-md-6 col-xl-4">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
+							<div class="card-title">
+								<h3 style="width: 230px; font-size: 12px; height: 10px;" class="card-title">{{$c->id}} - {{substr($c->razao_social, 0, 30)}}
+								</h3>
+							</div>
+
+							<div class="card-toolbar">
+								<div class="dropdown dropdown-inline" data-toggle="tooltip" title="" data-placement="left" data-original-title="Ações">
+									<a href="#" class="btn btn-hover-light-primary btn-sm btn-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<i class="fa fa-ellipsis-h"></i>
+									</a>
+									<div class="dropdown-menu p-0 m-0 dropdown-menu-md dropdown-menu-right">
+										<!--begin::Navigation-->
+										<ul class="navi navi-hover">
+											<li class="navi-header font-weight-bold py-4">
+												<span class="font-size-lg">Ações:</span>
+											</li>
+											<li class="navi-separator mb-3 opacity-70"></li>
+											<li class="navi-item">
+												<a href="/clientes/edit/{{$c->id}}" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-primary">Editar</span>
+													</span>
+												</a>
+											</li>
+											<li class="navi-item">
+												<a onclick='swal("Atenção!", "Deseja remover este registro?", "warning").then((sim) => {if(sim){ location.href="/clientes/delete/{{ $c->id }}" }else{return false} })' href="#!" class="navi-link">
+													<span class="navi-text">
+														<span class="label label-xl label-inline label-light-danger">Excluir</span>
+													</span>
+												</a>
+											</li>
+
+
+										</ul>
+										<!--end::Navigation-->
+									</div>
+								</div>
+
+							</div>
+
+							<div class="card-body">
+
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">CNPJ/CPF:</span>
+									<a target="_blank" class="kt-widget__data text-success">{{ $c->cpf_cnpj }}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">IE/RG:</span>
+									<a class="kt-widget__data text-success">{{$c->ie_rg}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Cidade:</span>
+									<a class="kt-widget__data text-success">{{$c->cidade->nome}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">UF:</span>
+									<a class="kt-widget__data text-success">{{$c->cidade->uf}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Telefone:</span>
+									<a class="kt-widget__data text-success">{{$c->telefone}}</a>
+								</div>
+								<div class="kt-widget__info">
+									<span class="kt-widget__label">Email:</span>
+									<a class="kt-widget__data text-success">{{$c->email}}</a>
+								</div>
+
+							</div>
+
+						</div>
+
+					</div>
+
+				</div>
+
+				@endforeach
+
 			</div>
-			@if(isset($links))
-			<ul class="pagination center-align">
-				<li class="waves-effect">{{$clientes->links()}}</li>
-			</ul>
-			@endif
+
+			<div class="d-flex justify-content-between align-items-center flex-wrap">
+				<div class="d-flex flex-wrap py-2 mr-3">
+					@if(isset($links))
+					{{$clientes->links()}}
+					@endif
+				</div>
+			</div>
 		</div>
 	</div>
-	@endsection	
+</div>
+
+@endsection

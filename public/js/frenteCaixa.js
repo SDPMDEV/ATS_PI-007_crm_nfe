@@ -11,67 +11,49 @@ var VALORACRESCIMO = 0;
 var OBSERVACAO = "";
 var OBSERVACAOITEM = "";
 var DESCONTO = 0;
+var LISTAID = 0;
+var PDV_VALOR_RECEBIDO = 0;
 
+var VALORPAG1 = 0
+var VALORPAG2 = 0
+var VALORPAG3 = 0
+var TIPOPAG1 = ''
+var TIPOPAG2 = ''
+var TIPOPAG3 = ''
+var PRODUTOS = [];
+var CATEGORIAS = [];
+var CLIENTES = [];
 $(function () {
+	var w = window.innerWidth
+	if(w < 900){
+		$('#grade').trigger('click')
+	}
+	
 	novaHora();
 	novaData();
+	$('#codBarras').val('')
+	PRODUTOS = JSON.parse($('#produtos').val())
+	console.log(PRODUTOS)
+	CATEGORIAS = JSON.parse($('#categorias').val())
+	CLIENTES = JSON.parse($('#clientes').val())
+	let semCertificado = $('#semCertificado').val()
+	if(semCertificado){
+		swal("Aviso", "Para habilitar o cupom fiscal, realize o upload do certificado digital!!", "warning")
+	}
 
-	getClientes(function(data){
-		$('input.autocomplete-cliente').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-				var cliente = $('#autocomplete-cliente').val().split('-');
-				getCliente(cliente[0], (d) => {
-					if(d){
-						CLIENTE = d;
-						$('#cliente-nao').css('display', 'none');
-						$('#edit-cliente').css('display', 'block');
-						$('#autocomplete-cliente').attr('disabled', 'true');
+	PDV_VALOR_RECEBIDO = $('#PDV_VALOR_RECEBIDO').val()
 
-						if(CLIENTE.limite_venda > 0){
-							getVendasEmAbertoContaCredito(CLIENTE.id, (res) => {
-								TOTALEMABERTOCLIENTE = res;
+	let valor_entrega = $('#valor_entrega').val();
 
-							})
-						}
-						$('#conta_credito-btn').removeClass('disabled')
-					}
-
-					
-				})
-			},
-			minLength: 1,
-		});
-	});
-
-	getProdutos(function(data){
-		$('input.autocomplete-produto').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-				if(caixaAberto){
-					$('#preloader1').css('display', 'block');
-					var prod = $('#autocomplete-produto').val().split('-');
-					getProduto(prod[0], (d) => {
-						PRODUTO = d;
-						$('#nome-produto').html(d.nome);
-						$('#valor_item').val(d.valor_venda);
-					})
-				}else{
-					alert('Por favor abra o caixa!');
-					location.href = path+'frenteCaixa'
-					location.reload();
-				}
-			},
-			minLength: 1,
-		});
-	});
+	VALORACRESCIMO = parseFloat(valor_entrega);
+	let obs = $('#obs').val();
+	if(obs) OBSERVACAO = obs;
 
 	verificaCaixa((v) => {
-		caixaAberto = v;
-		if(v == false){
-			$('#modal1').modal('open');
+		console.log(v)
+		caixaAberto = v >= 0 ? true : false;
+		if(v < 0){
+			$('#modal1').modal('show');
 		}
 	})
 
@@ -98,11 +80,11 @@ $(function () {
 				let cont = 0;
 				v.sabores.map((sb) => {
 					cont++;
-					valorUnit = v.maiorValor;
+					valorUnit = v.valor;
 					nome += sb.produto.produto.nome + 
 					(cont == v.sabores.length ? '' : ' | ')
 				})
-
+				valorUnit = v.maiorValor
 
 			}else{
 				nome = v.produto.nome;
@@ -121,14 +103,24 @@ $(function () {
 
 
 			ITENS.push(item)
+
+
 			TOTAL += parseFloat((item.valor * item.quantidade));
+
 		});
 		let t = montaTabela();
+
+		let valor_total = $('#valor_total').val();
+		if(valor_total > TOTAL){ 
+			TOTAL = valor_total
+			VALORACRESCIMO = 0;
+		}
 
 
 		atualizaTotal();
 		$('#body').html(t);
 		let codigo_comanda = $('#codigo_comanda_hidden').val();
+
 		COMANDA = codigo_comanda;
 	}
 
@@ -137,22 +129,124 @@ $(function () {
 $('#desconto').keyup( () => {
 	$('#acrescimo').val('0')
 	let desconto = $('#desconto').val();
-	desconto = parseFloat(desconto.replace(",", "."))
-	DESCONTO = 0;
-	if(desconto > TOTAL && $('#desconto').val().length > 2){
-		Materialize.toast('ERRO, Valor desconto maior que o valor total', 4000)
-		$('#desconto').val("");
-	}else{
-		DESCONTO = desconto;
+	// if(!desconto){ $('#desconto').val('0'); desconto = 0}
 
-		atualizaTotal();
+	if(desconto){
+		desconto = parseFloat(desconto.replace(",", "."))
+		DESCONTO = 0;
+		if(desconto > TOTAL && $('#desconto').val().length > 2){
+			// Materialize.toast('ERRO, Valor desconto maior que o valor total', 4000)
+			$('#desconto').val("");
+		}else{
+			DESCONTO = desconto;
+
+			atualizaTotal();
+		}
 	}
-
-
 })
 
 function pad(s) {
 	return (s < 10) ? '0' + s : s;
+}
+
+function categoria(cat){
+
+	desmarcarCategorias(() => {
+		$('#cat_' + cat).addClass('ativo')
+	})
+	
+	produtosDaCategoria(cat, (res) => {
+		console.log(res)
+		montaProdutosPorCategoria(res, (html) => {
+			$('#prods').html(html)
+		})
+	})
+}
+
+function desmarcarCategorias(call){
+	CATEGORIAS.map((v) => {
+		$('#cat_' + v.id).removeClass('ativo')
+		$('#cat_' + v.id).removeClass('desativo')
+	})
+	$('#cat_todos').removeClass('desativo')
+	$('#cat_todos').removeClass('ativo')
+
+	call(true)
+}
+
+function produtosDaCategoria(cat, call){
+	let lista_id = $('#lista_id').val();
+	$('#codBarras').focus()
+	temp = [];
+	if(cat != 'todos'){
+		PRODUTOS.map((v) => {
+			if(v.categoria_id == cat){
+				temp.push(v)
+			}
+		})
+	}else{
+		temp = PRODUTOS
+	}
+	call(temp)
+}
+
+function montaProdutosPorCategoria(produtos, call){
+	$('#prods').html('')
+	let lista_id = $('#lista_id').val();
+
+	let html = '';
+	produtos.map((p) => {
+		console.log(p)
+		html += '<div class="col-sm-12 col-lg-6 col-md-6 col-xl-4" id="atalho_add" '
+		html += 'onclick="adicionarProdutoRapido2(\''+ p.id +'\')">'
+		html += '<div class="card card-custom gutter-b example example-compact">'
+		html += '<div class="card-header" style="height: 180px;">'
+		if(p.imagem == ''){
+			html += '<img class="img-prod" src="/imgs/no_image.png">'
+		}else{
+			html += '<img class="img-prod" src="/imgs_produtos/'+p.imagem+'">'
+		}
+		html += '<h6 style="font-size: 12px;" class="kt-widget__label">'
+		html += p.nome + '</h6>'
+		html += '<h6 style="font-size: 12px;" class="text-danger" class="kt-widget__label">'
+		if(lista_id == 0){
+			html += formatReal(p.valor_venda) + '</h6>'
+		}else{
+			let v = 0;
+			p.lista_preco.map((l) => {
+				if(lista_id == l.lista_id){
+					html += formatReal(l.valor) + '</h6>'
+
+				}
+			})
+		}
+
+		html += '</div></div></div>'
+	})
+
+	call(html)
+}
+
+function adicionarProdutoRapido(produto){
+	console.log(produto)
+	console.log(produto.nome)
+	produto = JSON.parse(produto)
+	PRODUTO = produto
+	console.log(produto.valor_venda)
+	$('#valor_item').val(produto.valor_venda)
+	$('#quantidade').val(1)
+	addItem()
+}
+
+function adicionarProdutoRapido2(id){
+	PRODUTOS.map((p) => {
+		if(p.id == id){
+			PRODUTO = p
+			$('#valor_item').val(p.valor_venda)
+			$('#quantidade').val(1)
+			addItem()
+		}
+	})
 }
 
 function novaHora() {
@@ -168,19 +262,18 @@ function novaData() {
 	$('#data').html(v);
 }
 
-function setarObservacao(){
+function apontarObs(){
 	let obs = $('#obs').val();
 	OBSERVACAO = obs;
-	if(obs != "") $('#btn-obs').css('border-left', '5px solid #1de9b6');
-	else $('#btn-obs').css('border-left', 'none');
-	$('#modal-obs').modal('close')
+
+	$('#modal-obs').modal('hide')
 }
 
 function setarObservacaoItem(){
 	let obs = $('#obs-item').val();
 	OBSERVACAOITEM = obs;
 
-	$('#modal-obs-item').modal('close')
+	$('#modal-obs-item').modal('hide')
 }
 
 $('#autocomplete-cliente').on('keyup', () => {
@@ -188,13 +281,6 @@ $('#autocomplete-cliente').on('keyup', () => {
 	CLIENTE = null;
 })
 
-$('#edit-cliente').click(() => {
-	$('#conta_credito-btn').addClass('disabled')
-	$('#autocomplete-cliente').removeAttr('disabled');
-	$('#autocomplete-cliente').val('');
-	$('#edit-cliente').css('display', 'none');
-	$('#cliente-nao').css('display', 'block');
-})
 
 function formatReal(v){
 	return v.toLocaleString('pt-br',{style: 'currency', currency: 'BRL'});;
@@ -261,11 +347,83 @@ function getVendasEmAbertoContaCredito(id, data){
 	});
 }
 
+$('#codBarras').keyup((v) => {
+	let cod = v.target.value
+
+	if(cod.length == 13){
+		$('#codBarras').val('')
+		getProdutoCodBarras(cod, (data) => {
+			if(data){
+				setTimeout(() => {
+					addItem();
+
+				}, 400)
+			}else{
+				let id = parseInt(cod.substring(1,5));
+
+				console.log(id)
+
+				$.get(path+'produtos/getProduto/'+id)
+				.done((res) => {
+
+					let valor = cod.substring(7,12);
+
+					let temp = valor.substring(0,3) + '.' +valor.substring(3,5);
+					valor = parseFloat(temp)
+					console.log(valor)
+
+					PRODUTO = JSON.parse(res);
+
+					$('#nome-produto').html(PRODUTO.nome);
+					let quantidade = 1;
+					if(PRODUTO.unidade_venda == 'KG'){
+						let valor_venda = PRODUTO.valor_venda;
+						quantidade = valor/valor_venda;
+						quantidade = quantidade.toFixed(3);
+						valor = valor_venda;
+					}
+					$('#valor_item').val(valor);
+					$('#quantidade').val(quantidade);
+					let tamanho2 = ITENS.length;
+					if(tamanho2 == tamanho){
+						console.log("inserindo");
+						$('#adicionar-item').trigger('click');
+					}
+
+				})
+				.fail((err) => {
+
+					swal("Erro", 'Produto nao encontrado!', "warning").then(() => {
+						$('#codBarras').focus()
+
+					})
+
+
+
+				})
+			}
+		})
+
+	}
+})
+
+$('#focus-codigo').click(() => {
+	$('#codBarras').focus()
+})
+
+
+$('#lista_id').change(() => {
+	let lista = $('#lista_id').val();
+	categoria('todos')
+})
+
 function getProduto(id, data){
+
+	console.log(LISTAID)
 	$.ajax
 	({
 		type: 'GET',
-		url: path + 'produtos/getProduto/'+id,
+		url: path + 'produtos/getProdutoVenda/' + id + '/' + LISTAID,
 		dataType: 'json',
 		success: function(e){
 			data(e)
@@ -275,55 +433,176 @@ function getProduto(id, data){
 	});
 }
 
-function addItem(){
-	verificaProdutoIncluso((call) => {
-
-		if(!call){
-			let quantidade = $('#quantidade').val();
-			quantidade = quantidade.replace(",", ".");
-			let valor = $('#valor_item').val();
-
-			if(quantidade.length > 0 && parseFloat(quantidade.replace(",", ".")) > 0 && valor.length > 0 && 
-				parseFloat(valor.replace(",", ".")) > 0
-				&& PRODUTO != null){
-				TOTAL += parseFloat(valor.replace(',','.'))*(quantidade.replace(',','.'));
-
-			let item = {
-				cont: (ITENS.length+1),
-				obs: OBSERVACAOITEM,
-				id: PRODUTO.id,
-				nome: PRODUTO.nome,
-				quantidade: $('#quantidade').val(),
-				valor: $('#valor_item').val()
-			}
-			$('#body').html("");
-			ITENS.push(item);
-
-			limparCamposFormProd();
-			atualizaTotal();
-
-			let v = $('#valor_recebido').val();
-			v = v.replace(",", ".");
-
-			if(ITENS.length > 0 && ((parseFloat(v) >= TOTAL))){
-				$('#finalizar-venda').removeClass('disabled');
+$('#kt_select2_1').change(() => {
+	let id = $('#kt_select2_1').val()
+	let lista_id = $('#lista_id').val()
+	PRODUTOS.map((p) => {
+		if(p.id == id){
+			PRODUTO = p
+			if(lista_id == 0){
+				$('#valor_item').val(p.valor_venda)
 			}else{
-				$('#finalizar-venda').addClass('disabled');
+				p.lista_preco.map((l) => {
+					if(lista_id == l.lista_id){
+						$('#valor_item').val(l.valor)
+					}
+				})
 			}
 
-			let t = montaTabela();
+			$('#quantidade').val(1)
+		}
+	})
+})
 
-			$('#body').html(t);
-			PRODUTO = null;
-			$('#obs-item').val('');
-			OBSERVACAOITEM = "";
-			// var audio = new Audio('/notificacao/beep.mp3');
-			// audio.play();
+$('#finalizar-venda').click(() => {
+	$('#modal-venda').modal('show')
+})
+
+function addItem(){
+	if(caixaAberto){
+		$('#codBarras').focus();
+		if(PRODUTO != null && $('#valor_item').val() > 0){
+			verificaProdutoIncluso((call) => {
+
+				console.log("cal", call)
+				if(call >= 0){
+					let quantidade = $('#quantidade').val() ? $('#quantidade').val() :  '1.00';
+					quantidade = quantidade.replace(",", ".");
+					let valor = $('#valor_item').val();
+					console.log("teste", (parseFloat(quantidade) + parseFloat(call)));
+					if(PRODUTO.gerenciar_estoque == 1 && (parseFloat(quantidade) + parseFloat(call)) > PRODUTO.estoque_atual){
+						swal("Erro", 'O estoque atual deste produto é de ' + PRODUTO.estoque_atual, "warning")
+						$('#quantidade').val('1')
+
+					}else{
+
+						if(quantidade.length > 0 && parseFloat(quantidade.replace(",", ".")) > 0 && valor.length > 0 && parseFloat(valor.replace(",", ".")) > 0 && PRODUTO != null){
+							TOTAL += parseFloat(valor.replace(',','.'))*(quantidade.replace(',','.'));
+
+							let item = {
+								cont: (ITENS.length+1),
+								obs: OBSERVACAOITEM,
+								id: PRODUTO.id,
+								nome: PRODUTO.nome,
+								quantidade: $('#quantidade').val(),
+								valor: $('#valor_item').val()
+							}
+
+							console.log(item)
+
+							$('#body').html("");
+							ITENS.push(item);
+
+							console.log(ITENS)
+
+							limparCamposFormProd();
+							atualizaTotal();
+
+							let v = $('#valor_recebido').val();
+							v = v.replace(",", ".");
+
+							if(PDV_VALOR_RECEBIDO == 0){
+								$('#valor_recebido').val(TOTAL)
+								// Materialize.updateTextFields();
+							}
+
+							if(ITENS.length > 0 && ((parseFloat(v) >= TOTAL))){
+								$('#finalizar-venda').removeClass('disabled');
+							}else{
+								$('#finalizar-venda').addClass('disabled');
+							}
+
+							let t = montaTabela();
+
+							$('#body').html(t);
+
+
+							PRODUTO = null;
+							$('#obs-item').val('');
+							OBSERVACAOITEM = "";
+
+						}
+					}
+				}else{
+					swal('Cuidado', 'Informe corretamente para continuar', 'warning')
+				}
+			});
+		}else{
+			swal('Cuidado', 'Informe corretamente para continuar', 'warning')
 		}
 	}else{
-		Materialize.toast('Informe corretamente os campos para continuar!', 4000)
+		swal("Erro", "Abra o caixa para vender!!", "error")
 	}
-});
+}
+
+function setaObservacao(){
+	$('#modal-obs').modal('show')
+}
+
+function setaDesconto(){
+	swal({
+		title: 'Valor desconto?',
+		text: 'Ultiliza ponto(.) ao invés de virgula!',
+		content: "input",
+		button: {
+			text: "Ok",
+			closeModal: false,
+			type: 'error'
+		}
+	}).then(v => {
+		if(v) {
+			DESCONTO = parseFloat(v)
+			$('#valor_desconto').html(formatReal(DESCONTO))
+			atualizaTotal()
+		}
+		swal.close()
+
+	});
+}
+
+function setaAcresicmo(){
+	swal({
+		title: 'Valor acrescimo?',
+		text: 'Ultiliza ponto(.) ao invés de virgula!',
+		content: "input",
+		button: {
+			text: "Ok",
+			closeModal: false,
+			type: 'error'
+		}
+	}).then(v => {
+		if(v) {
+
+			let acrescimo = v;
+			if(acrescimo > 0){
+				DESCONTO = 0;
+				$('#valor_desconto').html(formatReal(DESCONTO))
+			}
+
+			let total = TOTAL+VALORBAIRRO;
+
+			if(acrescimo.substring(0, 1) == "%"){
+
+				let perc = acrescimo.substring(1, acrescimo.length);
+
+				VALORACRESCIMO = total * (perc/100);
+
+
+			}else{
+				acrescimo = acrescimo.replace(",", ".")
+				VALORACRESCIMO = parseFloat(acrescimo)
+			}
+
+			if(acrescimo.length == 0) VALORACRESCIMO = 0;
+			atualizaTotal();
+			VALORACRESCIMO = parseFloat(VALORACRESCIMO)
+			$('#valor_acrescimo').html(formatReal(VALORACRESCIMO))
+
+			atualizaTotal()
+		}
+		swal.close()
+
+	});
 }
 
 $('#adicionar-item').click(() => {
@@ -333,9 +612,12 @@ $('#adicionar-item').click(() => {
 function atualizaTotal(){
 
 	let valor_recebido = $('#valor_recebido').val();
-	valor_recebido = valor_recebido.replace(",", ".");
-	valor_recebido = parseFloat(valor_recebido)
-
+	if(!valor_recebido) valor_recebido = 0;
+	if(valor_recebido > 0){
+		valor_recebido = valor_recebido.replace(",", ".");
+		valor_recebido = parseFloat(valor_recebido)
+	}
+	console.log(TOTAL + VALORBAIRRO + VALORACRESCIMO - DESCONTO)
 	if((TOTAL + VALORBAIRRO + VALORACRESCIMO - DESCONTO) > valor_recebido){
 		$('#finalizar-venda').addClass('disabled')
 	}else{
@@ -345,52 +627,122 @@ function atualizaTotal(){
 	if(!$('#valor_recebido').val()){
 		$('#finalizar-venda').addClass('disabled')
 	}
+	// $('#total-venda').html(formatReal(TOTAL + VALORBAIRRO + VALORACRESCIMO - DESCONTO));
+	console.log(VALORACRESCIMO)
 	$('#total-venda').html(formatReal(TOTAL + VALORBAIRRO + VALORACRESCIMO - DESCONTO));
 }
 
 function montaTabela(){
 	let t = ""; 
 	let quantidades = 0;
-	ITENS.map((v) => {
-		t += "<tr>";
-		t += "<td>"+v.cont+"</td>";
-		t += "<td class='cod'>"+v.id+"</td>";
-		t += "<td>"+v.nome + (v.obs ? " [OBS: "+v.obs+"]" : "")
-		+"</td>";
 
-		t += "<td>"+v.quantidade+"</td>";
-		t += "<td>"+formatReal(v.valor)+"</td>";
-		t += "<td>"+formatReal(v.valor*v.quantidade)+"</td>";
-		t += "<td><a href='#prod tbody' onclick='deleteItem("+v.cont+")'>"
-		t += "<i class=' material-icons red-text'>delete</i></a></td>";
-		t+= "</tr>";
+
+	ITENS.map((v) => {
+		console.log(v)
+
+		t += '<tr class="datatable-row" style="left: 0px;">'
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 50px;">'
+		t += v.cont + '</span>'
+		t += '</td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 50px;">'
+		t += v.id
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 200px;">'
+		t += v.nome + (v.obs ? " [OBS: "+v.obs+"]" : "")
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 120px;">'
+		t += '<div class="form-group mb-2">'
+		t += '<div class="input-group">'
+		t += '<div class="input-group-prepend">'
+		t += '<button onclick="subtraiItem('+v.cont+')" class="btn btn-danger" type="button">-</button>'
+		t += '</div>'
+		t += '<input type="text" readonly class="form-control" value="'+v.quantidade+'">'
+		t += '<div class="input-group-append">'
+		t += '<button onclick="incrementaItem('+v.cont+')" class="btn btn-success" type="button">+</button>'
+		t += '</div></div></div></span></td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 120px;">'
+		t += formatReal(v.valor)
+		t += '</span></td>'
+
+		t += '<td class="datatable-cell">'
+		t += '<span class="codigo" style="width: 120px;">'
+		t += formatReal(v.valor*v.quantidade)
+		t += '</span></td>'
+		t += '</tr>'
+
 		quantidades += parseInt(v.quantidade);
 	});
+
 	$('#qtd-itens').html(ITENS.length);
 	$('#_qtd').html(quantidades);
 	return t
 }
 
-function deleteItem(id){
+function subtraiItem(id){
 	let temp = [];
+	let soma = 0
 	ITENS.map((v) => {
 		if(v.cont != id){
 			temp.push(v)
+			soma += parseFloat(v.valor.replace(',','.'))*(v.quantidade);
 		}else{
-			TOTAL -= parseFloat(v.valor.replace(',','.'))*(v.quantidade.replace(',','.'));
+			if(v.quantidade > 1){
+				v.quantidade = parseFloat(v.quantidade) - 1;
+				soma += parseFloat(v.valor.replace(',','.')*v.quantidade);
+				temp.push(v)
+			}
 		}
 	});
-	ITENS = temp;
-	let t = montaTabela(); // para remover
-	$('#body').html(t)
-	$('#body-modal').html(t)
-	if(ITENS.length == 0) $('#finalizar-venda').addClass('disabled');
-	let v = $('#valor_recebido').val();
-	v = v.replace(",", ".");
-	if(parseFloat(v) > TOTAL){
-		$('#finalizar-venda').removeClass('disabled');
-	}
+	TOTAL = soma
+	ITENS = temp
+	let t = montaTabela();
 	atualizaTotal();
+	$('#body').html(t);
+}
+
+$('#click-client').click(() => {
+	$('#modal-cliente').modal('show')
+})
+
+function selecionarCliente(){
+	let cliente = $('#kt_select2_3').val();
+	CLIENTES.map((c) => {
+		if(c.id == cliente){
+			CLIENTE = c
+		}
+	})
+	$('#conta_credito-btn').removeClass('disabled')
+	$('#modal-cliente').modal('hide')
+}
+
+function incrementaItem(id){
+	let temp = [];
+	let soma = 0
+	console.log(ITENS)
+	ITENS.map((v) => {
+		if(v.cont != id){
+			temp.push(v)
+			soma += parseFloat(v.valor.replace(',','.'))*(v.quantidade);
+		}else{
+			v.quantidade = parseFloat(v.quantidade) + 1;
+			soma += parseFloat(v.valor.replace(',','.')*v.quantidade);
+			temp.push(v)
+		}
+	});
+	TOTAL = soma
+	ITENS = temp
+	let t = montaTabela();
+	atualizaTotal();
+	$('#body').html(t);
 }
 
 function limparCamposFormProd(){
@@ -400,12 +752,18 @@ function limparCamposFormProd(){
 }
 
 function verificaProdutoIncluso(call){
-
-
-	call(false);
+	let cont = 0;
+	ITENS.map((rs) => {
+		if(PRODUTO.id == rs.id){
+			cont += parseFloat(rs.quantidade);
+		}
+	})
+	call(cont);
 }
 
 function getProdutoCodBarras(cod, data){
+	let tamanho = ITENS.length;
+	console.log(tamanho)
 	$.ajax
 	({
 		type: 'GET',
@@ -420,8 +778,10 @@ function getProdutoCodBarras(cod, data){
 			}else{
 				if(cod.length == 13){
 					//validar pelo cod balança
-					
+
 					let id = parseInt(cod.substring(1,5));
+
+					console.log(id)
 
 					$.get(path+'produtos/getProduto/'+id)
 					.done((res) => {
@@ -430,17 +790,35 @@ function getProdutoCodBarras(cod, data){
 
 						let temp = valor.substring(0,3) + '.' +valor.substring(3,5);
 						valor = parseFloat(temp)
+						console.log(valor)
 
 						PRODUTO = JSON.parse(res);
+
 						$('#nome-produto').html(PRODUTO.nome);
+						let quantidade = 1;
+						if(PRODUTO.unidade_venda == 'KG'){
+							let valor_venda = PRODUTO.valor_venda;
+							quantidade = valor/valor_venda;
+							quantidade = quantidade.toFixed(3);
+							valor = valor_venda;
+						}
 						$('#valor_item').val(valor);
+						$('#quantidade').val(quantidade);
+						let tamanho2 = ITENS.length;
+						if(tamanho2 == tamanho){
+							console.log("inserindo");
+							$('#adicionar-item').trigger('click');
+						}
 
 					})
 					.fail((err) => {
-						alert('Produto nao encontrado!')
+						// alert('Produto nao encontrado!')
+						swal("Erro", 'Produto nao encontrado!', "warning")
+
 						$('#autocomplete-produto').val('')
 
 					})
+					
 					
 
 				}
@@ -460,6 +838,7 @@ function verificaCaixa(data){
 		url: path + 'aberturaCaixa/verificaHoje',
 		dataType: 'json',
 		success: function(e){
+			console.log(e)
 			data(e)
 
 		}, error: function(e){
@@ -472,8 +851,9 @@ function verificaCaixa(data){
 function abrirCaixa(){
 	let token = $('#_token').val();
 	let valor = $('#valor').val();
-	valor = valor.length > 0 ? valor.replace(",", ".") : 0 ;
-	if(parseFloat(valor) > 0){
+
+	valor = valor.length >= 0 ? valor.replace(",", ".") : 0 ;
+	if(parseFloat(valor) >= 0){
 		$.ajax
 		({
 			type: 'POST',
@@ -485,16 +865,21 @@ function abrirCaixa(){
 			},
 			success: function(e){
 				caixaAberto = true;
-				$('#modal1').modal('close');
+				$('#modal1').modal('hide');
+				swal("Sucesso", "Caixa aberto", "success")
 
 
 			}, error: function(e){
+				$('#modal1').modal('hide');
+				swal("Erro", "Erro ao abrir caixa", "error")
 				console.log(e)
 			}
 
 		});
 	}else{
-		alert('Insira um valor válido')
+		// alert('Insira um valor válido')
+		swal("Erro", 'Insira um valor válido', "warning")
+
 	}
 	
 }
@@ -514,14 +899,44 @@ function sangriaCaixa(){
 		success: function(e){
 
 			caixaAberto = true;
-			$('#modal2').modal('close');
+			$('#modal2').modal('hide');
 			$('#valor_sangria').val('');
-			var $toastContent = $('<span>Sangria realizada!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
-			Materialize.toast($toastContent, 5000);
+			swal("Sucesso", "Sangria realizada!", "success")
 
 
 		}, error: function(e){
 			console.log(e)
+			swal("Erro", "Erro ao realizar sangria!", "error")
+
+		}
+
+	});
+}
+
+function suprimentoCaixa(){
+	let token = $('#_token').val();
+
+	$.ajax
+	({
+		type: 'POST',
+		url: path + 'suprimentoCaixa/save',
+		dataType: 'json',
+		data: {
+			valor: $('#valor_suprimento').val(),
+			obs: $('#obs_suprimento').val(),
+			_token: token
+		},
+		success: function(e){
+
+			$('#modal-supri').modal('hide');
+			$('#valor_suprimento').val('');
+			$('#obs_suprimento').val('');
+			swal("Sucesso", "suprimento realizado!", "success")
+
+		}, error: function(e){
+			console.log(e)
+			swal("Erro", "Erro ao realizar suprimento de caixa!", "error")
+
 		}
 
 	});
@@ -543,13 +958,31 @@ function getSangriaDiaria(data){
 	});
 }
 
+function getSuprimentoDiario(data){
+	$.ajax
+	({
+		type: 'GET',
+		url: path + 'suprimentoCaixa/diaria',
+		dataType: 'json',
+		success: function(e){
+			data(e)
+
+		}, error: function(e){
+			console.log(e)
+		}
+
+	});
+}
+
 function getAberturaDiaria(data){
+
 	$.ajax
 	({
 		type: 'GET',
 		url: path + 'aberturaCaixa/verificaHoje',
 		dataType: 'json',
 		success: function(e){
+			console.log(e)
 			data(e)
 
 		}, error: function(e){
@@ -578,56 +1011,79 @@ function getVendaDiaria(data){
 function fluxoDiario(){
 	$('#preloader1').css('display', 'block');
 	getSangriaDiaria((sangrias) => {
+		getSuprimentoDiario((suprimentos) => {
 
-		let elem = "";
-		let totalSangria = 0;
-		sangrias.map((v) => {
+			let elem = "";
+			let totalSangria = 0;
+			let totalSuprimento = 0;
+			sangrias.map((v) => {
 
-			elem += "<p> Horario: "
-			elem += "<strong>" + v.data_registro.substring(10, 16) + "</strong>, Valor: "
-			elem += "<strong> R$ " + formatReal(v.valor) + "</strong>, Usuario: "
-			elem += "<strong>" + v.nome_usuario + "</strong>"
-			elem += "</p>";
-			totalSangria += parseFloat(v.valor);
-		})
-		elem += "<h6>Total: <strong class='orange-text'>" + formatReal(totalSangria) + "</strong></h6>";
-		$('#fluxo_sangrias').html(elem)
-		getAberturaDiaria((abertura) => {
-			abertura = abertura.replace(",", ".")
-			elem = "<p> Valor: ";
-			elem += "<strong class='orange-text'>R$ "+formatReal(abertura)+"</strong>";
-			elem += "</p>";
-			$('#fluxo_abertura_caixa').html(elem);
-			getVendaDiaria((vendas) => {
+				elem += "<p> Horario: "
+				elem += "<strong>" + v.data_registro.substring(10, 16) + "</strong>, Valor: "
+				elem += "<strong> R$ " + formatReal(v.valor) + "</strong>, Usuario: "
+				elem += "<strong>" + v.nome_usuario + "</strong>"
+				elem += "</p>";
+				totalSangria += parseFloat(v.valor);
+			})
 
-				elem = "";
-				let totalVendas = 0;
-				vendas.map((v) => {
-					console.log(v)
-					elem += "<p> Horario: "
-					elem += "<strong>" + v.data_registro.substring(10, 16) + "</strong>, Valor: "
-					elem += "<strong> R$ " + formatReal(parseFloat(v.valor_total) + parseFloat(v.acrescimo) - 
-						parseFloat(v.desconto)) + "</strong>, Tipo Pagamento: "
-					elem += "<strong>" + v.tipo_pagamento + "</strong>"
-					elem += "</p>";
-					totalVendas += parseFloat(parseFloat(v.valor_total) + parseFloat(v.acrescimo) - 
-						parseFloat(v.desconto));
-				})
-				elem += "<h6>Total: <strong class='orange-text'>" + formatReal(totalVendas) + "</strong></h6>";
+			elem += "<h6>Total: <strong class='text-danger'>" + formatReal(totalSangria) + "</strong></h6>";
+			elem += "<hr>"
+			$('#fluxo_sangrias').html(elem)
+			elem = ""
+			suprimentos.map((v) => {
 
-				$('#fluxo_vendas').html(elem);
-				$('#total_caixa').html(formatReal((totalVendas+parseFloat(abertura)) - totalSangria));
+				elem += "<p> Horario: "
+				elem += "<strong>" + v.created_at.substring(10, 16) + "</strong>, Valor: "
+				elem += "<strong> R$ " + formatReal(v.valor) + "</strong>, Usuario: "
+				elem += "<strong class='text-info'>" + v.nome_usuario + "</strong>, Obs: "
+				elem += "<strong class='text-info'>" + v.observacao + "</strong>"
+				elem += "</p>";
+				totalSuprimento += parseFloat(v.valor);
+			})
+			elem += "<h6>Total: <strong class='text-danger'>" + formatReal(totalSuprimento) + "</strong></h6>";
+			elem += "<hr>"
+			
+			$('#fluxo_suprimentos').html(elem)
 
-				$('#preloader1').css('display', 'none');
-			});
+			getAberturaDiaria((abertura) => {
+				abertura = abertura.replace(",", ".")
+				elem = "<p> Valor: ";
+				elem += "<strong class='text-danger'>R$ "+formatReal(abertura)+"</strong>";
+				elem += "</p>";
+				elem += "<hr>"
+
+				$('#fluxo_abertura_caixa').html(elem);
+				getVendaDiaria((vendas) => {
+
+					elem = "";
+					let totalVendas = 0;
+					vendas.map((v) => {
+						console.log(v)
+						elem += "<p> Horario: "
+						elem += "<strong>" + v.data_registro.substring(10, 16) + "</strong>, Valor: "
+						elem += "<strong> R$ " + formatReal(parseFloat(v.valor_total) + parseFloat(v.acrescimo) - 
+							parseFloat(v.desconto)) + "</strong>, Tipo Pagamento: "
+						elem += "<strong>" + v.tipo_pagamento + "</strong>"
+						elem += "</p>";
+						totalVendas += parseFloat(parseFloat(v.valor_total) + parseFloat(v.acrescimo) - 
+							parseFloat(v.desconto));
+					})
+					elem += "<h6>Total: <strong class='text-primary'>" + formatReal(totalVendas) + "</strong></h6>";
+					elem += "<hr>";
+					$('#fluxo_vendas').html(elem);
+					$('#total_caixa').html(formatReal((totalVendas+parseFloat(abertura)) - totalSangria + totalSuprimento));
+
+					$('#preloader1').css('display', 'none');
+				});
+			})
 		})
 	})
 	if(caixaAberto){
 		$('#modal3').modal('open');
 	}else{
 
-		var $toastContent = $('<span>Por favor abra o caixa!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
-		Materialize.toast($toastContent, 5000);
+		// var $toastContent = $('<span>Por favor abra o caixa!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+		// Materialize.toast($toastContent, 5000);
 		location.reload();
 	}
 }
@@ -657,17 +1113,26 @@ $('#valor_recebido').on('keyup', (event) => {
 		$('#finalizar-venda').addClass('disabled');
 	}
 
+	console.log(TOTAL)
 
 	if(v.length > 0 && parseFloat(v) > TOTAL && TOTAL > 0){
 		v = parseFloat(v);
 
 		if (event.keyCode === 13) {
-			let troco = v - t;
+
+			let troco = v - (t - DESCONTO + VALORACRESCIMO);
 			$("#valor_troco").html(formatReal(troco))
-			$('#modal4').modal('open');
+			$('#modal4').modal('show');
 
 			let resto = troco;
 			notas = [];
+
+			if(parseInt(troco / 100) > 0 && resto > 0){
+				resto = troco % 100;
+				$('#qtd_100_reais').html(' X'+1);
+				$('.100_reais').css('display', 'block');
+
+			}
 
 			if(parseInt(troco / 50) > 0 && resto > 0){
 
@@ -768,8 +1233,8 @@ $('#autocomplete-produto').on('keyup', () => {
 
 function verificaCliente(){
 	if(CLIENTE == null){
-		$('#modal-venda').modal('close');
-		$('#modal-cpf-nota').modal('open');
+		$('#modal-venda').modal('hide');
+		$('#modal-cpf-nota').modal('show');
 	} 
 	else{ 
 		finalizarVenda('fiscal')
@@ -833,16 +1298,17 @@ function finalizarVenda(acao) {
 		
 		let valorRecebido = $('#valor_recebido').val();
 		let troco = 0;
-		if(valorRecebido.length > 0 && parseFloat(valorRecebido) > TOTAL){
+		if(valorRecebido.length > 0 && parseFloat(valorRecebido) > (TOTAL + VALORACRESCIMO + VALORBAIRRO - DESCONTO)){
 			troco = parseFloat(valorRecebido) - (TOTAL + VALORACRESCIMO + VALORBAIRRO - DESCONTO);
 		}
 
-		let desconto = $('#desconto').val();
-		desconto = parseFloat(desconto.replace(",", "."))
+		let desconto = DESCONTO;
+
+		let obs = $('#obs').val();
 
 		let js = { 
 			itens: ITENS,
-			cliente: CLIENTE == null ? null : CLIENTE.id,
+			cliente: CLIENTE != null ? CLIENTE.id : null,
 			valor_total: TOTAL,
 			acrescimo: VALORBAIRRO + VALORACRESCIMO,
 			troco: troco,
@@ -856,11 +1322,20 @@ function finalizarVenda(acao) {
 			pedido_local: $('#pedidoLocal').val() ? true : false,
 			codigo_comanda: COMANDA,
 			desconto: desconto ? desconto : 0,
-			observacao: OBSERVACAO
+			observacao: obs,
+			tipo_pagamento_1: TIPOPAG1,
+			tipo_pagamento_2: TIPOPAG2,
+			tipo_pagamento_3: TIPOPAG3,
+			valor_pagamento_1: VALORPAG1,
+			valor_pagamento_2: VALORPAG2,
+			valor_pagamento_3: VALORPAG3
 		}
 
+		console.log(js)
 		let token = $('#_token').val();
+
 		if(acao != 'credito'){
+			$('#btn_nao_fiscal').addClass('disabled')
 			$.ajax
 			({
 				type: 'POST',
@@ -876,64 +1351,110 @@ function finalizarVenda(acao) {
 						$('#preloader9').css('display', 'block');
 						emitirNFCe(e.id);	
 					} else{
-						console.log("Imprime nao fiscal");
-						window.open(path + 'nfce/imprimirNaoFiscal/'+e.id, '_blank');
-						location.href=path+'frenteCaixa';
+						swal({
+							title: "Sucesso",
+							text: "Deseja imprimir comprovante?",
+							icon: "success",
+							buttons: ["Não", 'Imprimir'],
+							dangerMode: true,
+						})
+						.then((v) => {
+							if (v) {
+								window.open(path + 'nfce/imprimirNaoFiscal/'+e.id, '_blank');
+								location.href=path+'frenteCaixa';
+							} else {
+								location.href=path+'frenteCaixa';
+							}
+						});
+						
 					}
 
 				}, error: function(e){
 					console.log(e)
 					$('#preloader2').css('display', 'none');
 					$('#preloader9').css('display', 'none');
-					$('#modal-venda').modal('close')
+					$('#modal-venda').modal('hide')
 				}
 
 			});
 		}else{
-			let valorUltrapassadoConfirma = true;
-			if(CLIENTE.limite_venda < TOTALEMABERTOCLIENTE+TOTAL){
-				valorUltrapassadoConfirma = confirm("Valor do limite de conta crédito ultrapassado, confirma venda?!");
-			}
+			// let valorUltrapassadoConfirma = true;
+			// if(CLIENTE.limite_venda < TOTALEMABERTOCLIENTE+TOTAL){
+			// 	valorUltrapassadoConfirma = confirm("Valor do limite de conta crédito ultrapassado, confirma venda?!");
+			// }
+			if(CLIENTE == null){
+				swal("Alerta", "Informe um cliente para conta crédito", "warning")
+			}else{
+				if(CLIENTE.limite_venda < TOTALEMABERTOCLIENTE+TOTAL){
+					swal({
+						text: "Valor do limite de conta crédito ultrapassado, confirma a venda?!",
+						title: 'Cuidado',
+						icon: 'warning',
+						buttons: ["Não", "Vender"],
+					}).then(sim => {
+						if (sim) {
+							salvarCredito(js, token)
+						}else{
+							$('#preloader2').css('display', 'none');
+							$('#preloader9').css('display', 'none');
+							$('#modal-venda').modal('hide')
+						}
+					});
 
-
-			if(valorUltrapassadoConfirma == true){
-				$.ajax
-				({
-					type: 'POST',
-					url: path + 'vendas/salvarCrediario',
-					dataType: 'json',
-					data: {
-						venda: js,
-						_token: token
-					},
-					success: function(e){
-						$('#modal-venda').modal('close')
-
-						window.open(path + 'nfce/imprimirNaoFiscalCredito/'+e.id, '_blank');
-						$('#modal-credito').modal('open');
-						$('#evento-conta-credito').html('Venda salva na conta crédito do cliente ' +
-							CLIENTE.razao_social)
-
-					}, error: function(e){
-						console.log(e)
-						$('#preloader2').css('display', 'none');
-						$('#preloader9').css('display', 'none');
-						$('#modal-venda').modal('close')
-					}
-
-				});
+				}else{
+					salvarCredito(js, token)
+				}
 			}
 			
 		}
 	}else{
-		Materialize.toast('CPF Inválido!', 5000);
+		// Materialize.toast('CPF Inválido!', 5000);
+		swal('Erro', 'CPF Inválido!', 'error')
 	}
 
 }
 
+function salvarCredito(js, token){
+	$.ajax
+	({
+		type: 'POST',
+		url: path + 'vendas/salvarCrediario',
+		dataType: 'json',
+		data: {
+			venda: js,
+			_token: token
+		},
+		success: function(e){
+			$('#modal-venda').modal('hide')
+
+			window.open(path + 'nfce/imprimirNaoFiscalCredito/'+e.id, '_blank');
+			// $('#modal-credito').modal('open');
+			// $('#evento-conta-credito').html('Venda salva na conta crédito do cliente ' +
+			// 	CLIENTE.razao_social)
+			swal("Sucesso", "Venda salva na conta crédito do cliente " + CLIENTE.razao_social, "success")
+			.then(() => {
+				location.reload()
+			})
+
+		}, error: function(e){
+			console.log(e)
+			$('#preloader2').css('display', 'none');
+			$('#preloader9').css('display', 'none');
+			$('#modal-venda').modal('hide')
+		}
+
+	});
+}
+
 function emitirNFCe(vendaId){
 	// $('#modal-venda').modal('close')
-	$('#preloader_'+vendaId).css('display', 'inline-block');
+	// $('#preloader_'+vendaId).css('display', 'inline-block');
+	$('#btn-cpf').addClass('spinner')
+	$('#btn-cpf').addClass('disabled')
+	$('#btn_envia_'+vendaId).addClass('spinner')
+	$('#btn_envia_'+vendaId).addClass('disabled')
+	$('#btn_envia_grid_'+vendaId).addClass('spinner')
+	$('#btn_envia_grid_'+vendaId).addClass('disabled')
 
 	let token = $('#_token').val();
 	$.ajax
@@ -946,62 +1467,107 @@ function emitirNFCe(vendaId){
 			_token: token
 		},
 		success: function(e){
-			$('#modal-cpf-nota').modal('close')
-			$('#preloader_'+vendaId).css('display', 'none');
+			$('#modal-cpf-nota').modal('hide')
+			// $('#preloader_'+vendaId).css('display', 'none');
+			$('#btn-cpf').removeClass('spinner')
+			$('#btn-cpf').removeClass('disabled')
+			$('#btn_envia_'+vendaId).removeClass('spinner')
+			$('#btn_envia_'+vendaId).removeClass('disabled')
+			$('#btn_envia_grid_'+vendaId).removeClass('spinner')
+			$('#btn_envia_grid_'+vendaId).removeClass('disabled')
+
 
 			let recibo = e;
 			let retorno = recibo.substring(0,4);
 			let mensagem = recibo.substring(5,recibo.length);
 			if(retorno == 'Erro'){
-				let m = JSON.parse(mensagem);
-				$('#modal-alert-erro').modal('open');
-				$('#evento-erro').html("[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo)
+				try{
+					let m = JSON.parse(mensagem);
+					// $('#modal-alert-erro').modal('open');
+					// $('#evento-erro').html("[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo)
+					swal("Algo deu errado!", "[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo, "error")
+					.then(() => {
+						location.reload()
+					})
+				}catch(e){
+					// $('#modal-alert-erro').modal('open');
+					// $('#evento-erro').html(e)
+					swal("Algo deu errado!", e, "error").then(() => {
+						location.reload()
+					})
+				}
+
 
 			}
 			else if(retorno == 'erro'){
-				$('#modal-alert-erro').modal('open');
-				$('#evento-erro').html("WebService sefaz em manutenção, falha de comunicação SOAP ")
+				// $('#modal-alert-erro').modal('show');
+				// $('#evento-erro').html("WebService sefaz em manutenção, falha de comunicação SOAP")
+				swal("Algo deu errado!", "WebService sefaz em manutenção, falha de comunicação SOAP", "error").then(() => {
+					location.reload()
+				})
+
 
 			}
 			else if(e == 'Apro'){
-
-				var $toastContent = $('<span>Esta NF já esta aprovada, não é possível enviar novamente!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
-				Materialize.toast($toastContent, 5000);
+				swal("Cuidado", "Esta NF já esta aprovada, não é possível enviar novamente!", "warning").then(() => {
+					location.reload()
+				})
+				// var $toastContent = $('<span>Esta NF já esta aprovada, não é possível enviar novamente!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+				// Materialize.toast($toastContent, 5000);
 			}
 			else{
-				$('#modal-venda').modal('close')
-				$('#modal-alert').modal('open');
-				$('#evento').html("NFCe gerada com sucesso RECIBO: " +recibo)
-				window.open(path + 'nfce/imprimir/'+vendaId, '_blank');
+				$('#modal-venda').modal('hide')
+				swal("Sucesso", "NFCe gerada com sucesso RECIBO: " +recibo, "success")
+				.then(() => {
+					window.open(path + 'nfce/imprimir/'+vendaId, '_blank');
+					location.reload()
+				})
+				// $('#evento').html("NFCe gerada com sucesso RECIBO: " +recibo)
 				
 			}
-			$('#preloader2').css('display', 'none');
-			$('#preloader9').css('display', 'none');
-			$('#preloader1').css('display', 'none');
+			$('#btn_envia_'+vendaId).removeClass('spinner')
+			$('#btn_envia_grid_'+vendaId).removeClass('spinner')
+			// $('#preloader2').css('display', 'none');
+			// $('#preloader9').css('display', 'none');
+			// $('#preloader1').css('display', 'none');
 		}, error: function(err){
 			console.log(err)
-			$('#preloader_'+vendaId).css('display', 'none');
+			// $('#preloader_'+vendaId).css('display', 'none');
+			$('#btn-cpf').removeClass('spinner')
+			$('#btn-cpf').removeClass('disabled')
+			$('#btn_envia_'+vendaId).removeClass('spinner')
+			$('#btn_envia_'+vendaId).removeClass('disabled')
+			$('#btn_envia_grid_'+vendaId).removeClass('spinner')
+			$('#btn_envia_grid_'+vendaId).removeClass('disabled')
+
 
 			// deletarVenda(vendaId)
-
-			var $toastContent = $('<span>Erro ao enviar NFC-e</span>').add($('<button class="btn-flat toast-action">OK</button>'));
-			Materialize.toast($toastContent, 5000);
-			$('#preloader2').css('display', 'none');
-			$('#preloader9').css('display', 'none');
+			swal("Algo errado", "Erro ao enviar NFC-e", "error").then(() => {
+				location.reload()
+			})
+			// var $toastContent = $('<span>Erro ao enviar NFC-e</span>').add($('<button class="btn-flat toast-action">OK</button>'));
+			// Materialize.toast($toastContent, 5000);
+			// $('#preloader2').css('display', 'none');
+			// $('#preloader9').css('display', 'none');
 
 			let js = err.responseJSON;
 			console.log(js)
 			if(js.message){
-				Materialize.toast(js.message, 5000)
+				swal("Algo errado", js.message, "error")
+
 			}else{
 				let err = "";
 				js.map((v) => {
 					err += v + "\n";
 				});
-				alert(err);
-			}
+				// alert(err);
+				swal("Erro", err, "warning")
 
-			$('#preloader1').css('display', 'none');
+			}
+			$('#btn-cpf').removeClass('spinner')
+			
+
+			// $('#preloader1').css('display', 'none');
 			
 		}
 	})
@@ -1024,13 +1590,14 @@ function redireciona(){
 }
 
 function modalCancelar(id){
-	$('#modal').modal('open');
+	$('#modal').modal('show');
 	$('#venda_id').val(id)
 }
 
 
 function cancelar(){
-	$('#preloader').css('display', 'block');
+
+	$('#btn_cancelar_nfce').addClass('spinner');
 
 	let justificativa = $('#justificativa').val();
 	let id = $('#venda_id').val();
@@ -1046,19 +1613,28 @@ function cancelar(){
 		url: path + 'nfce/cancelar',
 		dataType: 'json',
 		success: function(e){
+			$('#btn_cancelar_nfce').removeClass('spinner');
 			
-			alert(e.retEvento.infEvento.xMotivo)
+			// alert(e.retEvento.infEvento.xMotivo)
+			swal("Sucesso", e.retEvento.infEvento.xMotivo, "success")
+			.then((v) => {
+				location.reload()
+			})
 
-			$('#preloader').css('display', 'none');
 		}, error: function(e){
-			$('#preloader').css('display', 'none');
+			$('#btn_cancelar_nfce').removeClass('spinner');
+
 			console.log(e)
 			let js = e.responseJSON;
 			if(e.status == 404){
-				alert(js.mensagem)
+				// alert(js.mensagem)
+				swal("Erro", js.mensagem, "warning")
+
 			}else{
-				alert(js.retEvento.infEvento.xMotivo)
-				Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
+				// alert(js.retEvento.infEvento.xMotivo)
+				swal("Erro", js.retEvento.infEvento.xMotivo, "warning")
+
+				// Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
 				
 			}
 		}
@@ -1073,7 +1649,7 @@ function verItens(){
 }
 
 function modalWhatsApp(){
-	$('#modal-whatsApp').modal('open')
+	$('#modal-whatsApp').modal('show')
 }
 
 function enviarWhatsApp(){
@@ -1096,17 +1672,16 @@ function apontarComanda(){
 		montarComanda(success, (rs) => {
 			if(rs){
 				COMANDA = cod;
-				$('#modal-comanda').modal('close')
-				var $toastContent = $('<span>Comanda setada!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
-				Materialize.toast($toastContent, 3000);
+				$('#modal-comanda').modal('hide')
+				swal("", "Comanda setada!!!", "success")
+
+
 			}
 		})
 	})
 	.fail((err) => {
 		if(err.status == 401){
-
-			var $toastContent = $('<span>Nada encontrado!!!</span>').add($('<button class="btn-flat toast-action">OK</button>'));
-			Materialize.toast($toastContent, 5000);
+			swal("", "Nada encontrado!!!", "error")
 		}
 		console.log(err)
 	})
@@ -1154,10 +1729,11 @@ function montarComanda(itens, call){
 }
 
 $('#acrescimo').keyup(() => {
-	$('#desconto').val('0')
-
-	let total = TOTAL+VALORBAIRRO;
 	let acrescimo = $('#acrescimo').val();
+	if(acrescimo > 0) $('#desconto').val('0')
+
+		let total = TOTAL+VALORBAIRRO;
+	
 	if(acrescimo.substring(0, 1) == "%"){
 
 		let perc = acrescimo.substring(1, acrescimo.length);
@@ -1175,6 +1751,97 @@ $('#acrescimo').keyup(() => {
 
 
 })
+
+function consultarNFCe(id){
+	$('#btn_consulta_' + id).addClass('spinner')
+	$('#btn_consulta_grid_' + id).addClass('spinner')
+	$.get(path + 'nfce/consultar/'+id)
+	.done((data) => {
+		$('#btn_consulta_' + id).removeClass('spinner')
+		$('#btn_consulta_grid_' + id).removeClass('spinner')
+
+		console.log(data)
+		let js = JSON.parse(data)
+		console.log(js)
+		swal("Consulta", "[" + js.protNFe.infProt.cStat + "] " + js.protNFe.infProt.xMotivo ,"success");
+	})
+	.fail((err) => {
+		$('#btn_consulta_' + id).removeClass('spinner')
+		$('#btn_consulta_grid_' + id).removeClass('spinner')
+		console.log(err)
+	})
+}
+
+$('#btn-plus').click((target) => {
+	let quantidade = parseInt($('#quantidade').val());
+	$('#quantidade').val(quantidade+1)
+})
+
+$('#click-multi').click(() => {
+	$('#modal-pag-mult').modal('show')
+	$('#v-multi').html(formatReal(TOTAL))
+
+	if(TOTAL <= 0){
+		swal("Erro", "Valor da venda deve ser maior que Zero!!", "error")
+		.then(() => {
+			$('#modal-pag-mult').modal('hide')
+		})
+	}
+	$('#total-multi').html(formatReal(TOTAL))
+})
+
+$('#btn-ok-multi').click(() => {
+
+	VALORPAG1 = $('#valor_pagamento_1').val() ? parseFloat($('#valor_pagamento_1').val()) : 0;
+	VALORPAG2 = $('#valor_pagamento_2').val() ? parseFloat($('#valor_pagamento_2').val()) : 0;
+	VALORPAG3 = $('#valor_pagamento_3').val() ? parseFloat($('#valor_pagamento_3').val()) : 0;
+
+	TIPOPAG1 = $('#tipo_pagamento_1').val()
+	TIPOPAG2 = $('#tipo_pagamento_2').val()
+	TIPOPAG3 = $('#tipo_pagamento_3').val()
+
+	$('#modal-pag-mult').modal('hide')
+	console.log(VALORPAG1, VALORPAG2, VALORPAG3)
+	console.log(TIPOPAG1, TIPOPAG2, TIPOPAG3)
+	$('#modal-venda').modal('show')
+})
+
+$('#valor_pagamento_1').keyup((target) => {
+	somaMultiplo();
+})
+$('#valor_pagamento_2').keyup((target) => {
+	somaMultiplo();
+})
+$('#valor_pagamento_3').keyup((target) => {
+	somaMultiplo();
+})
+
+function somaMultiplo(){
+	let v1 = $('#valor_pagamento_1').val() ? parseFloat($('#valor_pagamento_1').val()) : 0;
+	let v2 = $('#valor_pagamento_2').val() ? parseFloat($('#valor_pagamento_2').val()) : 0;
+	let v3 = $('#valor_pagamento_3').val() ? parseFloat($('#valor_pagamento_3').val()) : 0;
+
+	let soma = v1 + v2 + v3;
+	if(soma == TOTAL){
+		$('#btn-ok-multi').removeClass('disabled')
+	}else if(soma > TOTAL){
+		// swal("Alerta", "Valor de pagamentos ultrapassou o valor da venda", "warning")
+		$('#btn-ok-multi').addClass('disabled')
+	}else{
+		$('#btn-ok-multi').addClass('disabled')
+	}
+}
+
+$('#close-multi').click(() => {
+	$('#modal-pag-mult').modal('hide')
+	VALORPAG1 = 0
+	VALORPAG2 = 0
+	VALORPAG3 = 0
+	TIPOPAG1 = ''
+	TIPOPAG2 = ''
+	TIPOPAG3 = ''
+})
+//modal-venda
 
 
 

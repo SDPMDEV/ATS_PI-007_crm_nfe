@@ -35,11 +35,9 @@ class CategoriaServicoController extends Controller
         $result = $category->create($request->all());
 
         if($result){
-            session()->flash('color', 'blue');
-            session()->flash("message", "Categoria cadastrada com sucesso.");
+            session()->flash("mensagem_sucesso", "Categoria cadastrada com sucesso.");
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao cadastrar categoria.');
+            session()->flash('mensagem_erro', 'Erro ao cadastrar categoria.');
         }
         
         return redirect('/categoriasServico');
@@ -71,11 +69,9 @@ class CategoriaServicoController extends Controller
 
         $result = $resp->save();
         if($result){
-            session()->flash('color', 'green');
-            session()->flash('message', 'Categoria editada com sucesso!');
+            session()->flash('mensagem_sucesso', 'Categoria editada com sucesso!');
         }else{
-            session()->flash('color', 'red');
-            session()->flash('message', 'Erro ao editar categoria!');
+            session()->flash('mensagem_erro', 'Erro ao editar categoria!');
         }
         
         return redirect('/categoriasServico'); 
@@ -87,11 +83,9 @@ class CategoriaServicoController extends Controller
             ::where('id', $id)
             ->delete();
             if($delete){
-                session()->flash('color', 'blue');
-                session()->flash('message', 'Registro removido!');
+                session()->flash('mensagem_sucesso', 'Registro removido!');
             }else{
-                session()->flash('color', 'red');
-                session()->flash('message', 'Erro!');
+                session()->flash('mensagem_erro', 'Erro!');
             }
             return redirect('/categoriasServico');
         }catch(\Exception $e){

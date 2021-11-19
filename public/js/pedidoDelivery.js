@@ -16,7 +16,7 @@ $('#btn-enviar-push').click(() => {
 	.done((success) => {
 		console.log(success)
 		alert('Push Enviado')
-		$('#modal-push').modal('close')
+		$('#modal-push').modal('hide')
 
 	})
 	.fail((err) => {
@@ -25,15 +25,45 @@ $('#btn-enviar-push').click(() => {
 	})
 })
 
+$('#btn-enviar-push-web').click(() => {
+
+	let titulo = $('#titulo-push-web').val();
+	let texto = $('#texto-push-web').val();
+	let imagem = $('#imagem-push-web').val();
+
+	let js = {
+		titulo: titulo,
+		texto: texto,
+		imagem: imagem,
+		cliente: $('#cliente').val(),
+		_token: $('#token').val()
+	}
+	console.log(js)
+	$.post(path+'pedidosDelivery/sendPushWeb', js)
+	.done((success) => {
+		console.log(success)
+		// alert('Push Enviado')
+		swal("Sucesso", 'Push Enviado', "success")
+
+		$('#modal-push-web').modal('hide')
+
+	})
+	.fail((err) => {
+		console.log(err)
+		swal("Erro", 'Erro ao enviar Push', "warning")
+		// alert('Erro ao enviar Push')
+	})
+})
+
 function setaTelefone(telefone){
 	telefone = telefone.replace(" ", "").replace("-", "")
 	$('#telefone-sms').val(telefone)
-	Materialize.updateTextFields();
+	$('#modal-sms').modal('show')
 }
 
 $('#btn-enviar-sms').click(() => {
 
-
+	$('#btn-enviar-sms').addClass('spinner')
 	let texto = $('#texto-sms').val();
 	let telefone = $('#telefone-sms').val();
 
@@ -46,24 +76,27 @@ $('#btn-enviar-sms').click(() => {
 	console.log(js)
 	$.post(path+'pedidosDelivery/sendSms', js)
 	.done((success) => {
+		$('#btn-enviar-sms').removeClass('spinner')
+
 		console.log(success)
-		alert('SMS Enviado')
-		$('#modal-sms').modal('close')
+		swal("Sucesso", "SMS Enviado!!", "success")
+		$('#modal-sms').modal('hide')
 
 	})
 	.fail((err) => {
+		$('#btn-enviar-sms').removeClass('spinner')
 		console.log(err)
-		alert('Erro ao enviar SMS')
+		swal("Erro", "Erro ao enviar SMS!!", "error")
+
 	})
 })
 
 function consultar(codigo){
-	$('#preloader').css('display', 'block')
+	$('#btn-pgseguro').addClass('spinner')
 	console.log(codigo)
 	$.get(path + "/pagseguro/consultaJS", {codigo: codigo})
 	.done((success) => {
-		$('#preloader').css('display', 'none')
-
+		$('#btn-pgseguro').removeClass('spinner')
 		console.log(success)
 		let status = success.status[0];
 		let referencia = success.referencia[0];
@@ -80,11 +113,10 @@ function consultar(codigo){
 		$('#referencia').html(referencia)
 		$('#total').html(total)
 		$('#taxa').html(taxa)
-		$('#modal-consulta').modal('open');
+		$('#modal-consulta').modal('show');
 	})
 	.fail((err) => {
-		$('#preloader').css('display', 'none')
-		
+		$('#btn-pgseguro').removeClass('spinner')
 		console.log(err)
 		alert("Ocorreu um erro ao consultar o código: " + codigo)
 	})

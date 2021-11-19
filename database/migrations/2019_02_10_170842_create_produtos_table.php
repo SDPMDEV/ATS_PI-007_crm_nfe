@@ -22,6 +22,7 @@ class CreateProdutosTable extends Migration
             $table->foreign('categoria_id')->references('id')->on('categorias')
             ->onDelete('cascade');
             $table->decimal('valor_venda', 10,2)->default(0);
+            $table->decimal('valor_compra', 10,2)->default(0);
             $table->string('NCM', 13)->default("");
             $table->string('codBarras', 13)->default("");
             $table->string('CEST', 10)->default("");
@@ -50,6 +51,13 @@ class CreateProdutosTable extends Migration
             $table->string('descricao_anp', 95);
             $table->string('imagem', 100);
             $table->integer('alerta_vencimento');
+            $table->boolean('gerenciar_estoque');
+            $table->integer('estoque_minimo')->default(0);
+            $table->string('referencia', 25)->default('');
+
+            $table->integer('tela_id')->nullable()->unsigned();
+            $table->foreign('tela_id')->references('id')->on('tela_pedidos')->onDelete('cascade');
+            
 
             $table->timestamps();
         });

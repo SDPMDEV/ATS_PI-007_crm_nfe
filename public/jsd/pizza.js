@@ -1,8 +1,6 @@
 
 
 function select_pizza(produto, galeria, sabor){
-	console.log(produto)
-	console.log(galeria)
 
 	$('#pizza_id').val(produto.id)
 	$('#ingredientes').html(produto.ingredientes)
@@ -14,10 +12,10 @@ function select_pizza(produto, galeria, sabor){
 		$("#img").attr('src', '/imgs/no_image.png')
 	}
 	verificaAdicionado(produto.id, (res) => {
-		console.log(res)
+
 		if(res == 'true'){
 			location.href='#!';
-			alert('Este sabor ja esta adicionado!')
+			swal("Atenção", "Este sabor ja esta adicionado!", "warning")
 		}
 	})
 
@@ -48,10 +46,10 @@ function somaTotal(){
 	let valorProduto = $('#valor_produto').html();
 	valorProduto = parseFloat(valorProduto)
 	adicionais.map((v) => {
-		console.log(v.valor)
+
 		valorProduto += parseFloat(v.valor);
 	})
-	alert(valorProduto)
+
 	$('#valor_total').html(convertMoney(valorProduto))
 }
 
@@ -75,9 +73,9 @@ function adicionar(){
 		observacao: observacao
 	})
 	.done(function(data) {
-		console.log(data)
+
 		if(data == 'false'){
-			alert("Você está com um pedido pendente, aguarde o processamento");
+			swal("", "Você está com um pedido pendente, aguarde o processamento", "warning")
 		}else{
 			sucesso();
 		}

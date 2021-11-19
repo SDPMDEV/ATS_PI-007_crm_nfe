@@ -46,11 +46,9 @@ class VeiculoController extends Controller
 		$result = $veiculo->create($request->all());
 
 		if($result){
-			session()->flash('color', 'blue');
-			session()->flash("message", "Veiculo cadastrado com sucesso.");
+			session()->flash("mensagem_sucesso", "Veiculo cadastrado com sucesso.");
 		}else{
-			session()->flash('color', 'red');
-			session()->flash('message', 'Erro ao cadastrar veiculo.');
+			session()->flash('mensagem_erro', 'Erro ao cadastrar veiculo.');
 		}
 		
 		return redirect('/veiculos');
@@ -109,11 +107,9 @@ class VeiculoController extends Controller
 
     	$result = $resp->save();
     	if($result){
-    		session()->flash('color', 'green');
-    		session()->flash('message', 'Veiculo editado com sucesso!');
+    		session()->flash('mensagem_sucesso', 'Veiculo editado com sucesso!');
     	}else{
-    		session()->flash('color', 'red');
-    		session()->flash('message', 'Erro ao editar veiculo!');
+    		session()->flash('mensagem_erro', 'Erro ao editar veiculo!');
     	}
     	
     	return redirect('/veiculos'); 
@@ -125,11 +121,9 @@ class VeiculoController extends Controller
         	where('id', $id)
         	->delete();
         	if($delete){
-        		session()->flash('color', 'blue');
-        		session()->flash('message', 'Registro removido!');
+        		session()->flash('mensagem_sucesso', 'Registro removido!');
         	}else{
-        		session()->flash('color', 'red');
-        		session()->flash('message', 'Erro!');
+        		session()->flash('mensagem_erro', 'Erro!');
         	}
         	return redirect('/veiculos');
         }catch(\Exception $e){
@@ -147,6 +141,7 @@ class VeiculoController extends Controller
     		'marca' => 'required|max:20',
             'modelo' => 'required|max:20',
             'tara' => 'required|max:10',
+            'rntrc' => 'required|min:8',
             'capacidade' => 'required|max:10',
             'proprietario_nome' => 'required|max:40',
             'proprietario_ie' => 'required|max:13',
@@ -165,6 +160,9 @@ class VeiculoController extends Controller
 
             'tara.required' => 'O campo tara é obrigatório.',
             'tara.max' => '10 caracteres maximos permitidos.',
+
+            'rntrc.required' => 'O campo RNTRC é obrigatório.',
+            'rntrc.min' => '8 caracteres minimos permitidos.',
 
             'proprietario_nome.required' => 'O campo Nome proprietário é obrigatório.',
             'proprietario_nome.max' => '40 caracteres maximos permitidos.',

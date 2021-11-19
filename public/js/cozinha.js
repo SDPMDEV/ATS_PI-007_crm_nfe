@@ -1,29 +1,40 @@
+var TELA = 0;
 $(function () {
 
 	console.log('buscando')
-	buscar((res) => {
-		console.log(res)
-		if(res != false){
-			montaHtml(res)
-		}
-	})
-
-	setInterval(() => {
-		$('.progress').css('display', 'block')
+	setTimeout(() => {
 		buscar((res) => {
+			console.log(res)
 			if(res != false){
 				montaHtml(res)
-				$('.progress').css('display', 'none')
-
 			}
 		})
+	}, 500)
+
+	setInterval(() => {
+		$('.progresso').css('display', 'block')
+		buscar((res) => {
+			console.log(res)
+			if(res != false){
+				montaHtml(res)
+			}
+
+			$('.progresso').css('display', 'none')
+			
+		})
 	}, 5000)
+
+
+	TELA = $('#tela').val();
+	if(!TELA) TELA = 0;
+
 
 })
 
 function buscar(call){
-	$.get(path+'controleCozinha/buscar')
+	$.get(path+'controleCozinha/buscar', {tela: TELA})
 	.done((data) => {
+		console.log(data)
 		call(data)
 	})
 	.fail((err) => {
@@ -32,76 +43,83 @@ function buscar(call){
 	})
 }
 
-function pronto(id){
+function pronto(id, ehDelivery){
 	console.log(id)
 	let js = {
-		id: id
-	}
+		id: id,
+		ehDelivery: ehDelivery ? 1 : 0
+	}	
 
 	$.get(path+'controleCozinha/concluido', js)
 	.done((success) => {
 		console.log(success)
-		location.reload()
+		swal("Sucesso", "Item pronto", "success")
+		.then(v => {
+			location.reload()
+		})
 	})
 	.fail((err) => {
+		swal("Erro", "Algo deu errado", "warning")
+
 		console.log(err)
 	})
 }
 
 function montaHtml(obj){
 	let html = '';
+	contDelivery = 0;
+	contComanda = 0
 	obj.map((v) => {
-		console.log(v)
-		criaDiv(v.comanda, v.produto.nome, v.quantidade, v.data, v.id, 
-			v.adicionais, v.saboresPizza, v.tamanhoPizza, (res) => {
+		if(v.comanda == null){
+			contDelivery++;
+		}else{
+			contComanda++;
+		}
+		let nome = v.produto.nome;
+		if(!nome) nome = v.produto.produto.nome;
+		criaDiv(v.comanda, nome, v.quantidade, v.data, v.id, 
+			v.adicionais, v.saboresPizza, v.tamanhoPizza, v.pedido_id, v.observacao, v.cor, (res) => {
 
 				html += res;
 			})
 	})
+	$('#contDelivery').html(contDelivery);
+	$('#contComanda').html(contComanda);
 	$('#itens').html(html);
 
-	$('.progress').css('display', 'none')
+	$('.progresso').css('display', 'none')
 }
 
 function criaDiv(comanda, nome, quantidade, data, item_id, adicionais, 
-	saboresPizza, tamanhoPizza, call){
-	console.log(tamanhoPizza)
-	let html = '<div class="col s12 m12 l6">'+
-	'<div class="card">'+
-	'<div class="row">'+
-	'<div class="card-header"><br>'+
+	saboresPizza, tamanhoPizza, pedidoId, obs, cor, call){
 
-	'<h5 class="center-align">Mesa/Comanda <strong class="blue-text">'+
-	comanda+'</strong> <strong class="red-text">'+data+'</strong></h5>'+
+	let tipo = comanda != null ? 'Comanda' : 'Item Delivery Pedido <strong class="blue-text">' + pedidoId + '</strong>';
 
-	'</div>'+
+	let html = '<div class="col-sm-6 col-lg-6 col-md-12">'+
+	'<div class="card card-custom gutter-b">'+
+	'<div class="card-header" style="background: '+cor+'">'+
+	'<h3 style="margin-top: 20px;">'+tipo+': <strong class="text-success">'+ (comanda != null ? comanda : '')+
+	'</strong></h3></div>'+
 
-	'<div class="card-content">'+
+	'<div class="card-body">'+
+	'<h6>' +data+ '</h6>'+
+	'<h6>Item: <strong>' + nome + '</strong>' + (tamanhoPizza != false ? ' - Tamanho: <strong class="text-danger">'+tamanhoPizza+'</strong>' : '') + '</h6>'+
+	'<h6>Quantidade: <strong>' + quantidade + '</strong></h6>'+
+	'<h6>Adicionais: <strong>' + adicionais + '</strong></h6>'+
+	'<h6>Sabores: <strong>' + saboresPizza + '</strong></h6>'+
+	'<h6>Observação: <a href="#!" onclick=\'swal("", "'+obs+'", "info")\'' + 
+	' class="btn btn-light-info '+ (obs.length > 0 ? '' : 'disabled') +' ">Ver</a></h6>'+
 
+	'</div><div class="card-footer">' + 
+	'<a onclick="pronto('+item_id+', '+ (comanda == null ? true : false) +')" style="width: 100%; margin-top: 5px;" class="btn btn-success">' +
+	'<i class="la la-check"></i>Pronto</a>'+
 
-	'<h6>Item: <strong class="red-text">'+nome+'</strong> '+ (tamanhoPizza != false ? ' - Tamanho: <strong class="red-text">'+tamanhoPizza+'</strong>' : '')+
-	'<h6>Quantidade: <strong class="red-text">'+quantidade+'</strong></h6>'+
-	'<h6>Adicionais: <strong class="red-text">'+adicionais+'</strong></h6>'+
-
-
-	'<h6>Sabores: <strong class="red-text">'+saboresPizza+'</strong></h6>'+
-
-
-
-	'</div>'+
-
-	'<div class="card-footer">'+
-	'<a onclick="pronto('+item_id+')" style="width: 100%" href="#!" class="btn btn-large green accent-3">'+
-	'<i class="material-icons right">check</i> Pronto</a>'+
-	'</div>'+
-
-	'</div>'+
-	'</div>'+
-	'</div>';
-
+	'</div></div></div>'
 
 
 	call(html);
 }
+
+
 
 

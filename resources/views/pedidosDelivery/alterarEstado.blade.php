@@ -1,72 +1,97 @@
 @extends('default.layout')
 @section('content')
 
-<div class="row">
-	<div class="col s12">
-		<div class="row">
-			<h3 class="center-align">Alteração de Estado do Pedido Delivery <strong class="red-text">{{$pedido->id}}</strong></h3>
-		</div>
+<div class="card card-custom gutter-b">
+	<div class="card-body">
 
-		@if(session()->has('message'))
-		<div class="row">
-			<div style="border-radius: 10px;" class="col s12 {{ session('color') }}">
-				<h5 class="center-align white-text">{{ session()->get('message') }}</h5>
-			</div>
-			<br>
-			<a style="margin-top: 10px; width: 100%" class="btn center-align" href="/configNF">ir para Configuração do Emitente</a>
+		<h3 class="center-align">Alteração de Estado do Pedido Delivery
+			<strong class="text-danger">{{$pedido->id}}</strong>
+		</h3>
 
-		</div>
-		@endif
+		<h5>Você tem certeza que irá alterar o estado desse pedido de 
+			@if($pedido->estado == 'nv')
+			<strong class="text-primary">NOVO</strong>
+			@elseif($pedido->estado == 'rp')
+			<strong class="text-warning">REPORVADO</strong>
+			@elseif($pedido->estado == 'rc')
+			<strong class="text-danger">RECUSADO</strong>
+			@elseif($pedido->estado == 'ap')
+			<strong class="text-success">APROVADO</strong>
+			@else
+			<strong class="text-info">FINALIZADO</strong>
+			@endif 
+			para 
+			@if($tipo == 'nv')
+			<strong class="text-primary">NOVO</strong>
+			@elseif($tipo == 'rp')
+			<strong class="text-warning">REPORVADO</strong>
+			@elseif($tipo == 'rc')
+			<strong class="text-danger">RECUSADO</strong>
+			@elseif($tipo == 'ap')
+			<strong class="text-success">APROVADO</strong>
+			@else
+			<strong class="text-info">FINALIZADO</strong>
+			@endif 
+		</h5>
 
-		
-		<div class="container">
-			<h5>Você tem certeza que irá alterar o estado desse pedido de 
-				@if($pedido->estado == 'nv')
-				<strong>NOVO</strong>
-				@elseif($pedido->estado == 'rp')
-				<strong>REPORVADO</strong>
-				@elseif($pedido->estado == 'rc')
-				<strong>RECUSADO</strong>
-				@elseif($pedido->estado == 'ap')
-				<strong>APROVADO</strong>
-				@else
-				<strong>FINALIZADO</strong>
-				@endif 
-				para 
-				@if($tipo == 'nv')
-				<strong>NOVO</strong>
-				@elseif($tipo == 'rp')
-				<strong>REPORVADO</strong>
-				@elseif($tipo == 'rc')
-				<strong>RECUSADO</strong>
-				@elseif($tipo == 'ap')
-				<strong>APROVADO</strong>
-				@else
-				<strong>FINALIZADO</strong>
-				@endif 
-			</h5>
-		</div>
+		<div class="">
 
-		<div class="container">
-			<p class="red-text">Você será redirecionado para frente de caixa após esta tela</p>
+			@if($tipo == 'fz')
+			<p class="text-info">Você será redirecionado para frente de caixa após esta tela</p>
+			@endif
 			<form action="/pedidosDelivery/confirmarAlteracao" method="get">
 				<input type="hidden" name="tipo" value="{{$tipo}}">
 				<input type="hidden" name="id" value="{{$pedido->id}}">
 
 				<div class="row">
-					
-					<div class="input-field col s12">
-						<textarea data-length="50" name="motivoEstado" id="motivoEstado" class="materialize-textarea"></textarea>
-						<label for="motivoEstado">Motivo da alteração (Opcional)</label>
+
+					<div class="form-group validated col-sm-12 col-lg-12">
+						<label class="col-form-label">Motivo da alteração (Opcional)</label>
+						<div class="">
+							<textarea class="form-control" name="motivoEstado" rows="3"></textarea>
+							
+						</div>
 					</div>
+					
 				</div>
 
 
-				<button style="width: 100%;" 
-				class="btn @if($tipo == 'rp') red @elseif($tipo == 'rc') yellow @elseif($tipo == 'ap') green @else cyan @endif" type="submit">Confirmar Alteração</button>
+				@if($tipo == 'fz')
+
+				@if($pedido->endereco)
+				<div class="row">
+					<div class="form-group validated col-sm-5 col-lg-5">
+						<label class="col-form-label">Motoboy</label>
+						<div class="">
+							<select name="motoboy_id" class="form-control custom-select">
+								@foreach($motoboys as $m)
+								<option value="{{$m->id}}">{{$m->nome}}</option>
+								@endforeach
+							</select>
+							
+						</div>
+					</div>
+
+					<div class="form-group validated col-sm-3 col-lg-3">
+						<label class="col-form-label">Valor de repasse</label>
+						<div class="">
+							<input type="text" class="form-control money" required name="valor_repasse" value="{{$valorRepasse}}">
+
+						</div>
+					</div>
+
+				</div>
+
+				@endif
+				@endif
+				<button style="width: 100%;" class="btn @if($tipo == 'rp') btn-danger @elseif($tipo == 'rc') btn-warning @elseif($tipo == 'ap') btn-success @else btn-info @endif" type="submit">
+					<i class="la la-check"></i>
+					Confirmar Alteração
+				</button>
 			</form>
 		</div>
 
 	</div>
 </div>
+
 @endsection	

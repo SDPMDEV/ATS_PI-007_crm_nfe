@@ -1,48 +1,99 @@
 @extends('default.layout')
 @section('content')
-	<div class="row">
-		<div class="col s12">
-			<h4>{{{ isset($bairro) ? "Editar": "Cadastrar" }}} Bairro</h4>
-			<form method="post" action="{{{ isset($bairro) ? '/bairrosDelivery/update': '/bairrosDelivery/save' }}}">
-				<input type="hidden" name="id" value="{{{ isset($bairro->id) ? $bairro->id : 0 }}}">
-				
-				<div class="row">
-					<div class="input-field col s6">
-			          <input value="{{{ isset($bairro->nome) ? $bairro->nome : old('nome') }}}" id="nome" name="nome" type="text" class="validate">
-			          <label for="nome">Nome</label>
-			          
-			          @if($errors->has('nome'))
-			          <div class="center-align red lighten-2">
-			          	<span class="white-text">{{ $errors->first('nome') }}</span>
-			          </div>
-			          @endif
 
-			        </div>
-				</div>
+<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 
-				<div class="row">
-					<div class="input-field col s3">
-			          <input value="{{{ isset($bairro->valor_entrega) ? $bairro->valor_entrega : old('valor_entrega') }}}" id="valor_entrega" name="valor_entrega" type="text" class="validate">
-			          <label for="valor_entrega">Valor de Entrega</label>
-			          
-			          @if($errors->has('valor_entrega'))
-			          <div class="center-align red lighten-2">
-			          	<span class="white-text">{{ $errors->first('valor_entrega') }}</span>
-			          </div>
-			          @endif
+	<div class="container">
+		<div class="card card-custom gutter-b example example-compact">
+			<div class="col-lg-12">
+				<!--begin::Portlet-->
+				<form method="post" action="{{{ isset($bairro) ? '/bairrosDelivery/update': '/bairrosDelivery/save' }}}">
 
-			        </div>
-				</div>
+					<input type="hidden" name="id" value="{{{ isset($bairro->id) ? $bairro->id : 0 }}}">
 
-				<input type="hidden" name="_token" value="{{ csrf_token() }}">
+					<div class="card card-custom gutter-b example example-compact">
+						<div class="card-header">
 
-				
-				<br>
-				<div class="row">
-					<a class="btn-large red lighten-2" href="/bairrosDelivery">Cancelar</a>
-					<input type="submit" value="Salvar" class="btn-large green accent-3">
-				</div>
-			</form>
+							<h3 class="card-title">{{isset($bairro) ? 'Editar' : 'Novo'}} Bairro</h3>
+						</div>
+
+					</div>
+					@csrf
+
+					<div class="row">
+						<div class="col-xl-2"></div>
+						<div class="col-xl-8">
+							<div class="kt-section kt-section--first">
+								<div class="kt-section__body">
+
+									<div class="row">
+										<div class="form-group validated col-sm-8 col-lg-8">
+											<label class="col-form-label">Nome</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('nome')) is-invalid @endif" name="nome" value="{{{ isset($bairro) ? $bairro->nome : old('nome') }}}">
+												@if($errors->has('nome'))
+												<div class="invalid-feedback">
+													{{ $errors->first('nome') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+									
+									<div class="row">
+										<div class="form-group validated col-sm-4 col-lg-4">
+											<label class="col-form-label">Valor de Entrega</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('valor_entrega')) is-invalid @endif money" name="valor_entrega" value="{{{ isset($bairro) ? $bairro->valor_entrega : old('valor_entrega') }}}">
+												@if($errors->has('valor_entrega'))
+												<div class="invalid-feedback">
+													{{ $errors->first('valor_entrega') }}
+												</div>
+												@endif
+											</div>
+										</div>
+
+										<div class="form-group validated col-sm-4 col-lg-4">
+											<label class="col-form-label">Valor de repasse(Opcional)</label>
+											<div class="">
+												<input type="text" class="form-control @if($errors->has('valor_repasse')) is-invalid @endif money" name="valor_repasse" value="{{{ isset($bairro) ? $bairro->valor_repasse : old('valor_repasse') }}}">
+												@if($errors->has('valor_repasse'))
+												<div class="invalid-feedback">
+													{{ $errors->first('valor_repasse') }}
+												</div>
+												@endif
+											</div>
+										</div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="card-footer">
+
+						<div class="row">
+							<div class="col-xl-2">
+
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<a style="width: 100%" class="btn btn-danger" href="/bairrosDelivery">
+									<i class="la la-close"></i>
+									<span class="">Cancelar</span>
+								</a>
+							</div>
+							<div class="col-lg-3 col-sm-6 col-md-4">
+								<button style="width: 100%" type="submit" class="btn btn-success">
+									<i class="la la-check"></i>
+									<span class="">Salvar</span>
+								</button>
+							</div>
+
+						</div>
+					</div>
+				</form>
+			</div>
 		</div>
 	</div>
+</div>
 @endsection

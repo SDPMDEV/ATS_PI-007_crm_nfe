@@ -76,6 +76,7 @@ class MdfeController extends Controller
 		->with('mdfeEnvioJs', true)
 		->with('dataInicial', $dataInicial)
 		->with('dataFinal', $dataFinal)
+		->with('estado', $estado)
 		->with('title', "Filtro de MDF-e");
 	}
 
@@ -85,6 +86,7 @@ class MdfeController extends Controller
 		$veiculos = Veiculo::all();
 		$config = ConfigNota::first();
 		$ufs = Mdfe::cUF();
+		$cidades = Cidade::all();
 		$tiposUnidadeTransporte = Mdfe::tiposUnidadeTransporte();
 
 
@@ -101,6 +103,7 @@ class MdfeController extends Controller
 			->with('mdfeJs', true)
 			->with('veiculos', $veiculos)
 			->with('ufs', $ufs)
+			->with('cidades', $cidades)
 			->with('tiposUnidadeTransporte', $tiposUnidadeTransporte)
 			->with('lastMdfe', $lastMdfe)
 			->with('title', "Nova MDF-e");
@@ -146,7 +149,7 @@ class MdfeController extends Controller
 		$condutorCpf = $data['condutor_cpf'];
 		$tpEmit = $data['tp_emit'];
 		$tpTransp = $data['tp_transp'];
-		$lacreRodo = $data['lacre_rodo'];
+		$lacreRodo = $data['lacre_rodo'] ?? '';
 
 
 
@@ -283,12 +286,13 @@ class MdfeController extends Controller
 		$ciots = $this->getCiots($mdfe);
 		$valesPedagio = $this->getValesPedagio($mdfe);
 		$infoDescarga = $this->getInfoDescarga($mdfe);
-
-
+		$cidades = Cidade::all();
+		
 		return view("mdfe/register")
 		->with('mdfeJs', true)
 		->with('veiculos', $veiculos)
 		->with('ufs', $ufs)
+		->with('cidades', $cidades)
 		->with('tiposUnidadeTransporte', $tiposUnidadeTransporte)
 		->with('lastMdfe', $lastMdfe->mdfe_numero ?? 'Nulo')
 		->with('mdfe', $mdfe)
@@ -416,7 +420,7 @@ class MdfeController extends Controller
 		$condutorCpf = $data['condutor_cpf'];
 		$tpEmit = $data['tp_emit'];
 		$tpTransp = $data['tp_transp'];
-		$lacreRodo = $data['lacre_rodo'];
+		$lacreRodo = $data['lacre_rodo'] ?? '';
 
 		$mdfe = Mdfe::find($data['id']);
 
@@ -580,11 +584,15 @@ class MdfeController extends Controller
 			]);
 		}
 
-		session()->flash('color', 'green');
-		session()->flash("message", "MDFe Alterada!");
+		session()->flash("mensagem_sucesso", "MDFe Alterada!");
 
 		echo json_encode($mdfe);
 	}
 
+	public function delete($id){
+		$res = MDFe::find($id)->delete();
+		session()->flash("mensagem_sucesso", "MDFe removida!");
+		return redirect()->back();
+	}
 
 }

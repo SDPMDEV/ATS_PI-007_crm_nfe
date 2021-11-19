@@ -14,59 +14,45 @@ var LACRESTRANSP = [];
 var LACRESUNIDCARGA = [];
 var MDFEID = 0;
 
-
 $(function () {
 
 	// se editar
 	if($('#mdfe_id').val()) MDFEID = $('#mdfe_id').val()
-	if(MDFEID > 0){
+		if(MDFEID > 0){
 
-		
-		mostraVeiculoTracao();
-		mostraVeiculoReboque();
-		let municipios = $('#municipios_hidden').val()
-		MUNIPIOSCARREGAMENTO = JSON.parse(municipios);
-		montaTabelaMunicipioCarregamento();
+			let mdfe = JSON.parse($('#mdfe_c').val())
+			if(mdfe){
+				$('#condutor_nome').val(mdfe.condutor_nome)
+				$('#condutor_cpf').val(mdfe.condutor_cpf)
+			}
+
+			mostraVeiculoTracao();
+			mostraVeiculoReboque();
+			let municipios = $('#municipios_hidden').val()
+			MUNIPIOSCARREGAMENTO = JSON.parse(municipios);
+			montaTabelaMunicipioCarregamento();
 
 
-		let percurso = $('#percurso_hidden').val()
-		PERCURSO = JSON.parse(percurso);
-		montaTabelaPercuso();
+			let percurso = $('#percurso_hidden').val()
+			PERCURSO = JSON.parse(percurso);
+			montaTabelaPercuso();
 
-		let ciots = $('#ciots_hidden').val()
-		CIOT = JSON.parse(ciots);
-		montaTabelaCiot();
+			let ciots = $('#ciots_hidden').val()
+			CIOT = JSON.parse(ciots);
+			montaTabelaCiot();
 
-		let vales = $('#vales_pedagio_hidden').val()
-		VALEPEDAGIO = JSON.parse(vales);
-		montaTabelaValePedagio();
+			let vales = $('#vales_pedagio_hidden').val()
+			VALEPEDAGIO = JSON.parse(vales);
+			montaTabelaValePedagio();
 
-		let infos = $('#info_descarga_hidden').val()
-		INFODESCARGA = JSON.parse(infos);
-		montaTabelaInfosDescargaEdit();
+			let infos = $('#info_descarga_hidden').val()
+			INFODESCARGA = JSON.parse(infos);
+			montaTabelaInfosDescargaEdit();
 
-		habilitaBtnSalvar();
-	}
+			habilitaBtnSalvar();
+		}
 
-	getCidades(function(data){
-		$('input.autocomplete-cidade-carregamento').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-			},
-			minLength: 1,
-		});
-
-		$('input.autocomplete-cidade-descarregamento').autocomplete({
-			data: data,
-			limit: 20, 
-			onAutocomplete: function(val) {
-			},
-			minLength: 1,
-		});
 	});
-
-});
 
 function getCidades(data){
 	$.ajax
@@ -91,6 +77,7 @@ $('#veiculo_tracao').change(() => {
 function mostraVeiculoTracao(){
 	let veiculo = $('#veiculo_tracao').val();
 	if(veiculo != 'null'){
+
 		veiculo = JSON.parse(veiculo);
 		VEICULOTRACAO = veiculo;
 		$('#tracao_marca').html(veiculo.marca);
@@ -127,21 +114,21 @@ function mostraVeiculoReboque(){
 
 //** INICIO FUNCOES DE MUNICIPIO
 $('#btn-add-municipio-carregamento').click(() => {
-	let cidade = $('#autocomplete-cidade-carregamento').val();
+	let cidade = JSON.parse($('#kt_select2_4').val());
+	console.log(cidade)
+	if(cidade != 'null'){
+		
+		validaMunipioNaoInserido(cidade.id, (res) => {
+			if(!res){
+				MUNIPIOSCARREGAMENTO.push({id: cidade.id, nome: cidade.nome});
+				montaTabelaMunicipioCarregamento();
+			}else{
+				swal("Erro", "Este municipio já esta incluido", "error")
 
-	if(cidade.length > 1){
-		if(cidade.split("-")[0]){
-			let cId = parseInt(cidade.split("-")[0]);
-			validaMunipioNaoInserido(cId, (res) => {
-				if(!res){
-					MUNIPIOSCARREGAMENTO.push({id: cId, nome: cidade.split("-")[1]});
-					montaTabelaMunicipioCarregamento();
-				}else{
-					alert("Este municipio já esta incluido")
-				}
-				console.log(MUNIPIOSCARREGAMENTO)
-			})
-		}
+			}
+			console.log(MUNIPIOSCARREGAMENTO)
+		})
+
 		habilitaBtnSalvar()
 
 	}else{
@@ -152,11 +139,21 @@ $('#btn-add-municipio-carregamento').click(() => {
 function montaTabelaMunicipioCarregamento(){
 	let html = "";
 	MUNIPIOSCARREGAMENTO.map((v) => {
-		html += "<tr>";
-		html += "<td>"+v.id+"</td>";
-		html += "<td>"+v.nome+"</td>";
-		html += "<td><a href='#!' onclick='deleteMunicipioCarregamento("+v.id+")'>"+
-		"<i class='material-icons red-text'>delete</i></a></td>";
+
+		html += '<tr class="datatable-row">'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 60px;" id="id">'
+		html += v.id
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 200px;" id="id">'
+		html += v.nome
+		html += '</span></td>'
+
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += '<a onclick="deleteMunicipioCarregamento('+v.id+')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		html += '</span></td>'
+
 		html += "</tr>";
 	})	
 
@@ -210,11 +207,21 @@ $('#btn-add-percurso').click(() => {
 function montaTabelaPercuso(){
 	let html = "";
 	PERCURSO.map((v) => {
-		html += "<tr>";
-		html += "<td>"+v+"</td>";
-		html += "<td><a href='#!' onclick='deleteUfPercurso(\""+ v +"\")'>"+
-		"<i class='material-icons red-text'>delete</i></a></td>";
+
+		html += '<tr class="datatable-row">'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v
+		html += '</span></td>'
+
+
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += '<a onclick="deleteUfPercurso(\''+v+ '\')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		html += '</span></td>'
+
 		html += "</tr>";
+
+		
 	})	
 
 	$('#tbody-percurso').html(html);
@@ -248,7 +255,6 @@ $('#btn-add-ciot').click(() => {
 
 	if(codigo.length > 1 && doc.length > 10){
 
-
 		CIOT.push({codigo: codigo, documento: doc});
 		montaTabelaCiot();
 
@@ -262,12 +268,21 @@ $('#btn-add-ciot').click(() => {
 function montaTabelaCiot(){
 	let html = "";
 	CIOT.map((v) => {
-		html += "<tr>";
-		html += "<td>"+v.codigo+"</td>";
-		html += "<td>"+v.documento+"</td>";
-		html += "<td><a href='#!' onclick='deleteCiot(\""+ v.codigo +"\")'>"+
-		"<i class='material-icons red-text'>delete</i></a></td>";
-		html += "</tr>";
+
+		html += '<tr class="datatable-row">'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v.codigo
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v.documento
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += '<a onclick="deleteCiot(\''+v.codigo+ '\')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		html += '</span></td>'
+		html += '</tr>'
+
 	})	
 
 	$('#tbody-ciot').html(html);
@@ -294,7 +309,7 @@ $('#btn-add-vale').click(() => {
 	let numero_compra = $('#vale_numero_compra').val();
 	let valor = $('#vale_valor').val();
 
-	if(cnpj_fornecedor.length > 10 && doc_pagador.length > 10 && numero_compra.length > 1 && valor.length > 1){
+	if(cnpj_fornecedor.length > 10 && doc_pagador.length > 10 && numero_compra.length > 0 && valor.length > 1){
 
 
 		VALEPEDAGIO.push(
@@ -311,21 +326,37 @@ $('#btn-add-vale').click(() => {
 
 		contVale++;
 	}else{
-		alert("Digite todos os valores para adicionar")
+		swal("Erro", "Digite todos os valores para adicionar", "error")
 	}
 })
 
 function montaTabelaValePedagio(){
 	let html = "";
 	VALEPEDAGIO.map((v) => {
-		html += "<tr>";
-		html += "<td>"+v.cnpj_fornecedor+"</td>";
-		html += "<td>"+v.doc_pagador+"</td>";
-		html += "<td>"+v.numero_compra+"</td>";
-		html += "<td>"+v.valor+"</td>";
-		html += "<td><a href='#!' onclick='deleteValePedagio("+ v.id +")'>"+
-		"<i class='material-icons red-text'>delete</i></a></td>";
-		html += "</tr>";
+
+		html += '<tr class="datatable-row">'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v.cnpj_fornecedor
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v.doc_pagador
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v.numero_compra
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v.valor
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += '<a onclick="deleteValePedagio(\''+v.id+ '\')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		html += '</span></td>'
+		html += '</tr>'
+
+
 	})	
 	$('#tbody-vale-pegadio').html(html);
 }
@@ -370,11 +401,18 @@ $('#btn-add-lacre-transp').click(() => {
 function montaTabelaLacreTransp(){
 	let html = "";
 	LACRESTRANSP.map((v) => {
-		html += "<tr>";
-		html += "<td>"+v+"</td>";
-		html += "<td><a href='#!' onclick='deleteLacreTransp("+v+")'>"+
-		"<i class='material-icons red-text'>delete</i></a></td>";
-		html += "</tr>";
+
+		html += '<tr class="datatable-row">'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += '<a onclick="deleteLacreTransp(\''+v+ '\')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		html += '</span></td>'
+		html += '</tr>'
+
+		
 	})	
 
 	$('#tbody-lacre-transp').html(html);
@@ -424,11 +462,17 @@ $('#btn-add-larcre-unidade').click(() => {
 function montaTabelaLacreUnidCarga(){
 	let html = "";
 	LACRESUNIDCARGA.map((v) => {
-		html += "<tr>";
-		html += "<td>"+v+"</td>";
-		html += "<td><a href='#!' onclick='deleteLacreUnidCarga("+v+")'>"+
-		"<i class='material-icons red-text'>delete</i></a></td>";
-		html += "</tr>";
+
+		html += '<tr class="datatable-row">'
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += v
+		html += '</span></td>'
+
+		html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+		html += '<a onclick="deleteLacreUnidCarga(\''+v+ '\')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+		html += '</span></td>'
+		html += '</tr>'
+
 	})	
 
 	$('#tbody-lacre-unid').html(html);
@@ -487,7 +531,7 @@ $('#btn-add-info-desc').click(() => {
 				segCodCTe: segCodCTe,
 				lacresUnidTransp: LACRESTRANSP,
 				lacresUnidCarga: LACRESUNIDCARGA,
-				municipio: $('#autocomplete-cidade-descarregamento').val()
+				municipio: $('#kt_select2_5').val()
 			}
 			contInfo++;
 
@@ -540,7 +584,7 @@ function validaInsertInfo(call){
 	if($('#qtd_rateio_unid_carga').val().length == 0){
 		msg += "Informe a quantidade de rateio da unidade da carga\n";
 	}
-	if($('#autocomplete-cidade-descarregamento').val().length == 0){
+	if($('#kt_select2_5').val() == 'null'){
 		msg += "Informe o municipio de decarregamento\n";
 	}
 	call(msg);
@@ -564,22 +608,61 @@ function montaTabelaInfosDescarga(){
 		montaLacres(LACRESUNIDCARGA, (lacresUnid) => {
 			INFODESCARGA.map((v) => {
 				console.log(v)
-				html += "<tr>";
-				html += "<td>"+v.tpTransp+"</td>";
-				html += "<td>"+v.idUnidTransp+"</td>";
-				html += "<td>"+v.qtdRateioUnidCarga+"</td>";
-				html += "<td>"+ (v.chaveNFe.length > 0 ? v.chaveNFe : v.segCodNFe) +"</td>";
-				html += "<td>"+ (v.chaveCTe.length > 0 ? v.chaveCTe : v.segCodCTe) +"</td>";
-				html += "<td>"+ v.municipio +"</td>";
-				html += "<td>[" + 
-				lacresTranp
-				+"]</td>";
-				html += "<td>[" + 
-				lacresUnid
-				+"]</td>";
-				html += "<td><a href='#!' onclick='deleteInfoDescarga("+v.id+")'>"+
-				"<i class='material-icons red-text'>delete</i></a></td>";
-				html += "</tr>";
+
+				html += '<tr class="datatable-row">'
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+				html += v.tpTransp
+				html += '</span></td>'
+
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+				html += v.idUnidTransp
+				html += '</span></td>'
+
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 120px;" id="id">'
+				html += v.qtdRateioUnidCarga
+				html += '</span></td>'
+
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 150px;" id="id">'
+				html += (v.chaveNFe.length > 0 ? v.chaveNFe : v.segCodNFe)
+				html += '</span></td>'
+
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 150px;" id="id">'
+				html += (v.chaveCTe.length > 0 ? v.chaveCTe : v.segCodCTe)
+				html += '</span></td>'
+
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 150px;" id="id">'
+				html += v.municipio
+				html += '</span></td>'
+
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 150px;" id="id">'
+				html += lacresTranp
+				html += '</span></td>'
+
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 150px;" id="id">'
+				html += lacresUnid
+				html += '</span></td>'
+
+				html += '<td class="datatable-cell"><span class="codigo" style="width: 100px;" id="id">'
+				html += '<a onclick="deleteInfoDescarga(\''+v.id+ '\')" class="btn btn-sm btn-danger"><i class="la la-trash"></i></a>'
+				html += '</span></td>'
+				html += '</tr>'
+
+				// html += "<tr>";
+				// html += "<td>"+v.tpTransp+"</td>";
+				// html += "<td>"+v.idUnidTransp+"</td>";
+				// html += "<td>"+v.qtdRateioUnidCarga+"</td>";
+				// html += "<td>"+ (v.chaveNFe.length > 0 ? v.chaveNFe : v.segCodNFe) +"</td>";
+				// html += "<td>"+ (v.chaveCTe.length > 0 ? v.chaveCTe : v.segCodCTe) +"</td>";
+				// html += "<td>"+ v.municipio +"</td>";
+				// html += "<td>[" + 
+				// lacresTranp
+				// +"]</td>";
+				// html += "<td>[" + 
+				// lacresUnid
+				// +"]</td>";
+				// html += "<td><a href='#!' onclick='deleteInfoDescarga("+v.id+")'>"+
+				// "<i class='material-icons red-text'>delete</i></a></td>";
+				// html += "</tr>";
 			})	
 		})
 	})
@@ -641,16 +724,24 @@ function deleteInfoDescarga(l){
 
 
 $('#chave_nfe').on('keyup', () => { 
-	$('#seg_cod_nfe').val('');
+	if($('#chave_nfe').val().length > 0){
+		$('#seg_cod_nfe').val('');
+	}
 })
 $('#seg_cod_nfe').on('keyup', () => { 
-	$('#chave_nfe').val('');
+	if($('#seg_cod_nfe').val().length > 0){
+		$('#chave_nfe').val('');
+	}
 })
 $('#chave_cte').on('keyup', () => { 
-	$('#seg_cod_cte').val('');
+	if($('#chave_cte').val().length > 0){
+		$('#seg_cod_cte').val('');
+	}
 })
 $('#seg_cod_cte').on('keyup', () => { 
-	$('#chave_cte').val('');
+	if($('#seg_cod_cte').val().length > 0){
+		$('#chave_cte').val('');
+	}
 })
 
 $('#condutor_nome').on('keyup', () => { 
@@ -696,7 +787,7 @@ function salvarMDFe(){
 				veiculo_reboque: VEICULOREBOQUE.id,
 				uf_inicio: $('#uf_inicio').val(),
 				uf_fim: $('#uf_fim').val(),
-				data_inicio_viagem: $('#data_inicio_viagem').val(),
+				data_inicio_viagem: $('#kt_datepicker_3').val(),
 				carga_posteior: $('#carga_posteior').is(':checked') ? 1 : 0,
 				cnpj_contratante: $('#cnpj_contratante').val(),
 				seguradora_nome: $('#seguradora_nome').val(),

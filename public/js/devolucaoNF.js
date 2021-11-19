@@ -1,5 +1,10 @@
 $(function () {
 	validaBtns();
+
+	var w = window.innerWidth
+	if(w < 900){
+		$('#grade').trigger('click')
+	}
 })
 
 $('#checkbox input').click(() => {
@@ -19,7 +24,9 @@ function enviar(){
 		alert('Por favor selecione apenas um item da tabela!')
 	}else{
 		if(cont > 0){
-			$('#preloader1').css('display', 'block');
+
+			$('#btn-enviar').addClass('spinner')
+			$('#btn-enviar').addClass('disabled')
 
 			let token = $('#_token').val();
 
@@ -41,31 +48,101 @@ function enviar(){
 					let mensagem = recibo.substring(5,recibo.length);
 					if(retorno == 'Erro'){
 						let m = JSON.parse(mensagem);
-
-						$('#modal-alert-erro').modal('open');
-						$('#evento-erro').html("[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo)
-
+						try{
+							swal("Erro", "[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo, "error")
+						}catch{
+							swal("Erro", "Erro desconhecido", "error")
+						}
 					}
 					else if(e == 'false'){
-						alert("Esta NF já esta aprovada, não é possível enviar novamente!");
+						swal("Atenção", "Esta NF já esta aprovada, não é possível enviar novamente!", "warning")
 					}
 					else{
-						$('#modal-alert').modal('open');
-						$('#evento').html("Devolução emitida com sucesso RECIBO: "+recibo)
-						window.open(path+"/devolucao/imprimir/"+id, "_blank");
+
+						swal("Sucesso", "Devolução emitida com sucesso RECIBO: "+recibo, "success")
+						.then(() => {
+							window.open(path+"/devolucao/imprimir/"+id, "_blank");
+							location.reload()
+						})
 					}
 
-					$('#preloader1').css('display', 'none');
+					$('#btn-enviar').removeClass('spinner')
+					$('#btn-enviar').removeClass('disabled')
 				}, error: function(e){
-					Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
+					swal("Erro", "Erro de comunicação contate o desenvolvedor", "error")
 					console.log(e)
-					$('#preloader1').css('display', 'none');
+					$('#btn-enviar').removeClass('spinner')
+					$('#btn-enviar').removeClass('disabled')
 				}
 			});
 		}else{
 			alert('Selecione um documento para envio!')
 		}
 	}
+}
+
+function cancelarNFe(id, nf){
+	$('#modal1_aux').modal('show')
+	$('#numero_cancelamento2').html(nf)
+	$('#id_cancela').val(id)
+}
+
+function transmitir(id){
+	$('#btn_transmitir_grid_'+id).addClass('spinner')
+	$('#btn_transmitir_grid_'+id).addClass('disabled')
+
+	let token = $('#_token').val();
+
+	$.ajax
+	({
+		type: 'POST',
+		data: {
+			devolucao_id: id,
+			_token: token
+		},
+		url: path + 'devolucao/enviarSefaz',
+		dataType: 'json',
+		success: function(e){
+
+			console.log(e)
+			let recibo = e;
+			let retorno = recibo.substring(0,4);
+			console.log(retorno)
+			let mensagem = recibo.substring(5,recibo.length);
+			if(retorno == 'Erro'){
+				let m = JSON.parse(mensagem);
+
+				try{
+					$('#evento-erro').html("[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo)
+					swal("Erro", "[" + m.protNFe.infProt.cStat + "] : " + m.protNFe.infProt.xMotivo, "error")
+				}catch{
+					swal("Erro", "Erro desconhecido", "error")
+				}
+
+			}
+			else if(e == 'false'){
+				swal("Atenção", "Esta NF já esta aprovada, não é possível enviar novamente!", "warning")
+			}
+			else{
+				$('#modal-alert').modal('open');
+				$('#evento').html("Devolução emitida com sucesso RECIBO: "+recibo)
+				swal("Sucesso", "Devolução emitida com sucesso RECIBO: "+recibo, "success")
+				.then(() => {
+					location.reload()
+					window.open(path+"/devolucao/imprimir/"+id, "_blank");
+				})
+			}
+
+			$('#btn_transmitir_grid_'+id).removeClass('spinner')
+			$('#btn_transmitir_grid_'+id).removeClass('disabled')
+		}, error: function(e){
+			swal("Erro", "Erro de comunicação contate o desenvolvedor!", "error")
+			console.log(e)
+			$('#btn_transmitir_grid_'+id).removeClass('spinner')
+			$('#btn_transmitir_grid_'+id).removeClass('disabled')
+		}
+	});
+
 }
 
 function imprimir(){
@@ -83,8 +160,7 @@ function imprimir(){
 		if(id > 0){
 			window.open(path+"/devolucao/imprimir/"+id, "_blank");
 		}else{
-			Materialize.toast('Selecione um documento para imprimir', 4000)
-
+			swal("Erro", "Selecione um documento para imprimir!", "error")
 		}
 	}
 
@@ -101,8 +177,6 @@ function validaBtns(){
 			cont++;
 		}
 	})
-
-	console.log(estado)
 
 	if(cont > 1 || cont == 0){
 		desabilitaBotoes();
@@ -175,7 +249,8 @@ function setarNumero(buscarCliente = false){
 }
 
 function cancelar(){
-	$('#preloader5').css('display', 'block');
+	$('#btn-cancelar-2').addClass('spinner')
+	$('#btn-cancelar-2').addClass('disabled')
 	let id = 0;
 	let cont = 0;
 	let justificativa = $('#justificativa').val();
@@ -201,24 +276,76 @@ function cancelar(){
 			url: path + 'devolucao/cancelar',
 			dataType: 'json',
 			success: function(e){
-				$('#modal1').modal('close');
+				$('#modal1').modal('hide');
 				console.log(e)
-				$('#preloader5').css('display', 'none');
+				$('#btn-cancelar-2').removeClass('spinner')
+				$('#btn-cancelar-2').removeClass('disabled')
 
 				let js = JSON.parse(e);
 				// console.log(js)
 				// alert(js.retEvento.infEvento.xMotivo)
-				$('#modal-sucesso-cancela').modal('open');
-				$('#evento-cancela').html("[" + js.retEvento.infEvento.cStat + "] : " + js.retEvento.infEvento.xMotivo)
-
+				swal("Sucesso", "[" + js.retEvento.infEvento.cStat + "] : " + js.retEvento.infEvento.xMotivo, "success")
 				// $('#preloader5').css('display', 'none');
 			}, error: function(e){
 				console.log(e)
-				Materialize.toast('Erro de comunicação contate o desenvolvedor', 5000)
-				$('#preloader5').css('display', 'none');
+				try{
+					swal("Erro", e.responseJSON, "error")
+				}catch{
+					swal("Erro", "Verifique o console do navegador!", "error")
+				}
+				$('#btn-cancelar-2').removeClass('spinner')
+				$('#btn-cancelar-2').removeClass('disabled')
 			}
 		});
 	}
+}
+
+function cancelar2(){
+	// $('#preloader5').css('display', 'block');
+	$('#btn-cancelar-3').addClass('spinner')
+
+	let id = $('#id_cancela').val();
+	
+	let justificativa = $('#justificativa2').val();
+
+	
+	let token = $('#_token').val();
+	$.ajax
+	({
+		type: 'POST',
+		data: {
+			id: id,
+			justificativa: justificativa,
+			_token: token
+		},
+		url: path + 'nf/cancelar',
+		dataType: 'json',
+		success: function(e){
+			console.log(e)
+			let js = JSON.parse(e);
+			console.log(js)
+			$('#btn-cancelar-3').removeClass('spinner')
+				// alert(js.retEvento.infEvento.xMotivo)
+				swal("Sucesso", js.retEvento.infEvento.xMotivo, "success")
+				.then(() => {
+					window.open(path+"/nf/imprimirCancela/"+id, "_blank");
+					location.reload();
+				})
+
+				// $('#preloader5').css('display', 'none');
+
+			}, error: function(e){
+				console.log(e)
+				try{
+					swal("Erro", e.responseJSON, "error")
+				}catch{
+					swal("Erro", "Verifique o console do navegador!", "error")
+				}
+
+				$('#btn-cancelar-3').removeClass('spinner')
+
+			}
+		});
 }
 
 function redireciona(){
