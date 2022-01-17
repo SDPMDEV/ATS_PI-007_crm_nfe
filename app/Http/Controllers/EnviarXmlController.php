@@ -13,7 +13,7 @@ use Mail;
 
 class EnviarXmlController extends Controller
 {
-	
+
 	public function __construct(){
 		$this->middleware(function ($request, $next) {
 			$value = session('user_logged');
@@ -36,7 +36,7 @@ class EnviarXmlController extends Controller
 	public function filtro(Request $request){
 		$xml = Venda::
 		whereBetween('updated_at', [
-			$this->parseDate($request->data_inicial), 
+			$this->parseDate($request->data_inicial),
 			$this->parseDate($request->data_final, true)])
 		->where('estado', 'APROVADO')
 		->get();
@@ -63,7 +63,7 @@ class EnviarXmlController extends Controller
 		try{
 			$xmlCte = Cte::
 			whereBetween('updated_at', [
-				$this->parseDate($request->data_inicial), 
+				$this->parseDate($request->data_inicial),
 				$this->parseDate($request->data_final, true)])
 			->where('estado', 'APROVADO')
 			->get();
@@ -89,7 +89,7 @@ class EnviarXmlController extends Controller
 		try{
 			$xmlNfce = VendaCaixa::
 			whereBetween('updated_at', [
-				$this->parseDate($request->data_inicial), 
+				$this->parseDate($request->data_inicial),
 				$this->parseDate($request->data_final, true)])
 			->where('estado', 'APROVADO')
 			->get();
@@ -112,7 +112,7 @@ class EnviarXmlController extends Controller
 
 		$xmlMdfe = Mdfe::
 		whereBetween('updated_at', [
-			$this->parseDate($request->data_inicial), 
+			$this->parseDate($request->data_inicial),
 			$this->parseDate($request->data_final, true)])
 		->where('estado', 'APROVADO')
 		->get();
@@ -191,7 +191,8 @@ class EnviarXmlController extends Controller
 		return redirect('/enviarXml');
 	}
 
-	private function parseDate($date, $plusDay = false){
+	private function parseDate($date, $plusDay = false)
+    {
 		if($plusDay == false)
 			return date('Y-m-d', strtotime(str_replace("/", "-", $date)));
 		else
@@ -244,7 +245,7 @@ class EnviarXmlController extends Controller
 	}
 
 	public function emailCte($dataInicial, $dataFinal){
-		
+
 		$empresa = ConfigNota::first();
 		Mail::send('mail.xml', ['data_inicial' => $dataInicial, 'data_final' => $dataFinal,
 			'empresa' => $empresa->razao_social, 'cnpj' => $empresa->cnpj, 'tipo' => 'CTe'], function($m){
@@ -267,7 +268,7 @@ class EnviarXmlController extends Controller
 	}
 
 	public function emailMdfe($dataInicial, $dataFinal){
-		
+
 		$empresa = ConfigNota::first();
 		Mail::send('mail.xml', ['data_inicial' => $dataInicial, 'data_final' => $dataFinal,
 			'empresa' => $empresa->razao_social, 'cnpj' => $empresa->cnpj, 'tipo' => 'MDFe'], function($m){
@@ -289,7 +290,7 @@ class EnviarXmlController extends Controller
 
 	}
 
-	
-	
+
+
 
 }

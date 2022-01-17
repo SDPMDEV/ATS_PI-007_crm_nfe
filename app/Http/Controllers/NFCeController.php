@@ -127,10 +127,12 @@ class NFCeController extends Controller
 		}
 	}
 
-	public function imprimirNaoFiscal($id){
+	public function imprimirNaoFiscal($id)
+	{
 		$venda = VendaCaixa::
 		where('id', $id)
 		->first();
+
 		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 		$pathLogo = $public.'imgs/logo.jpg';
 

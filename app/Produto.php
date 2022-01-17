@@ -9,7 +9,7 @@ class Produto extends Model
 	protected $fillable = [
 		'nome', 'categoria_id', 'cor', 'valor_venda', 'NCM', 'CST_CSOSN', 'CST_PIS', 'CST_COFINS', 'CST_IPI', 'unidade_compra', 'unidade_venda', 'composto', 'codBarras', 'conversao_unitaria', 'valor_livre', 'perc_icms', 'perc_pis', 'perc_cofins', 'perc_ipi', 'CFOP_saida_estadual', 'CFOP_saida_inter_estadual', 'codigo_anp', 
 		'descricao_anp', 'perc_iss', 'cListServ', 'imagem', 'alerta_vencimento', 'valor_compra', 'gerenciar_estoque', 
-		'estoque_minimo', 'referencia', 'tela_id'
+		'estoque_minimo', 'referencia', 'tela_id', 'code'
 	];
 
 	public function categoria(){

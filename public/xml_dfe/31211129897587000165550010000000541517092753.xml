@@ -1,0 +1,200 @@
+<nfeProc versao="4.00"
+  xmlns="http://www.portalfiscal.inf.br/nfe">
+  <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <infNFe Id="NFe31211129897587000165550010000000541517092753" versao="4.00">
+      <ide>
+        <cUF>31</cUF>
+        <cNF>51709275</cNF>
+        <natOp>Venda Prod Industrializado</natOp>
+        <mod>55</mod>
+        <serie>1</serie>
+        <nNF>54</nNF>
+        <dhEmi>2021-11-22T13:38:00-03:00</dhEmi>
+        <dhSaiEnt>2021-11-22T13:38:00-03:00</dhSaiEnt>
+        <tpNF>1</tpNF>
+        <idDest>1</idDest>
+        <cMunFG>3120706</cMunFG>
+        <tpImp>1</tpImp>
+        <tpEmis>1</tpEmis>
+        <cDV>3</cDV>
+        <tpAmb>1</tpAmb>
+        <finNFe>1</finNFe>
+        <indFinal>0</indFinal>
+        <indPres>0</indPres>
+        <procEmi>0</procEmi>
+        <verProc>3.10.37</verProc>
+      </ide>
+      <emit>
+        <CNPJ>29897587000165</CNPJ>
+        <xNome>INDUSTRIA E COMERCIO , ATAC. E VARE. DE PAPEL BREJENSE LTDA</xNome>
+        <xFant>INDUSTRIA DE PAPEIS BREJENSE</xFant>
+        <enderEmit>
+          <xLgr>R VINTE E UM DE ABRIL</xLgr>
+          <nro>235</nro>
+          <xBairro>CENTRO BREJO BONITO</xBairro>
+          <cMun>3120706</cMun>
+          <xMun>Cruzeiro da Fortaleza</xMun>
+          <UF>MG</UF>
+          <CEP>38738000</CEP>
+          <cPais>1058</cPais>
+          <xPais>Brasil</xPais>
+          <fone>34997805000</fone>
+        </enderEmit>
+        <IE>0031478120096</IE>
+        <CRT>1</CRT>
+      </emit>
+      <dest>
+        <CNPJ>16549105000215</CNPJ>
+        <xNome>PURILIMP PRODUTOS DE LIMPEZA E HIGIENE LTDA</xNome>
+        <enderDest>
+          <xLgr>RUA EURIPEDES RIBEIRO</xLgr>
+          <nro>843</nro>
+          <xCpl>LOJA 03</xCpl>
+          <xBairro>CENTRO</xBairro>
+          <cMun>3137502</cMun>
+          <xMun>Lagoa Formosa</xMun>
+          <UF>MG</UF>
+          <CEP>38720000</CEP>
+          <cPais>1058</cPais>
+          <xPais>Brasil</xPais>
+          <fone>3438242885</fone>
+        </enderDest>
+        <indIEDest>1</indIEDest>
+        <IE>0019994040146</IE>
+        <email>produtospurilimp@hotmail.com</email>
+      </dest>
+      <det nItem="1">
+        <prod>
+          <cProd>38</cProd>
+          <cEAN>SEM GTIN</cEAN>
+          <xProd>PAPEL TOALHA BREJENSE BRANCO 23X21</xProd>
+          <NCM>48182000</NCM>
+          <CEST>2004500</CEST>
+          <indEscala>S</indEscala>
+          <CFOP>5401</CFOP>
+          <uCom>UN</uCom>
+          <qCom>40.00</qCom>
+          <vUnCom>5.00</vUnCom>
+          <vProd>200.00</vProd>
+          <cEANTrib>SEM GTIN</cEANTrib>
+          <uTrib>UN</uTrib>
+          <qTrib>40.00</qTrib>
+          <vUnTrib>5.00</vUnTrib>
+          <indTot>1</indTot>
+          <xPed>667</xPed>
+          <nItemPed>1</nItemPed>
+        </prod>
+        <imposto>
+          <vTotTrib>49.92</vTotTrib>
+          <ICMS>
+            <ICMSSN900>
+              <orig>0</orig>
+              <CSOSN>900</CSOSN>
+              <modBC>0</modBC>
+              <vBC>200.00</vBC>
+              <pRedBC>0.0000</pRedBC>
+              <pICMS>0.0000</pICMS>
+              <vICMS>0.00</vICMS>
+              <modBCST>0</modBCST>
+              <pRedBCST>0.0000</pRedBCST>
+              <vBCST>306.54</vBCST>
+              <pICMSST>6.2560</pICMSST>
+              <vICMSST>19.18</vICMSST>
+              <pCredSN>0.0000</pCredSN>
+              <vCredICMSSN>0.00</vCredICMSSN>
+            </ICMSSN900>
+          </ICMS>
+          <PIS>
+            <PISOutr>
+              <CST>49</CST>
+              <qBCProd>0.00</qBCProd>
+              <vAliqProd>0.00</vAliqProd>
+              <vPIS>0.00</vPIS>
+            </PISOutr>
+          </PIS>
+          <COFINS>
+            <COFINSOutr>
+              <CST>49</CST>
+              <qBCProd>0.00</qBCProd>
+              <vAliqProd>0.00</vAliqProd>
+              <vCOFINS>0.00</vCOFINS>
+            </COFINSOutr>
+          </COFINS>
+        </imposto>
+      </det>
+      <total>
+        <ICMSTot>
+          <vBC>200.00</vBC>
+          <vICMS>0.00</vICMS>
+          <vICMSDeson>0.00</vICMSDeson>
+          <vFCP>0.00</vFCP>
+          <vBCST>306.54</vBCST>
+          <vST>19.18</vST>
+          <vFCPST>0.00</vFCPST>
+          <vFCPSTRet>0.00</vFCPSTRet>
+          <vProd>200.00</vProd>
+          <vFrete>0.00</vFrete>
+          <vSeg>0.00</vSeg>
+          <vDesc>0.00</vDesc>
+          <vII>0.00</vII>
+          <vIPI>0.00</vIPI>
+          <vIPIDevol>0.00</vIPIDevol>
+          <vPIS>0.00</vPIS>
+          <vCOFINS>0.00</vCOFINS>
+          <vOutro>0.00</vOutro>
+          <vNF>219.18</vNF>
+          <vTotTrib>49.92</vTotTrib>
+        </ICMSTot>
+      </total>
+      <transp>
+        <modFrete>9</modFrete>
+        <vol>
+          <qVol>40</qVol>
+          <pesoL>0.000</pesoL>
+          <pesoB>0.000</pesoB>
+        </vol>
+      </transp>
+      <pag>
+        <detPag>
+          <tPag>01</tPag>
+          <vPag>219.18</vPag>
+        </detPag>
+      </pag>
+      <infAdic>
+        <infCpl>IMPOSTO RECOLHIDO POR ST NOS TERMOS DO ANEXO XV DO RICMS/MG  CLASSIFICACAO NA NCM 48182000 COM MVA 53,27%Valor aproximado dos Tributos :R$ 49,92</infCpl>
+      </infAdic>
+    </infNFe>
+    <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+      <SignedInfo>
+        <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+        <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+        <Reference URI="#NFe31211129897587000165550010000000541517092753">
+          <Transforms>
+            <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+            <Transform Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+          </Transforms>
+          <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+          <DigestValue>OExZ7oShk90ORU8fAlfgueMEPCA=</DigestValue>
+        </Reference>
+      </SignedInfo>
+      <SignatureValue>Cl4v/UkVVhKQIxCoEpPk9Fp0tzabY+D+NzIgpHM8NoCvQdVwTJYegKWBfh4fkY1241ENi8AlMN4sAszZS+tgW2TQQYrRvVsf7o4Y9KTaUmWa8Zk8p9VIH2EdWZuB3huIXrZHtrDiRgtYqTUl1tVzMQH+V1y1TGf5e415TBZcGrPaxDsQWsUFYIE+dO2F8J4FBLHEbkUwV5wy+6WQYUwIIVRt+YIQTBomOeBwPLoQnxuEeZB3PVfbURlOaObtSejxm0mRVqaJJI82hlGL8hxc9uZAkPHaK2WNZGTwOCHyFIagYYP01B3ttDMxA/RteIoebrhe4/sUvgZx9Yn0EAANVQ==</SignatureValue>
+      <KeyInfo>
+        <X509Data>
+          <X509Certificate>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</X509Certificate>
+        </X509Data>
+      </KeyInfo>
+    </Signature>
+  </NFe>
+  <protNFe versao="4.00">
+    <infProt Id="ID131214440326313">
+      <tpAmb>1</tpAmb>
+      <verAplic>14.4.41-ZB1</verAplic>
+      <chNFe>31211129897587000165550010000000541517092753</chNFe>
+      <dhRecbto>2021-11-22T13:41:07-03:00</dhRecbto>
+      <nProt>131214440326313</nProt>
+      <digVal>OExZ7oShk90ORU8fAlfgueMEPCA=</digVal>
+      <cStat>100</cStat>
+      <xMotivo>Autorizado o uso da NF-e</xMotivo>
+    </infProt>
+  </protNFe>
+</nfeProc>

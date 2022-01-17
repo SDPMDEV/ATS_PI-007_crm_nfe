@@ -496,7 +496,7 @@ class DFeController extends Controller
 			'indPag' => $xml->NFe->infNFe->ide->indPag,
 			'nNf' => $xml->NFe->infNFe->ide->nNF,
 			'vFrete' => $vFrete,
-			'vDesc' => $vDesc
+			'vDesc' => $vDesc,
 		];
 	}
 

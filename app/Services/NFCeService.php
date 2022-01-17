@@ -32,10 +32,11 @@ class NFCeService{
 		
 	}
 
-	public function gerarNFCe($idVenda){
+	public function gerarNFCe($idVenda)
+	{
 		$venda = VendaCaixa::
-		where('id', $idVenda)
-		->first();
+			where('id', $idVenda)
+			->first();
 
 		$config = ConfigNota::first();
 		$tributacao = Tributacao::first(); 

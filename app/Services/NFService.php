@@ -13,6 +13,7 @@ use NFePHP\DA\NFe\Danfe;
 use NFePHP\DA\Legacy\FilesFolders;
 use NFePHP\Common\Soap\SoapCurl;
 use App\Tributacao;
+use Illuminate\Http\Request;
 
 error_reporting(E_ALL);
 ini_set('display_errors', 'On');
@@ -631,6 +632,21 @@ class NFService{
 		return $arr;
 	}
 
+	public function consultarPorChave($chave)
+	{
+		try {
+			$response = $this->tools->sefazConsultaChave($chave);
+
+			$stdCl = new Standardize($response);
+			$arr = $stdCl->toArray();
+
+			return json_encode($arr);
+
+		} catch (\Exception $e) {
+			return false;
+		}
+	}
+
 	public function consultar($vendaId){
 		try {
 			$venda = Venda::
@@ -654,6 +670,8 @@ class NFService{
 
 	public function inutilizar($nInicio, $nFinal, $justificativa){
 		try{
+			
+			$config = ConfigNota::first();
 
 			$nSerie = $config->numero_serie_nfe;
 			$nIni = $nInicio;
@@ -668,6 +686,74 @@ class NFService{
 
 			return $arr;
 
+		} catch (\Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+
+	public function inutilizarPelaRequest($nInicio, $nFinal, $justificativa){
+		try {
+
+			$config = ConfigNota::first();
+
+			$nSerie = $config->numero_serie_nfe;
+			$nIni = $nInicio;
+			$nFin = $nFinal;
+			$xJust = $justificativa;
+			$response = $this->tools->sefazInutiliza($nSerie, $nIni, $nFin, $xJust);
+
+			$stdCl = new Standardize($response);
+			$std = $stdCl->toStd();
+			$arr = $stdCl->toArray();
+			$json = $stdCl->toJson();
+
+			return $arr;
+
+		} catch (\Exception $e) {
+			return response()->json([
+				'error' => true,
+				'message' => $e->getMessage()
+			]);
+		}
+	}
+
+	public function cancelarPelaChave($chave, $justificativa)
+	{
+		try {
+
+			$response = $this->tools->sefazConsultaChave($chave);
+			$stdCl = new Standardize($response);
+			$arr = $stdCl->toArray();
+			sleep(1);
+			
+			$xJust = $justificativa;
+
+
+			$nProt = $arr['protNFe']['infProt']['nProt'];
+
+			$response = $this->tools->sefazCancela($chave, $xJust, $nProt);
+			sleep(2);
+			$stdCl = new Standardize($response);
+			$std = $stdCl->toStd();
+			$arr = $stdCl->toArray();
+			$json = $stdCl->toJson();
+
+			if ($std->cStat != 128) {
+
+			} else {
+				$cStat = $std->retEvento->infEvento->cStat;
+				$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+				if ($cStat == '101' || $cStat == '135' || $cStat == '155' ) {
+
+					$xml = Complements::toAuthorize($this->tools->lastRequest, $response);
+					file_put_contents($public.'xml_nfe_cancelada/'.$chave.'.xml',$xml);
+
+					return $json;
+				} else {
+					
+					return ['erro' => true, 'data' => $arr, 'status' => 402];	
+				}
+			}    
 		} catch (\Exception $e) {
 			echo $e->getMessage();
 		}
@@ -717,6 +803,46 @@ class NFService{
 		} catch (\Exception $e) {
 			echo $e->getMessage();
     //TRATAR
+		}
+	}
+
+	public function cartaCorrecaoPorRequest(Request $request)
+	{
+		try {
+
+			$chave = $request->chave;
+			$xCorrecao = $request->correcao;
+			$nSeqEvento = $request->sequencia_cce+1;
+			$response = $this->tools->sefazCCe($chave, $xCorrecao, $nSeqEvento);
+			sleep(2);
+
+			$stdCl = new Standardize($response);
+
+			$std = $stdCl->toStd();
+
+			$arr = $stdCl->toArray();
+
+			$json = $stdCl->toJson();
+
+			if ($std->cStat == 128) {
+				$cStat = $std->retEvento->infEvento->cStat;
+				if ($cStat == '135' || $cStat == '136') {
+					$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+
+					$xml = Complements::toAuthorize($this->tools->lastRequest, $response);
+					file_put_contents($public.'xml_nfe_correcao/'.$chave.'.xml',$xml);
+
+					return [
+						'error' => false,
+						'json' => $json
+					];
+
+				} else {
+					return ['erro' => true, 'data' => $arr, 'status' => 402];	
+				}
+			}
+		} catch (\Exception $e) {
+			return $e->getMessage();
 		}
 	}
 
@@ -1308,7 +1434,8 @@ class NFService{
 
 	}
 
-	public function sign($xml){
+	public function sign($xml)
+	{
 		return $this->tools->signNFe($xml);
 	}
 
@@ -1345,8 +1472,5 @@ class NFService{
 			return "Erro: ".$e->getMessage() ;
 		}
 
-	}	
-
-
-	
+	}
 }

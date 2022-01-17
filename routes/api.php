@@ -16,7 +16,7 @@ Route::group(['prefix' => 'appUser'],function(){
 	Route::post('/validaToken', 'AppUserController@validaToken');
 	Route::post('/validaCupom', 'AppUserController@validaCupom')->middleware('token');
 	Route::post('/redefinirSenha', 'AppUserController@redefinirSenha');
-	
+
 });
 
 Route::group(['prefix' => 'appProduto'],function(){
@@ -25,7 +25,7 @@ Route::group(['prefix' => 'appProduto'],function(){
 	Route::get('/adicionais/{produto_id}', 'AppProdutoController@adicionais');
 
 	Route::get('/pesquisaProduto', 'AppProdutoController@pesquisaProduto');
-	
+
 	Route::post('/favorito', 'AppProdutoController@favorito')->middleware('token');
 	Route::post('/enviaProduto', 'AppProdutoController@enviaProduto')->middleware('token');
 
@@ -52,7 +52,7 @@ Route::group(['prefix' => 'appCarrinho'],function(){
 
 	Route::get('/getBairros', 'AppCarrinhoController@getBairros');
 	Route::get('/getValorBairro/{id}', 'AppCarrinhoController@getValorBairro');
-	
+
 
 });
 
@@ -85,7 +85,7 @@ Route::group(['prefix' => '/pagseguro'], function(){
 	Route::get('/getSessao', 'PagSeguroController@getSessao');
 	Route::get('/getFuncionamento', 'PagSeguroController@getFuncionamento');
 	Route::post('/cartoes', 'PagSeguroController@cartoes')->middleware('token');
-	
+
 	Route::post('/efetuaPagamento', 'PagSeguroController@efetuaPagamentoApp');
 	Route::get('/consultaJS', 'PagSeguroController@consultaJS');
 });
@@ -135,7 +135,7 @@ Route::group(['prefix' => 'appFiscal'],function(){
 		Route::get('/dadosParaCadastro', 'AppFiscal\\ProdutoController@dadosParaCadastro')->middleware('authApp');
 		Route::get('/tributosPadrao', 'AppFiscal\\ProdutoController@tributosPadrao')->middleware('authApp');
 		Route::post('/salvarImagem', 'AppFiscal\\ProdutoController@salvarImagem');
-		
+
 	});
 
 	Route::group(['prefix' => 'naturezas'],function(){
@@ -204,12 +204,54 @@ Route::group(['prefix' => 'appFiscal'],function(){
 
 	Route::group(['prefix' => 'home'],function(){
 		Route::get('/dadosGrafico', 'AppFiscal\\HomeController@dadosGrafico')->middleware('authApp');
+
 	});
 
 });
 
+Route::post('/get_issuer', "ApiController@returnIssuer");
+Route::post('/get_payment_methods', 'ApiController@getPaymentOpt');
+Route::post('/get_issuer_configs', "ApiController@getIssuerConfigs");
+Route::post('/save_issuer', "ApiController@saveIssuerConfigs");
+Route::post('/save_certificate', "ApiController@saveCertificate");
+Route::post('/delete_certificate', "ApiController@removeCertificate");
+Route::post('/get_certificate_status', "ApiController@getCertificateStatus");
+Route::post('/test_certificate', "ApiController@teste");
 
+Route::post('/get_office_configs', "ApiController@getOfficeConfigs");
+Route::post('/save_office_configs', "ApiController@saveOfficeConfigs");
+Route::post('/save_office_configs', "ApiController@saveOfficeConfigs");
 
+Route::post('/get_nature_configs', "ApiController@getNatureConfigs");
+Route::post('/delete_nature', "ApiController@deleteNature");
+Route::post('/edit_nature', "ApiController@editNature");
+Route::post('/new_nature', "ApiController@newNature");
 
+Route::post('/get_taxation_configs', "ApiController@getTaxation");
+Route::post('/save_taxation', "ApiController@saveTaxation");
 
+Route::post('/filter_xml', "ApiController@filtrarXml");
 
+Route::post('/validate_certificate', "ApiController@validateCertificate");
+Route::post('/get_docs', "ApiController@getDocsDFE");
+Route::post('/get_docs_filter', "ApiController@getDocsFilter");
+Route::post('/get_new_docs', "ApiController@getNewDocs");
+Route::post('/get_download_configs/{chave}', "ApiController@getDonwloadConfigs");
+Route::post('/get_fiscal_settings', "ApiController@getFiscalSettings");
+Route::post('/manifest', "ApiController@manifest");
+Route::post('/generate_nfe', "ApiController@gerarNFe");
+
+Route::get('/generate_danfe', 'ApiController@generateDanfe');
+Route::post('/generate_nf', 'ApiController@gerarNf');
+Route::post('/consult_nfe', 'ApiController@consultNfe');
+Route::post('/cancel_nfe', 'ApiController@cancelNfe');
+Route::post('/fix_nfe', 'ApiController@fixNfe');
+Route::get('/print_cce', 'ApiController@printCce');
+Route::get('/download_xml', 'ApiController@downloadXml');
+Route::get('/print_cancel', 'ApiController@printCancel');
+Route::post('/disable_nfe', 'ApiController@disableNfe');
+Route::get('/send_nfe_xml', 'ApiController@sendNfeXml');
+Route::get('/download_xml_zip', 'ApiController@downloadXmlZip');
+Route::post('/generate_nfce', 'ApiController@generateNfce');
+Route::get('/print_nfce', 'ApiController@printNfce');
+Route::get('/generate_cupom', 'ApiController@generateCupom');

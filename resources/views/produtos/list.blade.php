@@ -87,7 +87,7 @@
                                 <td>{{$p->unidade_venda}}</td>
                                 <td>{{$p->unidade_compra}}</td>
                                 <td>
-                                    <a href="#!" data-toggle="modal" data-target="#exampleModal" class="navi-link">
+                                    <a href="#!" data-toggle="modal" data-target="#modal-{{ $p->id }}" class="navi-link">
                                         <span class="navi-text">
                                             <span class="label label-xl label-inline label-light-primary">Editar</span>
                                         </span>
@@ -114,7 +114,7 @@
                                 </td>
                             </tr>
 
-                            <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal fade" id="modal-{{ $p->id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-xl" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">

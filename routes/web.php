@@ -44,7 +44,7 @@ Route::group(['prefix' => '/relatorios'], function(){
 	Route::get('/cobrancaPendente', 'RelatorioController@cobrancaPendente');
 
 	Route::get('/filtroLucro', 'RelatorioController@filtroLucro');
-	
+
 
 });
 
@@ -89,7 +89,7 @@ Route::group(['prefix' => '/info'], function(){
 	Route::get('/alterarEndereco/{id}', 'DeliveryController@alterarEndereco');
 	Route::post('/atualizarSenha', 'DeliveryController@atualizarSenha');
 	Route::post('/updateEndereco', 'DeliveryController@updateEndereco');
-	
+
 });
 
 Route::group(['prefix' => '/carrinho'], function(){
@@ -151,7 +151,7 @@ Route::group(['prefix' => '/pedidosDelivery'], function(){
 
 	Route::get('/mapa', 'PedidoDeliveryController@mapa');
 
-	
+
 });
 
 
@@ -209,7 +209,7 @@ Route::group(['prefix' => 'deliveryProduto'], function(){
 	Route::post('/saveImagem', 'DeliveryConfigProdutoController@saveImagem');
 	Route::post('/update', 'DeliveryConfigProdutoController@update');
 	Route::get('/pesquisa', 'DeliveryConfigProdutoController@pesquisa');
-	
+
 });
 
 
@@ -391,7 +391,7 @@ Route::group(['prefix' => 'contasReceber'],function(){
 	Route::post('/receberSomente', 'ContaReceberController@receberSomente');
 	Route::post('/receberComDivergencia', 'ContaReceberController@receberComDivergencia');
 	Route::post('/receberComOutros', 'ContaReceberController@receberComOutros');
-	
+
 
 });
 
@@ -440,7 +440,7 @@ Route::group(['prefix' => 'vendasEmCredito'],function(){
 	Route::get('/receber', 'CreditoVendaController@receber');
 	Route::get('/delete/{id}', 'CreditoVendaController@delete');
 	Route::get('/somaVendas/{cliente_id}', 'CreditoVendaController@somaVendas');
-	
+
 	Route::get('/emitirNFe', 'CreditoVendaController@emitirNFe');
 	Route::get('/filtro', 'CreditoVendaController@filtro');
 	Route::get('/apenasReceber', 'CreditoVendaController@apenasReceber');
@@ -521,7 +521,7 @@ Route::group(['prefix' => 'cte'],function(){
 
 	Route::get('/consultaChave', 'EmiteCteController@consultaChave');
 	Route::get('/chaveNfeDuplicada', 'CteController@chaveNfeDuplicada');
-	
+
 });
 
 Route::group(['prefix' => 'cteSefaz'],function(){
@@ -550,7 +550,7 @@ Route::group(['prefix' => 'mdfe'],function(){
 	Route::post('/salvar', 'MdfeController@salvar');
 	Route::post('/update', 'MdfeController@update');
 	Route::get('/filtro', 'MdfeController@filtro');
-	
+
 });
 
 Route::group(['prefix' => 'mdfeSefaz'],function(){
@@ -576,7 +576,7 @@ Route::group(['prefix' => 'nfce'],function(){
 	Route::get('/consultar/{id}', 'NFCeController@consultar');
 	Route::get('/baixarXml/{id}', 'NFCeController@baixarXml');
 	Route::get('/gerarXml/{id}', 'NFCeController@gerarXml');
-	
+
 	// Route::post('/consultar', 'NotaFiscalController@consultar');
 	// Route::get('/teste', 'NotaFiscalController@teste');
 });
@@ -590,7 +590,7 @@ Route::group(['prefix' => 'clientes'],function(){
 	Route::get('/verificaLimite', 'ClienteController@verificaLimite');
 	Route::get('/find/{id}', 'ClienteController@find');
 	Route::get('/pesquisa', 'ClienteController@pesquisa');
-	
+
 	Route::post('/request', 'ClienteController@request');
 	Route::post('/save', 'ClienteController@save');
 	Route::post('/update', 'ClienteController@update');
@@ -613,11 +613,11 @@ Route::group(['prefix' => 'clientesDelivery'],function(){
 	Route::get('/favoritos/{id}', 'ClienteDeliveryController@favoritos');
 	Route::get('/push/{id}', 'ClienteDeliveryController@push');
 	Route::post('/updateEndereco', 'ClienteDeliveryController@updateEndereco');
-	
+
 	Route::get('/pesquisa', 'ClienteDeliveryController@pesquisa');
 
 	Route::get('/alterarStatus/{id}', 'ClienteDeliveryController@alterarStatus');
-	
+
 });
 
 
@@ -628,7 +628,7 @@ Route::group(['prefix' => 'transportadoras'],function(){
 	Route::get('/new', 'TransportadoraController@new');
 	Route::get('/all', 'TransportadoraController@all');
 	Route::get('/find/{id}', 'TransportadoraController@find');
-	
+
 	Route::post('/save', 'TransportadoraController@save');
 	Route::post('/update', 'TransportadoraController@update');
 });
@@ -734,7 +734,7 @@ Route::group(['prefix' => 'ordemServico'],function(){
 	Route::get('/alterarEstado/{id}', 'OrderController@alterarEstado');
 	Route::post('/alterarEstado', 'OrderController@alterarEstadoPost');
 	Route::get('/filtro', 'OrderController@filtro');
-	
+
 	Route::post('/addRelatorio', 'OrderController@saveRelatorio');
 	Route::post('/updateRelatorio', 'OrderController@updateRelatorio');
 	Route::get('/cashFlowFilter', 'OrderController@cashFlowFilter');
@@ -750,7 +750,7 @@ Route::group(['prefix' => 'ordemServico'],function(){
 
 	Route::get('/alterarStatusServico/{id}', 'OrderController@alterarStatusServico');
 	Route::get('/imprimir/{id}', 'OrderController@imprimir');
-	
+
 });
 
 Route::group(['prefix' => 'semRegistro'],function(){
@@ -810,7 +810,7 @@ Route::group(['prefix' => 'compras'],function(){
 	Route::get('/produtosSemValidade', 'PurchaseController@produtosSemValidade');
 	Route::post('/salvarValidade', 'PurchaseController@salvarValidade');
 	Route::get('/validadeAlerta', 'PurchaseController@validadeAlerta');
-	
+
 
 });
 
@@ -833,7 +833,7 @@ Route::group(['prefix' => 'cotacao'],function(){
 	Route::get('/', 'CotacaoController@index');
 	Route::get('/new', 'CotacaoController@new');
 	Route::post('/salvar', 'CotacaoController@salvar');
-	
+
 	Route::get('/deleteItem/{id}', 'CotacaoController@deleteItem');
 	Route::get('/delete/{id}', 'CotacaoController@delete');
 	Route::get('/edit/{id}', 'CotacaoController@edit');
@@ -1100,7 +1100,7 @@ Route::group(['prefix' => 'listaDePrecos'], function(){
 	Route::get('/editValor/{id}', 'ListaPrecoController@editValor');
 
 	Route::post('/salvarPreco', 'ListaPrecoController@salvarPreco');
-	
+
 	Route::get('/pesquisa', 'ListaPrecoController@pesquisa');
 	Route::get('/filtro', 'ListaPrecoController@filtro');
 

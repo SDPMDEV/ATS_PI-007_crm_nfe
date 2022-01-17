@@ -1464,7 +1464,7 @@ function emitirNFCe(vendaId){
 		dataType: 'json',
 		data: {
 			vendaId: vendaId,
-			_token: token
+			_token: token,
 		},
 		success: function(e){
 			$('#modal-cpf-nota').modal('hide')

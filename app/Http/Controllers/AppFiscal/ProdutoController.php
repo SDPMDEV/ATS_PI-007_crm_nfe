@@ -70,7 +70,7 @@ class ProdutoController extends Controller
 				'unidade_venda' => $request->unidade_venda,
 				'composto' => false,
 				'codBarras' => $request->codBarras ?? 'SEM GTIN',
-				'conversao_unitaria' => 1,
+				'conversao_unitaria' => 1, 
 				'valor_livre' => $request->valor_livre ?? false,
 				'perc_icms' => $request->perc_icms,
 				'perc_pis' => $request->perc_pis,
