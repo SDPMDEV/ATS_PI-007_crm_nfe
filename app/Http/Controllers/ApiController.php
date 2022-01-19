@@ -39,7 +39,7 @@ use ZipArchive;
 use NFePHP\DA\NFe\Danfce;
 use NFePHP\DA\NFe\Cupom;
 
-class ApiController extends Controller
+class ApiController extends \NFePHP\DA\NFe\Danfe
 {
     private $token;
 
@@ -644,7 +644,7 @@ class ApiController extends Controller
 			}
 
 			$d->data_emissao = \Carbon\Carbon::parse($d->data_emissao)->format('d/m/Y H:i:s');
-			
+
 			if($d->tipo == 0){
 				$d->estado = "--";
 			}else if($d->tipo == 1){
@@ -657,7 +657,7 @@ class ApiController extends Controller
 				$d->estado = "Operação não realizada";
 			}
 		}
-		
+
 		return response()->json([
 			'docs' => $arrayDocs,
 			'dfeJS' => $arrayDocs,
@@ -688,7 +688,7 @@ class ApiController extends Controller
 		}
 
 
-		$docs = ManifestaDfe::orderBy('id', 'desc')->get();  
+		$docs = ManifestaDfe::orderBy('id', 'desc')->get();
 		$arrayDocs = [];
 
 		foreach($docs as $d){
@@ -731,7 +731,7 @@ class ApiController extends Controller
 			'data_final' => $dataFinal,
 			'data_inicial' => $dataInicial
 		]);
-		
+
 	}
 
 	private function validaNaoInserido($chave){
@@ -789,8 +789,8 @@ class ApiController extends Controller
 		$cidade = Cidade::getCidadeCod($xml->NFe->infNFe->emit->enderEmit->cMun);
 		$fornecedor = [
 			'cpf' => $xml->NFe->infNFe->emit->CPF,
-			'cnpj' => $xml->NFe->infNFe->emit->CNPJ,  				
-			'razaoSocial' => $xml->NFe->infNFe->emit->xNome, 				
+			'cnpj' => $xml->NFe->infNFe->emit->CNPJ,
+			'razaoSocial' => $xml->NFe->infNFe->emit->xNome,
 			'nomeFantasia' => $xml->NFe->infNFe->emit->xFant ?? $xml->NFe->infNFe->emit->xNome,
 			'logradouro' => $xml->NFe->infNFe->emit->enderEmit->xLgr,
 			'numero' => $xml->NFe->infNFe->emit->enderEmit->nro,
@@ -856,7 +856,7 @@ class ApiController extends Controller
 	private function getInfosDaNFe($xml)
 	{
 		$chave = substr($xml->NFe->infNFe->attributes()->Id, 3, 44);
-		$vFrete = number_format((double) $xml->NFe->infNFe->total->ICMSTot->vFrete, 
+		$vFrete = number_format((double) $xml->NFe->infNFe->total->ICMSTot->vFrete,
 			2, ",", ".");
 		$vDesc = number_format((double) $xml->NFe->infNFe->total->ICMSTot->vDesc, 2, ",", ".");
 		return [
@@ -871,7 +871,7 @@ class ApiController extends Controller
 
 	private function getFaturaDaNFe($xml){
 		if (!empty($xml->NFe->infNFe->cobr->dup))
-		{	
+		{
 			$fatura = [];
 			$cont = 1;
 			foreach($xml->NFe->infNFe->cobr->dup as $dup) {
@@ -879,7 +879,7 @@ class ApiController extends Controller
 				$vencimento = $dup->dVenc;
 				$vencimento = explode('-', $vencimento);
 				$vencimento = $vencimento[2]."/".$vencimento[1]."/".$vencimento[0];
-				$vlr_parcela = number_format((double) $dup->vDup, 2, ",", ".");	
+				$vlr_parcela = number_format((double) $dup->vDup, 2, ",", ".");
 
 				$parcela = [
 					'numero' => $titulo,
@@ -945,13 +945,13 @@ class ApiController extends Controller
 		], 55);
 		try{
 			$response = $dfe_service->download($chave);
-			
+
 			$stz = new Standardize($response);
 			$std = $stz->toStd();
 			if ($std->cStat != 138) {
-				echo "Documento não retornado. [$std->cStat] $std->xMotivo" . ", aguarde alguns instantes e atualize a pagina!";  
+				echo "Documento não retornado. [$std->cStat] $std->xMotivo" . ", aguarde alguns instantes e atualize a pagina!";
 				die();
-			}    
+			}
 			$zip = $std->loteDistDFeInt->docZip;
 			$xml = gzdecode(base64_decode($zip));
 
@@ -1047,20 +1047,20 @@ class ApiController extends Controller
 		$manifestaAnterior = $this->verificaAnterior($request->chave);
 
 		if($evento == 1){
-			$res = $dfe_service->manifesta($request->chave,	 
+			$res = $dfe_service->manifesta($request->chave,
 				$manifestaAnterior != null ? ($manifestaAnterior->sequencia_evento + 1) : 1);
 		}else if($evento == 2){
-			$res = $dfe_service->confirmacao($request->chave,	 
+			$res = $dfe_service->confirmacao($request->chave,
 				$manifestaAnterior != null ? ($manifestaAnterior->sequencia_evento + 1) : 1);
 		}else if($evento == 3){
-			$res = $dfe_service->desconhecimento($request->chave,	 
+			$res = $dfe_service->desconhecimento($request->chave,
 				$manifestaAnterior != null ? ($manifestaAnterior->sequencia_evento + 1) : 1, $request->justificativa);
 		}else if($evento == 4){
-			$res = $dfe_service->operacaoNaoRealizada($request->chave,	 
+			$res = $dfe_service->operacaoNaoRealizada($request->chave,
 				$manifestaAnterior != null ? ($manifestaAnterior->sequencia_evento + 1) : 1, $request->justificativa);
 		}
 
-		if($res['retEvento']['infEvento']['cStat'] == '135') { 
+		if($res['retEvento']['infEvento']['cStat'] == '135') {
 
 			$manifesto = ManifestaDfe::where('chave', $request->chave)
 			->first();
@@ -1082,7 +1082,7 @@ class ApiController extends Controller
 				'message' => 'Já esta manifestado a chave ' . $request->chave
 			]);
 		}
-		
+
 	}
 
 	public function gerarNFe(Request $request)
@@ -1093,15 +1093,15 @@ class ApiController extends Controller
 
 		$nfe = new Make();
 		$stdInNFe = new \stdClass();
-		$stdInNFe->versao = '4.00'; 
-		$stdInNFe->Id = null; 
-		$stdInNFe->pk_nItem = ''; 
+		$stdInNFe->versao = '4.00';
+		$stdInNFe->Id = null;
+		$stdInNFe->pk_nItem = '';
 
 		$infNFe = $nfe->taginfNFe($stdInNFe);
 
 		$vendaLast = $request->lastId;
 		$lastNumero = $vendaLast;
-		
+
 		$stdIde = new \stdClass();
 		$stdIde->cUF = $config->cUF;
 		$stdIde->cNF = rand(11111,99999);
@@ -1157,7 +1157,7 @@ class ApiController extends Controller
 		$stdEnderEmit->xLgr = $config->logradouro;
 		$stdEnderEmit->nro = $config->numero;
 		$stdEnderEmit->xCpl = "";
-		
+
 		$stdEnderEmit->xBairro = $config->bairro;
 		$stdEnderEmit->cMun = $config->codMun;
 		$stdEnderEmit->xMun = $config->municipio;
@@ -1181,7 +1181,7 @@ class ApiController extends Controller
 			}else{
 				$stdDest->indIEDest = "1";
 			}
-			
+
 		}else{
 			$stdDest->indIEDest = "9";
 		}
@@ -1200,7 +1200,7 @@ class ApiController extends Controller
 		}
 		else{
 			$stdDest->CPF = $cnpj_cpf;
-		} 
+		}
 
 		$dest = $nfe->tagdest($stdDest);
 
@@ -1308,12 +1308,12 @@ class ApiController extends Controller
 			// ICMS
 			if($produto->perc_iss == 0) {
 				// regime normal
-				if($tributacao->regime == 1){ 
+				if($tributacao->regime == 1){
 
 				//$venda->produto->CST  CST
 
 					$stdICMS = new \stdClass();
-					$stdICMS->item = $itemCont; 
+					$stdICMS->item = $itemCont;
 					$stdICMS->orig = 0;
 					$stdICMS->CST = $produto->CST_CSOSN;
 					$stdICMS->modBC = 0;
@@ -1330,17 +1330,17 @@ class ApiController extends Controller
 						$VBC += $stdProd->vProd;
 					}
 
-					$somaICMS += (($produto->valor * $produto->quantidade) 
+					$somaICMS += (($produto->valor * $produto->quantidade)
 						* ($stdICMS->pICMS/100));
 					$ICMS = $nfe->tagICMS($stdICMS);
 					// regime simples
-				} else { 
+				} else {
 
 				//$venda->produto->CST CSOSN
 
 					$stdICMS = new \stdClass();
 
-					$stdICMS->item = $itemCont; 
+					$stdICMS->item = $itemCont;
 					$stdICMS->orig = 0;
 					$stdICMS->CSOSN = $produto->CST_CSOSN;
 
@@ -1364,7 +1364,7 @@ class ApiController extends Controller
 
 
 				$std = new \stdClass();
-				$std->item = $itemCont; 
+				$std->item = $itemCont;
 				$std->vBC = $stdProd->vProd;
 				$std->vAliq = $produto->perc_iss;
 				$std->vISSQN = $this->format($valorIss);
@@ -1378,24 +1378,24 @@ class ApiController extends Controller
 
 				//PIS
 			$stdPIS = new \stdClass();
-			$stdPIS->item = $itemCont; 
+			$stdPIS->item = $itemCont;
 			$stdPIS->CST = $produto->CST_PIS;
 			$stdPIS->vBC = $this->format($produto->perc_pis) > 0 ? $stdProd->vProd : 0.00;
 			$stdPIS->pPIS = $this->format($produto->perc_pis);
-			$stdPIS->vPIS = $this->format(($stdProd->vProd * $produto->quantidade) * 
+			$stdPIS->vPIS = $this->format(($stdProd->vProd * $produto->quantidade) *
 				($produto->perc_pis/100));
 			$PIS = $nfe->tagPIS($stdPIS);
 
 				//COFINS
 			$stdCOFINS = new \stdClass();
-			$stdCOFINS->item = $itemCont; 
+			$stdCOFINS->item = $itemCont;
 			$stdCOFINS->CST = $produto->CST_COFINS;
 			$stdCOFINS->vBC = $this->format($produto->perc_cofins) > 0 ? $stdProd->vProd : 0.00;
 			// $stdCOFINS->qBCProd = '0.00';
 			// $stdCOFINS->vAliqProd = '0.00';
 
 			$stdCOFINS->pCOFINS = $this->format($produto->perc_cofins);
-			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $produto->quantidade) * 
+			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $produto->quantidade) *
 				($produto->perc_cofins/100));
 			$COFINS = $nfe->tagCOFINS($stdCOFINS);
 
@@ -1403,9 +1403,9 @@ class ApiController extends Controller
 				//IPI
 
 			$std = new \stdClass();
-			$std->item = $itemCont; 
+			$std->item = $itemCont;
 				//999 – para tributação normal IPI
-			$std->cEnq = '999'; 
+			$std->cEnq = '999';
 			$std->CST = $produto->CST_IPI;
 			$std->vBC = $this->format($produto->perc_ipi) > 0 ? $stdProd->vProd : 0.00;
 			$std->pIPI = $this->format($produto->perc_ipi);
@@ -1419,9 +1419,9 @@ class ApiController extends Controller
 
 			if(strlen($produto->descricao_anp) > 5){
 				$stdComb = new \stdClass();
-				$stdComb->item = $itemCont; 
+				$stdComb->item = $itemCont;
 				$stdComb->cProdANP = $produto->codigo_anp;
-				$stdComb->descANP = $produto->descricao_anp; 
+				$stdComb->descANP = $produto->descricao_anp;
 				$stdComb->UFCons = $request->cliente->cidade->uf;
 
 				$nfe->tagcomb($stdComb);
@@ -1433,7 +1433,7 @@ class ApiController extends Controller
 			$stdProd->CEST = $cest;
 			if(strlen($cest) > 0){
 				$std = new \stdClass();
-				$std->item = $itemCont; 
+				$std->item = $itemCont;
 				$std->CEST = $cest;
 				$nfe->tagCEST($std);
 			}
@@ -1462,9 +1462,9 @@ class ApiController extends Controller
 		$stdICMSTot->vOutro = 0.00;
 
 		if($request->frete){
-			$stdICMSTot->vNF = 
+			$stdICMSTot->vNF =
 			$this->format(($somaProdutos+$request->frete->valor+$somaIPI)-$request->desconto);
-		} 
+		}
 		else $stdICMSTot->vNF = $this->format($somaProdutos+$somaIPI-$request->desconto);
 
 		$stdICMSTot->vTotTrib = 0.00;
@@ -1572,7 +1572,7 @@ class ApiController extends Controller
 
 
 		$stdDetPag->tPag = $request->tipo_pagamento;
-		$stdDetPag->vPag = $request->tipo_pagamento != '90' ? $this->format($somaProdutos - $request->desconto) : 0.00; 
+		$stdDetPag->vPag = $request->tipo_pagamento != '90' ? $this->format($somaProdutos - $request->desconto) : 0.00;
 
 		if($request->tipo_pagamento == '03' || $request->tipo_pagamento == '04'){
 			$stdDetPag->CNPJ = '12345678901234';
@@ -1580,7 +1580,7 @@ class ApiController extends Controller
 			$stdDetPag->cAut = '3333333';
 			$stdDetPag->tpIntegra = 1;
 		}
-		$stdDetPag->indPag = $request->forma_pagamento == 'a_vista' ?  0 : 1; 
+		$stdDetPag->indPag = $request->forma_pagamento == 'a_vista' ?  0 : 1;
 
 		$detPag = $nfe->tagdetPag($stdDetPag);
 
@@ -1599,10 +1599,10 @@ class ApiController extends Controller
 		$std->email = getenv('RESP_EMAIL'); //E-mail da pessoa jurídica a ser contatada
 		$std->fone = getenv('RESP_FONE'); //Telefone da pessoa jurídica/física a ser contatada
 		$nfe->taginfRespTec($std);
-		
+
 		if(getenv("AUTXML")){
 			$std = new \stdClass();
-			$std->CNPJ = getenv("AUTXML"); 
+			$std->CNPJ = getenv("AUTXML");
 			$std->CPF = null;
 			$nfe->tagautXML($std);
 		}
@@ -1651,7 +1651,7 @@ class ApiController extends Controller
 				return "[$std->cStat] - $std->xMotivo";
 			}
 			sleep(1);
-			$recibo = $std->infRec->nRec; 
+			$recibo = $std->infRec->nRec;
 			$protocolo = $this->tools->sefazConsultaRecibo($recibo);
 			sleep(1);
 
@@ -1673,13 +1673,13 @@ class ApiController extends Controller
 
 	public function generateDanfe(Request $request)
 	{
-		
+
 		$request->produtos = json_decode(json_encode($request->produtos));
 		$request->frete = json_decode(json_encode($request->frete));
 		$request->cliente = json_decode(json_encode($request->cliente));
 		$request->natureza = json_decode(json_encode($request->natureza));
 
-		$nfe = $this->gerarNFe($request);	
+		$nfe = $this->gerarNFe($request);
 
 		if(!isset($nfe['erros_xml'])) {
 			$xml = $nfe['xml'];
@@ -1696,7 +1696,7 @@ class ApiController extends Controller
 				return response($pdf)->header('Content-Type', 'application/pdf');
 			} catch (\InvalidArgumentException $e) {
 				return response()->json(['error' => true, 'message' => "Ocorreu um erro durante o processamento :" . $e->getMessage()]);
-			} 
+			}
 		} else {
 			return response()->json(['error' => true, 'xml' => $nfe['erros_xml']]);
 		}
@@ -1709,12 +1709,13 @@ class ApiController extends Controller
 		$request->frete = json_decode(json_encode($request->frete));
 		$request->cliente = json_decode(json_encode($request->cliente));
 		$request->natureza = json_decode(json_encode($request->natureza));
-		
-		return $this->gerarNFe($request);	
+
+		return $this->gerarNFe($request);
 	}
 
 	public function gerarNf(Request $request)
 	{
+
 		$config = ConfigNota::first();
 
 		$cnpj = str_replace(".", "", $config->cnpj);
@@ -1733,12 +1734,12 @@ class ApiController extends Controller
 			"tokenIBPT" => "AAAAAAA",
 			"CSC" => $config->csc,
 			"CSCid" => $config->csc_id
-		]);	
+		]);
 
 		if ($request->estado == 'REJEITADO' || $request->estado == 'DISPONIVEL') {
 
 			header('Content-type: text/html; charset=UTF-8');
-			
+
 			$request->produtos = json_decode(json_encode($request->produtos));
 			$request->frete = json_decode(json_encode($request->frete));
 			$request->cliente = json_decode(json_encode($request->cliente));
@@ -1752,7 +1753,7 @@ class ApiController extends Controller
 				$resultado = $nfe_service->transmitir($signed, $nfe['chave']);
 
 				if(substr($resultado, 0, 4) != 'Erro') {
-					
+
 					$data = [
 						'error' => false,
 						'chave' => $nfe['chave'],
@@ -1760,7 +1761,7 @@ class ApiController extends Controller
 						'nfNumero' => $nfe['nNf']
 					];
 				} else {
-					
+
 					$data = [
 						'error' => true,
 						'estado' => 'REJEITADO'
@@ -1783,7 +1784,7 @@ class ApiController extends Controller
 			}
 
 		} else {
-			echo json_encode("Apro"); 
+			echo json_encode("Apro");
 		}
 	}
 
@@ -1826,7 +1827,7 @@ class ApiController extends Controller
 			]);
 		}
 	}
-	
+
 	public function cancelNfe(Request $request){
 
 		$config = ConfigNota::first();
@@ -1851,7 +1852,7 @@ class ApiController extends Controller
 
 
 		$nfe = $nfe_service->cancelarPelaChave($request->chave, $request->justificativa);
-		
+
 		if(!isset($nfe['erro'])) {
 
 			return response()->json(['error' => false, 'nfe' => $nfe], 200);
@@ -1859,9 +1860,9 @@ class ApiController extends Controller
 
 			return response()->json([ 'error' => false, 'nfe_data' => $nfe['data'] ]);
 		}
-		
+
 	}
-	
+
 	public function fixNfe(Request $request)
 	{
 
@@ -1893,7 +1894,7 @@ class ApiController extends Controller
 	private function getEmitente()
 	{
 		$config = ConfigNota::first();
-		
+
 		return [
 			'razao' => $config->razao_social,
 			'logradouro' => $config->logradouro,
@@ -1928,9 +1929,9 @@ class ApiController extends Controller
 				} catch (\InvalidArgumentException $e) {
 					return response()->json([
 						'error' => true,
-						'message' => "Ocorreu um erro durante o processamento :" . $e->getMessage()	
+						'message' => "Ocorreu um erro durante o processamento :" . $e->getMessage()
 					]);
-				}  
+				}
 			} else {
 				return response()->json([
 					'error' => true,
@@ -1996,7 +1997,7 @@ class ApiController extends Controller
 					'error' => true,
 					'message' => "Ocorreu um erro durante o processamento :" . $e->getMessage(),
 				]);
-			}  
+			}
 		} else {
 			return response()->json([
 				'error' => true,
@@ -2076,12 +2077,12 @@ class ApiController extends Controller
 			$danfe = new Danfe($xml);
 			$id = $danfe->monta($logo);
 			$pdf = $danfe->render();
-			
+
 			header('Content-Type: application/pdf');
 			file_put_contents($public.'pdf/DANFE_'.$chave.'.pdf',$pdf);
 		} catch (\InvalidArgumentException $e) {
 			echo "Ocorreu um erro durante o processamento :" . $e->getMessage();
-		}  
+		}
 	}
 
 	public function downloadXmlZip(Request $request)
@@ -2108,7 +2109,7 @@ class ApiController extends Controller
 		}
 	}
 
-	private function deletePdfEnvio($chave) 
+	private function deletePdfEnvio($chave)
 	{
 		$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 		unlink($public.'pdf/DANFE_'.$chave.'.pdf');
@@ -2117,7 +2118,7 @@ class ApiController extends Controller
 	public function factNfce(Request $request)
 	{
 		$config = ConfigNota::first();
-		$tributacao = Tributacao::first(); 
+		$tributacao = Tributacao::first();
 
 		$nfe = new Make();
 		$stdInNFe = new \stdClass();
@@ -2140,7 +2141,7 @@ class ApiController extends Controller
 
 		$stdIde->mod = 65;
 		$stdIde->serie = $config->numero_serie_nfce;
-		$stdIde->nNF = (int)$lastNumero+1; 
+		$stdIde->nNF = (int)$lastNumero+1;
 		$stdIde->dhEmi = date("Y-m-d\TH:i:sP");
 		$stdIde->dhSaiEnt = date("Y-m-d\TH:i:sP");
 		$stdIde->tpNF = 1;
@@ -2171,7 +2172,7 @@ class ApiController extends Controller
 		$cnpj = str_replace(".", "", $config->cnpj);
 		$cnpj = str_replace("/", "", $cnpj);
 		$cnpj = str_replace("-", "", $cnpj);
-		$stdEmit->CNPJ = $cnpj; 
+		$stdEmit->CNPJ = $cnpj;
 
 		$emit = $nfe->tagemit($stdEmit);
 
@@ -2251,7 +2252,7 @@ class ApiController extends Controller
 			$stdProd->qTrib = $produto->quantidade;
 			$stdProd->vUnTrib = $this->format($produto->valor);
 			$stdProd->indTot = 1;
-	
+
 			// if($venda->desconto > 0){
 			// 	$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
 			// }
@@ -2287,7 +2288,7 @@ class ApiController extends Controller
 			if($tributacao->regime == 1){ // regime normal
 
 				$stdICMS = new \stdClass();
-				$stdICMS->item = $itemCont; 
+				$stdICMS->item = $itemCont;
 				$stdICMS->orig = 0;
 				$stdICMS->CST = $produto->CST_CSOSN;
 				$stdICMS->modBC = 0;
@@ -2308,10 +2309,10 @@ class ApiController extends Controller
 				$ICMS = $nfe->tagICMS($stdICMS);
 
 			}else{ // regime simples
-				
+
 				$stdICMS = new \stdClass();
-				
-				$stdICMS->item = $itemCont; 
+
+				$stdICMS->item = $itemCont;
 				$stdICMS->orig = 0;
 				$stdICMS->CSOSN = $produto->CST_CSOSN;
 				$stdICMS->pCredSN = $this->format($produto->perc_icms);
@@ -2324,7 +2325,7 @@ class ApiController extends Controller
 
 
 			$stdPIS = new \stdClass();
-			$stdPIS->item = $itemCont; 
+			$stdPIS->item = $itemCont;
 			$stdPIS->CST = $produto->CST_PIS;
 			$stdPIS->vBC = $this->format($produto->perc_pis) > 0 ? $stdProd->vProd : 0.00;
 			$stdPIS->pPIS = $this->format($produto->perc_pis);
@@ -2333,19 +2334,19 @@ class ApiController extends Controller
 
 		//COFINS
 			$stdCOFINS = new \stdClass();
-			$stdCOFINS->item = $itemCont; 
+			$stdCOFINS->item = $itemCont;
 			$stdCOFINS->CST = $produto->CST_COFINS;
 			$stdCOFINS->vBC = $this->format($produto->perc_cofins) > 0 ? $stdProd->vProd : 0.00;
 			$stdCOFINS->pCOFINS = $this->format($produto->perc_cofins);
-			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $produto->quantidade) * 
+			$stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $produto->quantidade) *
 				($produto->perc_cofins/100));
 			$COFINS = $nfe->tagCOFINS($stdCOFINS);
 
 			if(strlen($produto->descricao_anp) > 5){
 				$stdComb = new \stdClass();
-				$stdComb->item = 1; 
+				$stdComb->item = 1;
 				$stdComb->cProdANP = $produto->codigo_anp;
-				$stdComb->descANP = $produto->descricao_anp; 
+				$stdComb->descANP = $produto->descricao_anp;
 				$stdComb->UFCons = $request->cliente->cidade->uf;
 
 				$nfe->tagcomb($stdComb);
@@ -2356,7 +2357,7 @@ class ApiController extends Controller
 			$stdProd->CEST = $cest;
 			if(strlen($cest) > 0){
 				$std = new \stdClass();
-				$std->item = $itemCont; 
+				$std->item = $itemCont;
 				$std->CEST = $cest;
 				$nfe->tagCEST($std);
 			}
@@ -2370,7 +2371,7 @@ class ApiController extends Controller
 		$stdICMSTot->vBCST = 0.00;
 		$stdICMSTot->vST = 0.00;
 		$stdICMSTot->vProd = $this->format($somaProdutos);
-		
+
 		$stdICMSTot->vFrete = 0.00;
 
 		$stdICMSTot->vSeg = 0.00;
@@ -2391,19 +2392,19 @@ class ApiController extends Controller
 
 		$transp = $nfe->tagtransp($stdTransp);
 
-		
+
 		$stdPag = new \stdClass();
 
-		$stdPag->vTroco = $this->format($request->troco); 
+		$stdPag->vTroco = $this->format($request->troco);
 
 		$pag = $nfe->tagpag($stdPag);
 
 		//Resp Tecnico
 		$stdResp = new \stdClass();
-		$stdResp->CNPJ = getenv('RESP_CNPJ'); 
+		$stdResp->CNPJ = getenv('RESP_CNPJ');
 		$stdResp->xContato= getenv('RESP_NOME');
-		$stdResp->email = getenv('RESP_EMAIL'); 
-		$stdResp->fone = getenv('RESP_FONE'); 
+		$stdResp->email = getenv('RESP_EMAIL');
+		$stdResp->fone = getenv('RESP_FONE');
 
 		$nfe->taginfRespTec($stdResp);
 
@@ -2412,7 +2413,7 @@ class ApiController extends Controller
 		$stdDetPag = new \stdClass();
 		$stdDetPag->indPag = 0;
 
-		$stdDetPag->tPag = $request->tipo_pagamento; 
+		$stdDetPag->tPag = $request->tipo_pagamento;
 		$stdDetPag->vPag = $this->format($stdICMSTot->vNF); //Obs: deve ser informado o valor pago pelo cliente
 
 		if($request->tipo_pagamento == '03' || $request->tipo_pagamento == '04'){
@@ -2442,7 +2443,7 @@ class ApiController extends Controller
 
 	public function generateNfce(Request $request)
 	{
-		
+
 		$config = ConfigNota::first();
 
 		$cnpj = str_replace(".", "", $config->cnpj);
@@ -2474,8 +2475,8 @@ class ApiController extends Controller
 			$nfce = $this->factNfce($request);
 
 			if(!isset($nfce['erros_xml'])){
-				
-				
+
+
 				$signed = $nfe_service->sign($nfce['xml']);
 				$resultado = $nfe_service->transmitirNfce($signed, $nfce['chave']);
 
@@ -2557,7 +2558,7 @@ class ApiController extends Controller
 		$request->itens = json_decode(json_encode($request->itens));
 
 		$cupom = new Cupom($request, $pathLogo);
-		
+
 		$cupom->monta();
 		$pdf = $cupom->render();
 
