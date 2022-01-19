@@ -2038,6 +2038,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 	{
 		if(!empty($request->sales_to_pdf)) {
 
+            $this->deleteLastZip();
+
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 
 			$zip = new ZipArchive();
@@ -2049,10 +2051,19 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
 			foreach ($request->sales_to_pdf as $id => $sale) {
 				$id++;
-				$this->criarPdfParaEnvio($sale['chave']);
 
-				$zip->addFile($public.'pdf/DANFE_'.$sale['chave'].'.pdf', "xml_e_pdf_".$id."/DANFE_" . $sale['chave'] . ".pdf");
-				$zip->addFile($public.'xml_nfe/'.$sale['chave'].'.xml', "xml_e_pdf_".$id."/XML_" . $sale['chave'] . ".xml");
+                if(!isset($sale['chave'])) {
+
+                    return response()->json([
+                        'error' => true,
+                        'message' => 'Uma das vendas selecionadas não possui XML para ser baixado. É necessário enviar a venda para gerar o XML'
+                    ]);
+                } else {
+                    $this->criarPdfParaEnvio($sale['chave']);
+
+                    $zip->addFile($public.'pdf/DANFE_'.$sale['chave'].'.pdf', "xml_e_pdf_".$id."/DANFE_" . $sale['chave'] . ".pdf");
+                    $zip->addFile($public.'xml_nfe/'.$sale['chave'].'.xml', "xml_e_pdf_".$id."/XML_" . $sale['chave'] . ".xml");
+                }
 			}
 
 			$zip->close();
@@ -2088,6 +2099,9 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 	public function downloadXmlZip(Request $request)
 	{
 		if(!empty($request->xmls)) {
+
+            $this->deleteLastZip();
+
 			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 
 			$zip = new ZipArchive();
@@ -2098,14 +2112,14 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 			}
 
 			foreach ($request->xmls as $id => $xml) {
-				$zip->addFile($public.'xml_nfe/'.$xml['chave'].'.xml', $xml['chave'] . ".xml");
+                $zip->addFile($public.'xml_nfe/'.$xml['chave'].'.xml', $xml['chave'] . ".xml");
 			}
 
 			$zip->close();
 
 			return response()->download($public.'xml_nfe/zip/XML_VENDAS.zip');
 		} else {
-			echo '<script>window.close()</script>';
+			die('<script>window.close()</script>');
 		}
 	}
 
@@ -2564,4 +2578,12 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
 		return response($pdf)->header('Content-Type', 'application/pdf');
 	}
+
+    private function deleteLastZip()
+    {
+        $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+
+        (file_exists($public.'xml_nfe/zip/XML_VENDAS.zip')) ?? unlink($public.'xml_nfe/zip/XML_VENDAS.zip');
+        (file_exists($public.'pdf/zip/DANFES_E_XML_PARA_EMAIL.zip')) ?? unlink($public.'pdf/zip/DANFES_E_XML_PARA_EMAIL.zip');
+    }
 }
