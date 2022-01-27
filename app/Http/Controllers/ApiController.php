@@ -60,7 +60,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
     private function getToken(): string
     {
-        return DB::table("api_table")->get(["token"])[0]->token;
+        return DB::table("fiscal_api_table")->get(["token"])[0]->token;
     }
 
     public function returnIssuer(Request $request)
@@ -78,7 +78,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 			"listaCSTPISCOFINS" => ConfigNota::listaCST_PIS_COFINS(),
 			"listaCSTIPI" => ConfigNota::listaCST_IPI(),
             "naturezas" => NaturezaOperacao::all(),
-            "certificado" => (!empty(DB::table("certificados")->get()->first())) ? true : false,
+            "certificado" => !empty(DB::table("fiscal_certificados")->get()->first()),
             "infoCerfificado" => $this->getInfoCertificado(Certificado::first()),
 			"listaPrecos" => ListaPreco::all(),
 			"estados_clientes" => Cliente::estados()
@@ -241,24 +241,24 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
 	private function tentativasCertificado($certificado)
 	{
-		$log = DB::table('log_certificados')->where('arquivo', $certificado)->first();
+		$log = DB::table('fiscal_log_certificados')->where('arquivo', $certificado)->first();
 
 		if($log == NULL) {
-			DB::table('log_certificados')->insert([
+			DB::table('fiscal_log_certificados')->insert([
 				'arquivo' => $certificado,
 				'tentativas' => 1
 			]);
 
 			return 1;
 		} else {
-			$all_logs = DB::select("select * from log_certificados");
+			$all_logs = DB::select("select * from fiscal_log_certificados");
 			foreach($all_logs as $log) {
 				if($log->arquivo == $certificado) {
 
 					$tentativas = $log->tentativas;
 					$tentativas++;
 
-					DB::table('log_certificados')->where("arquivo", $certificado)->update([
+					DB::table('fiscal_log_certificados')->where("arquivo", $certificado)->update([
 						'tentativas' => $tentativas
 					]);
 
@@ -363,7 +363,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 			$file = $request->file('file');
 			$temp = file_get_contents($file);
 
-			$all_logs = DB::select("select * from log_certificados");
+			$all_logs = DB::select("select * from fiscal_log_certificados");
 
 			foreach($all_logs as $log) {
 				if($log->arquivo == $temp) {
@@ -473,13 +473,14 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 		}
 	}
 
-    public function filtrarXml(Request $request){
-        $xml = Venda::
-        whereBetween('updated_at', [
+    public function filtrarXml(Request $request)
+    {
+        $xml = DB::table('sma_sales')->whereBetween('date', [
             $this->parseDate($request->data_inicial),
-            $this->parseDate($request->data_final, true)])
-            ->where('estado', 'APROVADO')
-            ->get();
+            $this->parseDate($request->data_final, true)
+        ])
+        ->where('pos', '=', 1)
+        ->where('estado', '=', 'APROVADO')->get();
 
         $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 
@@ -492,47 +493,55 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
                 foreach($xml as $x){
                     if(file_exists($public.'xml_nfe/'.$x->chave. '.xml'))
-                        $zip->addFile($public.'xml_nfe/'.$x->chave. '.xml', $x->path_xml);
+                        $zip->addFile($public.'xml_nfe/'.$x->chave. '.xml', $x->chave . ".xml");
                 }
                 $zip->close();
             }
-        }catch(\Exception $e){
-
+        } catch(\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => "Erro interno do servidor",
+                'exception' => $e->getMessage()
+            ]);
         }
 
+//        try {
+//            $xmlCte = DB::table('sma_sales')->whereBetween('date', [
+//                $this->parseDate($request->data_inicial),
+//                $this->parseDate($request->data_final, true)
+//            ])
+//            ->where('estado', '=', 'CANCELADA')
+//            ->where('sequencia_cce', '<>', null)
+//            ->where('sequencia_cce', '<>', 0)->get();
+//
+//            if(count($xmlCte) > 0){
+//                $zip_file = $public.'xmlcte.zip';
+//                $zip = new \ZipArchive();
+//                $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+//
+//                foreach($xmlCte as $x){
+//                    if(file_exists($public.'xml_cte/'.$x->chave. '.xml'))
+//                        $zip->addFile($public.'xml_cte/'.$x->chave. '.xml');
+//                }
+//                $zip->close();
+//
+//            }
+//        } catch(\Exception $e) {
+//            return response()->json([
+//                'error' => true,
+//                'message' => "Erro interno do servidor",
+//                'exception' => $e->getMessage()
+//            ]);
+//        }
+
         try{
-            $xmlCte = Cte::
-            whereBetween('updated_at', [
+            $xmlNfce = DB::table('sma_sales')->whereBetween('date', [
                 $this->parseDate($request->data_inicial),
-                $this->parseDate($request->data_final, true)])
-                ->where('estado', 'APROVADO')
-                ->get();
-
-            if(count($xmlCte) > 0){
-
-
-                $zip_file = $public.'xmlcte.zip';
-                $zip = new \ZipArchive();
-                $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-
-                foreach($xmlCte as $x){
-                    if(file_exists($public.'xml_cte/'.$x->chave. '.xml'))
-                        $zip->addFile($public.'xml_cte/'.$x->chave. '.xml', $x->path_xml);
-                }
-                $zip->close();
-
-            }
-        }catch(\Exception $e){
-
-        }
-
-        try{
-            $xmlNfce = VendaCaixa::
-            whereBetween('updated_at', [
-                $this->parseDate($request->data_inicial),
-                $this->parseDate($request->data_final, true)])
-                ->where('estado', 'APROVADO')
-                ->get();
+                $this->parseDate($request->data_final, true)
+            ])
+            ->where('estado', '=', 'APROVADO')
+            ->where('nfcNumero', '<>', null)
+            ->where('pos', '=', 1)->get();
 
             if(count($xmlNfce) > 0){
 
@@ -546,38 +555,45 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                 }
                 $zip->close();
             }
-        }catch(\Exception $e){
-
+        } catch(\Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => "Erro interno do servidor",
+                'exception' => $e->getMessage()
+            ]);
         }
 
-        $xmlMdfe = Mdfe::
-        whereBetween('updated_at', [
-            $this->parseDate($request->data_inicial),
-            $this->parseDate($request->data_final, true)])
-            ->where('estado', 'APROVADO')
-            ->get();
-
-        if(count($xmlMdfe) > 0){
-            try{
-
-                $zip_file = $public.'xmlmdfe.zip';
-                $zip = new \ZipArchive();
-                $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-
-                foreach($xmlMdfe as $x){
-                    if(file_exists($public.'xml_mdfe/'.$x->chave. '.xml')){
-                        $zip->addFile($public.'xml_mdfe/'.$x->chave. '.xml', $x->chave. '.xml');
-                    }
-                }
-                $zip->close();
-            }catch(\Exception $e){
-                // echo $e->getMessage();
-            }
-
-        }
+//        $xmlMdfe = Mdfe::
+//        whereBetween('updated_at', [
+//            $this->parseDate($request->data_inicial),
+//            $this->parseDate($request->data_final, true)])
+//            ->where('estado', 'APROVADO')
+//            ->get();
+//
+//        if(count($xmlMdfe) > 0){
+//            try{
+//
+//                $zip_file = $public.'xmlmdfe.zip';
+//                $zip = new \ZipArchive();
+//                $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+//
+//                foreach($xmlMdfe as $x){
+//                    if(file_exists($public.'xml_mdfe/'.$x->chave. '.xml')){
+//                        $zip->addFile($public.'xml_mdfe/'.$x->chave. '.xml', $x->chave. '.xml');
+//                    }
+//                }
+//                $zip->close();
+//            }catch(\Exception $e){
+//                return response()->json([
+//                    'error' => true,
+//                    'message' => "Erro interno do servidor"
+//                ]);
+//            }
+//
+//        }
 
         foreach($xmlNfce as $index => $value) {
-			$xmlNfce[$index]["razao_social"] = $this->getClientName($value->cliente_id);
+			$xmlNfce[$index]["razao_social"] = $this->getClientName($value->customer_id);
         }
 
         $dataInicial = str_replace("/", "-", $request->data_inicial);
@@ -586,8 +602,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
         return response()->json([
             'xml' => $xml,
             'xmlNfce' => $xmlNfce,
-            'xmlCte' => $xmlCte,
-            'xmlMdfe' => $xmlMdfe,
+//            'xmlCte' => $xmlCte,
+//            'xmlMdfe' => $xmlMdfe,
             'dataInicial' => $dataInicial,
             'dataFinal' => $dataFinal
         ]);
@@ -595,8 +611,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
     private function getClientName($id)
     {
-		foreach(Cliente::where('id', $id)->get(['razao_social']) as $dt) {
-			return $dt->razao_social;
+		foreach(DB::table('sma_companies')->where(['id', '=', $id])->get() as $dt) {
+			return $dt->name;
 		}
     }
 
@@ -2428,7 +2444,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 		$stdDetPag->indPag = 0;
 
 		$stdDetPag->tPag = $request->tipo_pagamento;
-		$stdDetPag->vPag = $this->format($stdICMSTot->vNF); //Obs: deve ser informado o valor pago pelo cliente
+		$stdDetPag->vPag = $this->format($request->valor_pago); //Obs: deve ser informado o valor pago pelo cliente
 
 		if($request->tipo_pagamento == '03' || $request->tipo_pagamento == '04'){
 			$stdDetPag->CNPJ = '12345678901234';

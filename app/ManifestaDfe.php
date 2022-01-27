@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ManifestaDfe extends Model
 {
+    protected $table = 'fiscal_manifesta_dves';
+
     protected $fillable = [
-		'chave', 'nome', 'documento', 'valor', 'num_prot', 'data_emissao', 
+		'chave', 'nome', 'documento', 'valor', 'num_prot', 'data_emissao',
 		'sequencia_evento', 'fatura_salva', 'tipo', 'nsu'
 	];
 

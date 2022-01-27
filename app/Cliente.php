@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cliente extends Model
 {
+    protected $table = 'fiscal_clientes';
+
 	protected $fillable = [
 		'razao_social', 'nome_fantasia', 'bairro', 'numero', 'rua', 'cpf_cnpj', 'telefone', 'celular', 'email', 'cep', 'ie_rg', 'consumidor_final', 'limite_venda', 'cidade_id', 'contribuinte', 'rua_cobranca', 'numero_cobranca', 'bairro_cobranca', 'cep_cobranca', 'cidade_cobranca_id'
 	];
@@ -43,7 +45,7 @@ class Cliente extends Model
 			"SE",
 			"SP",
 			"TO",
-			
+
 		];
 	}
 }

@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class ConfigNota extends Model
 {
+    protected $table = 'fiscal_config_notas';
+
     protected $fillable = [
         'razao_social', 'nome_fantasia', 'cnpj', 'ie', 'logradouro',
         'numero', 'bairro', 'municipio', 'codMun', 'pais', 'codPais',
-        'fone', 'cep', 'UF', 'CST_CSOSN_padrao', 'CST_COFINS_padrao', 'CST_PIS_padrao', 
-        'CST_IPI_padrao', 'frete_padrao', 'tipo_pagamento_padrao', 'nat_op_padrao', 'ambiente', 
+        'fone', 'cep', 'UF', 'CST_CSOSN_padrao', 'CST_COFINS_padrao', 'CST_PIS_padrao',
+        'CST_IPI_padrao', 'frete_padrao', 'tipo_pagamento_padrao', 'nat_op_padrao', 'ambiente',
         'cUF', 'ultimo_numero_nfe', 'ultimo_numero_nfce', 'ultimo_numero_cte', 'ultimo_numero_mdfe',
         'numero_serie_nfe', 'numero_serie_nfce', 'csc', 'csc_id', 'certificado_a3'
     ];
@@ -71,10 +73,10 @@ public static function listaCST_PIS_COFINS(){
         '03' => 'Operação Tributável com Alíquota por Unidade de Medida de Produto',
         '04' => 'Operação Tributável Monofásica – Revenda a Alíquota Zero',
         '05' => 'Operação Tributável por Substituição Tributária',
-        '06' => 'Operação Tributável a Alíquota Zero', 
-        '07' => 'Operação Isenta da Contribuição', 
-        '08' => 'Operação sem Incidência da Contribuição', 
-        '09' => 'Operação com Suspensão da Contribuição', 
+        '06' => 'Operação Tributável a Alíquota Zero',
+        '07' => 'Operação Isenta da Contribuição',
+        '08' => 'Operação sem Incidência da Contribuição',
+        '09' => 'Operação com Suspensão da Contribuição',
         '49' => 'Outras Operações de Saída'
     ];
 }
