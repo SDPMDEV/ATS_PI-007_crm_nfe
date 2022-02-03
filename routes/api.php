@@ -255,3 +255,8 @@ Route::get('/download_xml_zip', 'ApiController@downloadXmlZip');
 Route::post('/generate_nfce', 'ApiController@generateNfce');
 Route::get('/print_nfce', 'ApiController@printNfce');
 Route::get('/generate_cupom', 'ApiController@generateCupom');
+
+Route::prefix('mercado_pago')->group(function () {
+    Route::post('/make_payment', "MercadoPagoController@makePayment");
+    Route::post('/get_notification', "MercadoPagoController@getNotification");
+});
