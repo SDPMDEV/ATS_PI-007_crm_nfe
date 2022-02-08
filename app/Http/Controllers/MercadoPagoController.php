@@ -104,10 +104,9 @@ class MercadoPagoController extends Controller
 
     /**
      * @param Request $request
-     * @param string $sale_id
-     * @return Application|Redirector|RedirectResponse|void
+     * @return JsonResponse|mixed
      */
-    public function getNotification(Request $request, string $sale_id)
+    public function getNotification(Request $request)
     {
         if($request->collection_id) {
             $curl = curl_init();
@@ -126,9 +125,12 @@ class MercadoPagoController extends Controller
             $payment_info = json_decode(curl_exec($curl), true);
             curl_close($curl);
 
-            return redirect('/cart/checkout/?' . http_build_query($payment_info));
+            return $payment_info;
         }
 
-        return redirect('/cart/checkout/?' . 'error=1');
+        return response()->json([
+             'error' => true,
+             'message' => 'Identificador da venda não informado'
+        ]);
     }
 }
