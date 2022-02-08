@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\DB;
 use MercadoPago\SDK;
 use MercadoPago\Preference;
@@ -50,52 +53,61 @@ class MercadoPagoController extends Controller
      */
     public function makePayment(Request $request) : JsonResponse
     {
-        if(!empty($request->all()) && !empty($request->title)) {
-            SDK::setAccessToken($this->access_token);
+        try {
+            if(!empty($request->all()) && !empty($request->title)) {
+                SDK::setAccessToken($this->access_token);
 
-            $preference = new Preference();
-            $item = new item();
+                $preference = new Preference();
+                $item = new item();
 
-            $item->title = $request->title;
-            $item->quantity = $request->quantity;
-            $item->unit_price = (double)$request->unit_price;
+                $item->title = $request->title;
+                $item->quantity = $request->quantity;
+                $item->unit_price = (double)$request->unit_price;
 
-            $preference->items = array($item);
-            $preference->back_urls = [
-                'success' => $request->success_url,
-                'failure' => $request->failure_url,
-                'pending' => $request->pending_url
-            ];
+                $preference->items = array($item);
+                $preference->back_urls = [
+                    'success' => $request->success_url,
+                    'failure' => $request->failure_url,
+                    'pending' => $request->pending_url
+                ];
 
-            $preference->notification_url = url('/api/mercado_pago/get_notification');
-            $preference->external_reference = $request->sale_id;
+                $preference->notification_url = url('/api/mercado_pago/get_notification');
+                $preference->external_reference = $request->sale_id;
 
-            if ($preference->save()) {
+                if ($preference->save()) {
 
-                return response()->json([
-                    'error' => false,
-                    'link' => $preference->init_point
-                ]);
-            } else {
-                return response()->json([
-                    'error' => true,
-                    'message' => $preference->error,
-                    'causes' => $preference->error->causes
-                ]);
+                    return response()->json([
+                        'error' => false,
+                        'link' => $preference->init_point
+                    ]);
+                } else {
+                    return response()->json([
+                        'error' => true,
+                        'message' => $preference->error,
+                        'causes' => $preference->error->causes
+                    ]);
+                }
             }
-        }
 
-        return response()->json([
-            'error' => true,
-            'message' => 'Dados incompletos'
-        ]);
+            return response()->json([
+                'error' => true,
+                'message' => 'Dados incompletos'
+            ]);
+        } catch(\Exception $e) {
+
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 
     /**
      * @param Request $request
-     * @return JsonResponse
+     * @param string $sale_id
+     * @return Application|Redirector|RedirectResponse|void
      */
-    public function getNotification(Request $request)
+    public function getNotification(Request $request, string $sale_id)
     {
         if($request->collection_id) {
             $curl = curl_init();
@@ -114,9 +126,9 @@ class MercadoPagoController extends Controller
             $payment_info = json_decode(curl_exec($curl), true);
             curl_close($curl);
 
-            return response()->json(['error' => false, 'payment_info' => $payment_info]);
+            return redirect('/cart/checkout/?' . http_build_query($payment_info));
         }
 
-        return response()->json(['error' => true, 'message' => 'Id não encontrado']);
+        return redirect('/cart/checkout/?' . 'error=1');
     }
 }
