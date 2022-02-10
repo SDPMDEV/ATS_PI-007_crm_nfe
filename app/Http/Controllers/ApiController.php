@@ -81,7 +81,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
             "certificado" => !empty(DB::table("fiscal_certificados")->get()->first()),
             "infoCerfificado" => $this->getInfoCertificado(Certificado::first()),
 			"listaPrecos" => ListaPreco::all(),
-			"estados_clientes" => Cliente::estados()
+			"estados_clientes" => Cliente::estados(),
+            "unidadesDeMedida" => Produto::unidadesMedida()
         ]);
     }
 
