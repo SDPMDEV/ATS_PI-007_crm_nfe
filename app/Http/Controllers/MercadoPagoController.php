@@ -71,7 +71,7 @@ class MercadoPagoController extends Controller
                     'pending' => $request->pending_url
                 ];
 
-                $preference->notification_url = url('/api/mercado_pago/get_notification');
+                $preference->notification_url = str_replace("/api_fiscal", "", url('/order/details/'));
                 $preference->external_reference = $request->sale_id;
 
                 if ($preference->save()) {
@@ -119,13 +119,16 @@ class MercadoPagoController extends Controller
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => 'GET',
-                CURLOPT_HTTPHEADER => [ 'Authorization: Bearer' . $this->access_token ]
+                CURLOPT_HTTPHEADER => [ 'Authorization: Bearer ' . $this->access_token ]
             ]);
 
             $payment_info = json_decode(curl_exec($curl), true);
             curl_close($curl);
 
-            return $payment_info;
+            return response()->json([
+                'error' => false,
+                'mercado_pago' => $payment_info,
+            ]);
         }
 
         return response()->json([
