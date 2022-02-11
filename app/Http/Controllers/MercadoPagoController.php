@@ -73,6 +73,12 @@ class MercadoPagoController extends Controller
 
                 $preference->notification_url = str_replace("/api_fiscal", "", url('/order/details/'));
                 $preference->external_reference = $request->sale_id;
+                $preference->payment_methods = [
+                    "excluded_payment_types" => [
+                        ["id" => "pec"],
+                        ["id" => "digital_wallet"]
+                    ]
+                ];
 
                 if ($preference->save()) {
 
