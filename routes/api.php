@@ -259,4 +259,6 @@ Route::get('/generate_cupom', 'ApiController@generateCupom');
 Route::prefix('mercado_pago')->group(function () {
     Route::get('/make_payment', "MercadoPagoController@makePayment");
     Route::post('/get_notification', "MercadoPagoController@getNotification");
+    Route::post('/set_keys', "MercadoPagoController@setKeys");
+    Route::get('/get_keys', "MercadoPagoController@getKeys");
 });

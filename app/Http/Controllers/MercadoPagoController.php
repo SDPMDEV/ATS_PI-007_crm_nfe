@@ -142,4 +142,36 @@ class MercadoPagoController extends Controller
              'message' => 'Identificador da venda não informado'
         ]);
     }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function setKeys(Request $request)
+    {
+        if(isset($request->access_token) && !empty($request->access_token) &&
+            isset($request->public_key) && !empty($request->public_key)) {
+
+            if(putenv("MP_ACCESS_TOKEN=".$request->access_token) &&
+                putenv("MP_PUBLIC_KEY=".$request->public_key)) {
+                return response()->json([
+                    "error" => false,
+                    "message" => "Chave inserida com sucesso."
+                ]);
+            }
+        }
+
+        return response()->json([
+            "error" => true,
+            "message" => "Informe todas as chaves à serem inseridas."
+        ]);
+    }
+
+    public function getKeys()
+    {
+        return response()->json([
+            "access_token" => getenv("MP_ACCESS_TOKEN"),
+            "public_key" => getenv("MP_PUBLIC_KEY")
+        ]);
+    }
 }
