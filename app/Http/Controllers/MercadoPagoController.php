@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use Exception;
-use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\DB;
 use MercadoPago\SDK;
 use MercadoPago\Preference;
@@ -152,8 +149,8 @@ class MercadoPagoController extends Controller
         if(isset($request->access_token) && !empty($request->access_token) &&
             isset($request->public_key) && !empty($request->public_key)) {
 
-            if(putenv("MP_ACCESS_TOKEN=".$request->access_token) &&
-                putenv("MP_PUBLIC_KEY=".$request->public_key)) {
+            if($this->setEnv(["MP_ACCESS_TOKEN" => $request->access_token]) &&
+                $this->setEnv(["MP_PUBLIC_KEY" => $request->public_key])) {
                 return response()->json([
                     "error" => false,
                     "message" => "Chave inserida com sucesso."
@@ -170,8 +167,38 @@ class MercadoPagoController extends Controller
     public function getKeys()
     {
         return response()->json([
-            "access_token" => getenv("MP_ACCESS_TOKEN"),
-            "public_key" => getenv("MP_PUBLIC_KEY")
+            "access_token" => env("MP_ACCESS_TOKEN"),
+            "public_key" => env("MP_PUBLIC_KEY")
         ]);
+    }
+
+    public function setEnv(array $values)
+    {
+
+        $envFile = app()->environmentFilePath();
+        $str = file_get_contents($envFile);
+
+        if (count($values) > 0) {
+            foreach ($values as $envKey => $envValue) {
+
+                $str .= "\n"; // In case the searched variable is in the last line without \n
+                $keyPosition = strpos($str, "{$envKey}=");
+                $endOfLinePosition = strpos($str, "\n", $keyPosition);
+                $oldLine = substr($str, $keyPosition, $endOfLinePosition - $keyPosition);
+
+                // If key does not exist, add it
+                if (!$keyPosition || !$endOfLinePosition || !$oldLine) {
+                    $str .= "{$envKey}={$envValue}\n";
+                } else {
+                    $str = str_replace($oldLine, "{$envKey}={$envValue}", $str);
+                }
+
+            }
+        }
+
+        $str = substr($str, 0, -1);
+        if (!file_put_contents($envFile, $str)) return false;
+        return true;
+
     }
 }

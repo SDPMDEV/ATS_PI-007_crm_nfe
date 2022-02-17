@@ -262,3 +262,8 @@ Route::prefix('mercado_pago')->group(function () {
     Route::post('/set_keys', "MercadoPagoController@setKeys");
     Route::get('/get_keys', "MercadoPagoController@getKeys");
 });
+
+Route::prefix('sicoob')->group(function (){
+   Route::get('/get_key', "SicoobController@getKey");
+   Route::post('/set_key', "SicoobController@setKey");
+});
