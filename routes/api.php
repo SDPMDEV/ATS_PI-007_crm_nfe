@@ -266,4 +266,7 @@ Route::prefix('mercado_pago')->group(function () {
 Route::prefix('sicoob')->group(function (){
    Route::get('/get_key', "SicoobController@getKey");
    Route::post('/set_key', "SicoobController@setKey");
+   Route::post('/get_boleto', "SicoobController@getBoleto");
+   Route::get('/create_remessa', "SicoobController@createRemessa");
+   Route::get('/get_retorno', "SicoobController@getRetorno");
 });

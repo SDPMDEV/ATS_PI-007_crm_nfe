@@ -3,9 +3,15 @@
 namespace App\Http\Controllers;
 
 
+use Exception;
+use Faker\Provider\DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use OpenBoleto\Agente;
+use OpenBoleto\Banco\Sicoob;
+use CnabPHP\Remessa;
+use CnabPHP\Retorno;
 
 class SicoobController extends Controller
 {
@@ -81,5 +87,191 @@ class SicoobController extends Controller
         if (!file_put_contents($envFile, $str)) return false;
         return true;
 
+    }
+
+    public function getBoleto(Request $request)
+    {
+        $sacado = new Agente($request->customer_name, $request->customer_cpfcnpj, $request->customer_address, $request->customer_cep ?? '', $request->customer_city, $request->customer_uf);
+        $cedente = new Agente($request->issuer_name, $request->issuer_cpfcnpj, $request->issuer_address, $request->issuer_cep, $request->issuer_city, $request->issuer_uf);
+
+        $dataVenc = date('Y-m-d', strtotime(date('Y-m-d') . ' + ' . $request->venc_dias . ' days'));
+
+        if (isset($request->data_vencimento)) {
+            $dataVenc = date('Y-m-d', strtotime($dataVenc));
+        }
+
+        $boletoArr = [
+            // Parâmetros obrigatórios
+            'dataVencimento' => new \DateTime($dataVenc),
+            'valor' => doubleval($request->valor),
+            'sacado' => $sacado,
+            'cedente' => $cedente,
+            'agencia' => $request->agencia, // Até 4 dígitos
+            'carteira' => '1', // 1, 2 e 3
+            'modalidade' => '02', // 01, 02 e 05
+            'conta' => $request->conta, // Até 10 dígitos
+            'convenio' => $request->convenio, // Até 5 dígitos
+            'sequencial' => $request->sequencial, // Até 10 dígitos
+            'moraMulta' => doubleval($request->mora_multa),
+            'descontosAbatimentos' => doubleval($request->desconto),
+            'outrosAcrescimos' => doubleval($request->outro_acrescimo),
+            'especieDoc' => $request->especie,
+            'instrucoes' => $request->inst ?? [],
+            'logoPath' => $request->logo_path, // Logo da sua empresa
+            'descricaoDemonstrativo' => $request->descDemo ?? [],
+            'quantidade' => $request->quantidade,
+            'dataDocumento' => (isset($request->data_emissao)) ? $request->data_emissao : new \DateTime(),
+            'aceite' => 'N',
+            'valorUnitario' => doubleval($request->valor),
+            'numeroDocumento' => $request->num_doc,
+            'outrasDeducoes' => $request->outras_ded,
+            'valorCobrado' => $request->valor_cob,
+            //'usoBanco' => 'Uso banco',
+//            'layout' => 'layout.phtml',
+            //'logoPath' => 'http://boletophp.com.br/img/opensource-55x48-t.png',
+            //'sacadorAvalista' => new Agente('Antônio da Silva', '02.123.123/0001-11'),
+            // Parâmetros opcionais
+            // 'resourcePath' => '../resources',
+            //'moeda' => BancoDoBrasil::MOEDA_REAL,
+            //'dataProcessamento' => new DateTime(),
+            //'contraApresentacao' => true,
+            // 'agenciaDv' => 1,
+            // 'contaDv' => 2,
+            // Parâmetros recomendáveis
+        ];
+
+        $boleto = new Sicoob($boletoArr);
+
+        http_response_code(200);
+
+        return response()->json([
+            'boleto' => $boleto->getOutput(),
+            'vencimento' => $boleto->getDataVencimento()
+        ]);
+    }
+
+    public function createRemessa(Request $request)
+    {
+        $arquivo = new Remessa(756,'cnab240',array(
+
+            //Informações da emrpesa recebedora
+            'tipo_inscricao'  	=>	'2', // 1 para cpf, 2 cnpj
+            'numero_inscricao'	=>	$request->issuer_cnpj, // seu cpf ou cnpj completo
+            'agencia'       	=>	$request->agencia, // agencia sem o digito verificador
+            'agencia_dv'    	=>	$request->agencia_dv, // somente o digito verificador da agencia
+            'conta'         	=> 	$request->conta, // número da conta
+            'conta_dv'     		=> 	$request->conta_dv, // digito da conta
+            'nome_empresa' 		=>	$request->issuer_name, // seu nome de empresa
+            'numero_sequencial_arquivo'	=>	$request->sequencial,
+
+            'codigo_beneficiario'	=> $request->codigo_beneficiario, // codigo fornecido pelo banco
+            'codigo_beneficiario_dv'=> $request->codigo_beneficiario_dv, // codigo fornecido pelo banco
+
+            'situacao_arquivo' => 'T' // use T para teste e P para produção
+        ));
+        $lote  = $arquivo->addLote([ 'tipo_servico'=> '1' ]); // tipo_servico  = 1 para cobrança registrada, 2 para sem registro
+
+        $lote->inserirDetalhe([
+            //Registro 3P Dados do Boleto
+            'nosso_numero'      => $request->sequencial, // numero sequencial de boleto
+            //'nosso_numero_dv'   =>	1, // pode ser informado ou calculado pelo sistema
+            'parcela' 			=>	'01',
+            'modalidade'		=>	'1',
+            'tipo_formulario'	=>	'4',
+            'codigo_carteira'   =>	$request->codigo_carteira, // codigo da carteira
+            'carteira'   		=>	$request->codigo_carteira, // codigo da carteira
+            'seu_numero'        =>	$request->sequencial,// se nao informado usarei o nosso numero
+            'data_vencimento'   =>	date('Y-m-d', strtotime($request->data_emissao. ' + '.$request->venc_dias.' days')), // informar a data neste formato AAAA-MM-DD
+            'valor'             =>	$request->valor, // Valor do boleto como float valido em php
+            'cod_emissao_boleto'=>	'2', // tipo de emissao do boleto informar 2 para emissao pelo beneficiario e 1 para emissao pelo banco
+            'especie_titulo'    => 	$request->especie, // informar dm e sera convertido para codigo em qualquer laytou conferir em especie.php
+            'data_emissao'      => 	$request->data_emissao, // informar a data neste formato AAAA-MM-DD
+            'codigo_juros'		=>	'2', // Taxa por mês,
+            'data_juros'   	  	=> 	date('Y-m-d', strtotime($request->data_emissao. ' + '.$request->venc_dias.' days')), // data dos juros, mesma do vencimento
+            'vlr_juros'         => 	($request->mora_multa / 100) * $request->valor, // Valor do juros/mora informa 1% e o sistema recalcula a 0,03% por
+            // Você pode inserir desconto se houver, ou deixar em branco
+            //'codigo_desconto'	=>	'1',
+            //'data_desconto'		=> 	'2018-04-15', // inserir data para calcular desconto
+            //'vlr_desconto'		=> 	'0', // Valor do desconto
+//            'vlr_IOF'			=> 	'0',
+            'protestar'         => 	'1', // 1 = Protestar com (Prazo) dias, 3 = Devolver após (Prazo) dias
+            'prazo_protesto'    => 	'90', // Informar o numero de dias apos o vencimento para iniciar o protesto
+            'identificacao_contrato'	=>	"Contrato 32156",
+
+
+            // Registro 3Q [PAGADOR]
+            'tipo_inscricao'    => (strlen($request->customer_cpfcnpj) > 14) ? "2" : "1", //campo fixo, escreva '1' se for pessoa fisica, 2 se for pessoa juridica
+            'numero_inscricao'  => $request->customer_cpfcnpj,//cpf ou ncpj do pagador
+            'nome_pagador'      => $request->customer_name, // O Pagador é o cliente, preste atenção nos campos abaixo
+            'endereco_pagador'  => $request->customer_address,
+            'bairro_pagador'    => $request->customer_bairro,
+            'cep_pagador'       => $request->customer_cep, // com hífem
+            'cidade_pagador'    => $request->customer_city,
+            'uf_pagador'        => $request->customer_uf,
+
+            // Registro 3R Multas, descontos, etc
+            // Você pode inserir desconto se houver, ou deixar em branco, mas quando informar
+            // deve preencher os 3 campos: codigo, data e valor
+            'codigo_multa'		=>	'2', // Taxa por mês
+            'data_multa'   	  	=> 	date('Y-m-d', strtotime($request->data_emissao. ' + '.$request->venc_dias.' days')), // data dos juros, mesma do vencimento
+            'vlr_multa'         => 	($request->valor_venc / 100) * $request->valor, // Valor do juros de 2% ao mês
+
+            // Registro 3S3 Mensagens a serem impressas
+            'mensagem_sc_1' 	=> "Após venc. Mora 0,03%/dia e Multa 2,00%",
+            'mensagem_sc_2' 	=> "Não conceder desconto",
+            'mensagem_sc_3' 	=> "Sujeito a protesto após o vencimento",
+            'mensagem_sc_4' 	=> $request->issuer_name,
+
+        ]);
+
+        $remessa = utf8_decode($arquivo->getText()); // observar a header do seu php para não gerar comflitos de codificação de caracteres;
+
+        // Grava o arquivo
+        if ( file_put_contents($this->verificaPastas()->path.$arquivo->getFileName(), $remessa) ) {
+            $this->verificaPastas()->close();
+            return response()->json([
+                'error' => false,
+                'name' => $arquivo->getFileName()
+            ]);
+        }
+
+        return response()->json([ 'error' => true ]);
+    }
+
+    /* Função que pega o nome das pastas de acordo com o número do ano
+     * Caso as pastas não existam, serão criadas.
+     * Os arquivos de remessa serão organizados em ano/mês
+    */
+    private function verificaPastas()
+    {
+        date_default_timezone_set('America/Sao_Paulo');
+        $base_dir = dir(public_path() . '/remessas_sicoob/');
+
+        if (!is_dir($base_dir->path.date('Y').'/'.date('m').'/')){
+            mkdir ($base_dir->path.date('Y'), 0755);
+            mkdir($base_dir->path.date('Y').'/'.date('m'), 0755);
+        };
+        $base_dir = dir($base_dir->path.date('Y').'/'.date('m').'/');
+        //Retorna o caminho para guardar o arquivo
+        return $base_dir;
+    }
+
+    public function getRetorno(Request $request)
+    {
+        $fileContent = file_get_contents(public_path() . '/retornos_sicoob/' . $request->retorno);
+
+        $arquivo = new Retorno($fileContent);
+
+        $registros = $arquivo->getRegistros();
+        foreach($registros as $registro)
+        {
+            if($registro->R3U->codigo_movimento==6){
+                $nossoNumero   = $registro->nosso_numero;
+                $valorRecebido = $registro->R3U->vlr_pago;
+                $dataPagamento = $registro->R3U->data_ocorrencia;
+                $carteira      = $registro->carteira;
+                // você ja pode dar baixa
+            }
+        }
     }
 }
