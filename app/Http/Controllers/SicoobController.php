@@ -146,7 +146,7 @@ class SicoobController extends Controller
 
         return response()->json([
             'boleto' => $boleto->getOutput(),
-            'vencimento' => $boleto->getDataVencimento()
+            'vencimento' => $dataVenc
         ]);
     }
 
@@ -225,13 +225,14 @@ class SicoobController extends Controller
         ]);
 
         $remessa = utf8_decode($arquivo->getText()); // observar a header do seu php para não gerar comflitos de codificação de caracteres;
+        $arquivoNome = 'remessa_'.$request->sequencial . ".crm";
 
         // Grava o arquivo
-        if ( file_put_contents($this->verificaPastas()->path.$arquivo->getFileName(), $remessa) ) {
+        if ( file_put_contents($this->verificaPastas()->path.$arquivoNome, $remessa) ) {
             $this->verificaPastas()->close();
             return response()->json([
                 'error' => false,
-                'name' => $arquivo->getFileName()
+                'name' => 'remessa_'.$request->sequencial . ".crm"
             ]);
         }
 
