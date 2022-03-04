@@ -12,6 +12,8 @@ use OpenBoleto\Agente;
 use OpenBoleto\Banco\Sicoob;
 use CnabPHP\Remessa;
 use CnabPHP\Retorno;
+use PhpOffice\PhpSpreadsheet\Reader\Xls\RC4;
+use ZipArchive;
 
 class SicoobController extends Controller
 {
@@ -152,7 +154,7 @@ class SicoobController extends Controller
 
     public function createRemessa(Request $request)
     {
-        $arquivo = new Remessa(756,'cnab240',array(
+        $arquivo = new Remessa(756,'cnab400',array(
 
             //Informações da emrpesa recebedora
             'tipo_inscricao'  	=>	'2', // 1 para cpf, 2 cnpj
@@ -224,15 +226,15 @@ class SicoobController extends Controller
 
         ]);
 
-        $remessa = utf8_decode($arquivo->getText()); // observar a header do seu php para não gerar comflitos de codificação de caracteres;
-        $arquivoNome = 'remessa_'.$request->sequencial . ".crm";
+        $remessa = utf8_decode(trim($arquivo->getText())); // observar a header do seu php para não gerar comflitos de codificação de caracteres;
+        $arquivoNome = 'remessa_'.$request->sequencial . ".REM";
 
         // Grava o arquivo
         if ( file_put_contents($this->verificaPastas()->path.$arquivoNome, $remessa) ) {
             $this->verificaPastas()->close();
             return response()->json([
                 'error' => false,
-                'name' => 'remessa_'.$request->sequencial . ".crm"
+                'name' => 'remessa_'.$request->sequencial . ".REM"
             ]);
         }
 
@@ -261,18 +263,11 @@ class SicoobController extends Controller
     {
         $fileContent = file_get_contents(public_path() . '/retornos_sicoob/' . $request->retorno);
 
-        $arquivo = new Retorno($fileContent);
-
-        $registros = $arquivo->getRegistros();
-        foreach($registros as $registro)
-        {
-            if($registro->R3U->codigo_movimento==6){
-                $nossoNumero   = $registro->nosso_numero;
-                $valorRecebido = $registro->R3U->vlr_pago;
-                $dataPagamento = $registro->R3U->data_ocorrencia;
-                $carteira      = $registro->carteira;
-                // você ja pode dar baixa
-            }
+        try {
+            $arquivo = new Retorno($fileContent);
+            return response()->json(['error' => false, 'registros' => $arquivo->getRegistros()]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => true, 'message' => $e->getMessage()]);
         }
     }
 }
