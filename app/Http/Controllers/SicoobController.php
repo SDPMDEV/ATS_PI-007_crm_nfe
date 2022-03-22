@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 
+use ArUtil\I18N\Date;
 use Exception;
 use Faker\Provider\DateTime;
 use Illuminate\Http\JsonResponse;
@@ -109,42 +110,39 @@ class SicoobController extends Controller
             'sacado' => $sacado,
             'cedente' => $cedente,
             'agencia' => $request->agencia, // Até 4 dígitos
-            'carteira' => '1', // 1, 2 e 3
-            'modalidade' => '02', // 01, 02 e 05
+            'carteira' => $request->codigo_carteira, // 1, 2 e 3
+            'modalidade' => $request->modalidade, // 01, 02 e 05
             'conta' => $request->conta, // Até 10 dígitos
             'convenio' => $request->convenio, // Até 5 dígitos
             'sequencial' => $request->sequencial, // Até 10 dígitos
-            'moraMulta' => doubleval($request->mora_multa),
-            'descontosAbatimentos' => doubleval($request->desconto),
-            'outrosAcrescimos' => doubleval($request->outro_acrescimo),
-            'especieDoc' => $request->especie,
-            'instrucoes' => $request->inst ?? [],
             'logoPath' => $request->logo_path, // Logo da sua empresa
+            'contaDv' => $request->conta_dv,
+            'agenciaDv' => $request->agencia_dv,
             'descricaoDemonstrativo' => $request->descDemo ?? [],
-            'quantidade' => $request->quantidade,
+            'instrucoes' => $request->inst ?? [],
             'dataDocumento' => (isset($request->data_emissao)) ? $request->data_emissao : new \DateTime(),
-            'aceite' => 'N',
-            'valorUnitario' => doubleval($request->valor),
-            'numeroDocumento' => $request->num_doc,
-            'outrasDeducoes' => $request->outras_ded,
-            'valorCobrado' => $request->valor_cob,
-            //'usoBanco' => 'Uso banco',
-//            'layout' => 'layout.phtml',
-            //'logoPath' => 'http://boletophp.com.br/img/opensource-55x48-t.png',
-            //'sacadorAvalista' => new Agente('Antônio da Silva', '02.123.123/0001-11'),
-            // Parâmetros opcionais
-            // 'resourcePath' => '../resources',
-            //'moeda' => BancoDoBrasil::MOEDA_REAL,
             //'dataProcessamento' => new DateTime(),
             //'contraApresentacao' => true,
-            // 'agenciaDv' => 1,
-            // 'contaDv' => 2,
-            // Parâmetros recomendáveis
+            //'pagamentoMinimo' => 23.00,
+            'aceite' => 'N',
+            'CodigoBeneficiario' => $request->codigo_beneficiario,
+            'CodigoBeneficiarioDv' => $request->codigo_beneficiario_dv,
+            'especieDoc' => $request->especie,
+            'numeroDocumento' => $request->num_doc,
+            //'usoBanco' => 'Uso banco',
+            //'layout' => 'layout.phtml',
+            //'logoPath' => 'http://boletophp.com.br/img/opensource-55x48-t.png',
+            //'sacadorAvalista' => new Agente('Antônio da Silva', '02.123.123/0001-11'),
+            'descontosAbatimentos' => doubleval($request->desconto),
+            'moraMulta' => doubleval($request->mora_multa),
+            'outrasDeducoes' => $request->outras_ded,
+            'outrosAcrescimos' => doubleval($request->outro_acrescimo),
+            'valorCobrado' => $request->valor_cob,
+            'valorUnitario' => doubleval($request->valor),
+            'quantidade' => $request->quantidade,
         ];
 
         $boleto = new Sicoob($boletoArr);
-
-        http_response_code(200);
 
         return response()->json([
             'boleto' => $boleto->getOutput(),
@@ -169,7 +167,7 @@ class SicoobController extends Controller
             'codigo_beneficiario'	=> $request->codigo_beneficiario, // codigo fornecido pelo banco
             'codigo_beneficiario_dv'=> $request->codigo_beneficiario_dv, // codigo fornecido pelo banco
 
-            'situacao_arquivo' => 'T' // use T para teste e P para produção
+            'situacao_arquivo' => 'P' // use T para teste e P para produção
         ));
         $lote  = $arquivo->addLote([ 'tipo_servico'=> '1' ]); // tipo_servico  = 1 para cobrança registrada, 2 para sem registro
 
@@ -198,7 +196,7 @@ class SicoobController extends Controller
 //            'vlr_IOF'			=> 	'0',
             'protestar'         => 	'1', // 1 = Protestar com (Prazo) dias, 3 = Devolver após (Prazo) dias
             'prazo_protesto'    => 	'90', // Informar o numero de dias apos o vencimento para iniciar o protesto
-            'identificacao_contrato'	=>	"Contrato 32156",
+            'identificacao_contrato'	=>	$request->identificacao_contrato,
 
 
             // Registro 3Q [PAGADOR]
@@ -219,10 +217,10 @@ class SicoobController extends Controller
             'vlr_multa'         => 	($request->valor_venc / 100) * $request->valor, // Valor do juros de 2% ao mês
 
             // Registro 3S3 Mensagens a serem impressas
-            'mensagem_sc_1' 	=> "Após venc. Mora 0,03%/dia e Multa 2,00%",
-            'mensagem_sc_2' 	=> "Não conceder desconto",
-            'mensagem_sc_3' 	=> "Sujeito a protesto após o vencimento",
-            'mensagem_sc_4' 	=> $request->issuer_name,
+            'mensagem_sc_1' 	=> $request->inst1,
+            'mensagem_sc_2' 	=> $request->inst2,
+            'mensagem_sc_3' 	=> $request->inst3,
+            'mensagem_sc_4' 	=> $request->inst4,
 
         ]);
 
