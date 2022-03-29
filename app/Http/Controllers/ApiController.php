@@ -48,7 +48,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
         $this->token = $this->getToken();
 
         if((!isset($request->api_token) && $request->api_token != $this->token))
-            http_response_code(401);
+            return response()->json(["error" => "Unauthorized"], 401);
     }
 
     private function sanitizeString($str){
