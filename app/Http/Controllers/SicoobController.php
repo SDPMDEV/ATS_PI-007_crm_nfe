@@ -261,11 +261,18 @@ class SicoobController extends Controller
     {
         $fileContent = file_get_contents(public_path() . '/retornos_sicoob/' . $request->retorno);
 
-        try {
-            $arquivo = new Retorno($fileContent);
-            return response()->json(['error' => false, 'registros' => $arquivo->getRegistros()]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => true, 'message' => $e->getMessage()]);
+        $arquivo = new Retorno($fileContent);
+
+        $registros = $arquivo->getRegistros();
+        $boletoPagos = [];
+        foreach($registros as $registro) {
+            if($registro->R3U->codigo_movimento==6) {
+                $boletoPagos[] = [
+                    'nosso_numero' => $registro->nosso_numero,
+                    'vlr_pago' => $registro->R3U->vlr_pago
+                ];
+            }
         }
+        return response()->json(['error' => false, 'boletos' => $boletoPagos]);
     }
 }
