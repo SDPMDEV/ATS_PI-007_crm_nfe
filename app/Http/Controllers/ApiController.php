@@ -60,7 +60,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
     private function getToken(): string
     {
-        return DB::table("fiscal_api_table")->get(["token"])[0]->token;
+        return DB::table("fiscal_api_table")->get(["token"])[0]->token ?? "";
     }
 
     public function returnIssuer(Request $request)
