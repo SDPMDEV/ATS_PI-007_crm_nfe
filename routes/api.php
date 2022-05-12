@@ -240,6 +240,7 @@ Route::post('/get_download_configs/{chave}', "ApiController@getDonwloadConfigs")
 Route::post('/get_fiscal_settings', "ApiController@getFiscalSettings");
 Route::post('/manifest', "ApiController@manifest");
 Route::post('/generate_nfe', "ApiController@gerarNFe");
+Route::post('/import_xml', "ApiController@importXML");
 
 Route::get('/generate_danfe', 'ApiController@generateDanfe');
 Route::post('/generate_nf', 'ApiController@gerarNf');

@@ -2603,4 +2603,78 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
         (file_exists($public.'xml_nfe/zip/XML_VENDAS.zip')) ?? unlink($public.'xml_nfe/zip/XML_VENDAS.zip');
         (file_exists($public.'pdf/zip/DANFES_E_XML_PARA_EMAIL.zip')) ?? unlink($public.'pdf/zip/DANFES_E_XML_PARA_EMAIL.zip');
     }
+
+	public function importXML()
+    {
+		try {
+			$public = $_SERVER['DOCUMENT_ROOT'] . '/api_fiscal/public/';
+
+			$moveFile = move_uploaded_file($_FILES['xml_file']['tmp_name'], $public . 'xml_dfe/' . $_FILES['xml_file']['name']);
+
+			$file = $public . 'xml_dfe/' . $_FILES['xml_file']['name'];
+
+			if($moveFile) {
+				$config = ConfigNota::first();
+
+				$cnpj = str_replace(".", "", $config->cnpj);
+				$cnpj = str_replace("/", "", $cnpj);
+				$cnpj = str_replace("-", "", $cnpj);
+				$cnpj = str_replace(" ", "", $cnpj);
+
+
+				$dfe_service = new DFeService([
+					"atualizacao" => date('Y-m-d h:i:s'),
+					"tpAmb" => 1,
+					"razaosocial" => $config->razao_social,
+					"siglaUF" => $config->UF,
+					"cnpj" => $cnpj,
+					"schemes" => "PL_009_V4",
+					"versao" => "4.00",
+					"tokenIBPT" => "AAAAAAA",
+					"CSC" => $config->csc,
+					"CSCid" => $config->csc_id
+				], 55);
+				
+
+				$xml = simplexml_load_file($file);
+
+				if ($xml) {
+					$objXML = json_encode($xml);
+					$objXML = json_decode($objXML);
+
+					$res = ManifestaDfe::create([
+						'chave' => $objXML->protNFe->infProt->chNFe, 
+						'nome' => $objXML->NFe->infNFe->dest->xNome, 
+						'documento' => $objXML->NFe->infNFe->dest->CNPJ, 
+						'valor' => $objXML->NFe->infNFe->pag->detPag->tPag, 
+						'num_prot' => $objXML->protNFe->infProt->nProt, 
+						'data_emissao' => $objXML->NFe->infNFe->ide->dhEmi, 
+						'sequencia_evento' => 0, 
+						'fatura_salva' => 0, 
+						'tipo' => 1, 
+						'nsu' => 0
+					]);
+
+					if($res) {
+						return [
+							'error' => false,
+							'message' => 'Arquivo importado com sucesso!'
+						];
+					}
+				}
+			}
+
+			return [
+				'error' => true,
+				'message' => 'Erro ao importar arquivo xml.'
+			];
+
+		} catch(Exception $ex) {
+			return [
+				'error' => true,
+				'message' => $ex->getMessage()
+			];
+
+		}
+    }
 }
