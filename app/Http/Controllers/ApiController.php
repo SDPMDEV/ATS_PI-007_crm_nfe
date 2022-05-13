@@ -805,7 +805,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
 		$cidade = Cidade::getCidadeCod($xml->NFe->infNFe->emit->enderEmit->cMun);
 		$fornecedor = [
-			'cpf' => $xml->NFe->infNFe->emit->CPF,
+			'cpf' => $xml->NFe->infNFe->emit->CPF ?? '',
 			'cnpj' => $xml->NFe->infNFe->emit->CNPJ,
 			'razaoSocial' => $xml->NFe->infNFe->emit->xNome,
 			'nomeFantasia' => $xml->NFe->infNFe->emit->xFant ?? $xml->NFe->infNFe->emit->xNome,
@@ -819,34 +819,41 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 		];
 
 		$fornecedorEncontrado = $this->verificaFornecedor($xml->NFe->infNFe->emit->CNPJ);
-		if($fornecedorEncontrado){
-			$fornecedor['novo_cadastrado'] = false;
-		}else{
-			$fornecedor['novo_cadastrado'] = true;
-			$idFornecedor = $this->cadastrarFornecedor($fornecedor);
 
+		if ($fornecedorEncontrado){
+			$fornecedor['novo_cadastrado'] = false;
+		} else {
+			$fornecedor['novo_cadastrado'] = true;
+			$this->cadastrarFornecedor($fornecedor);
 		}
 
 		return $fornecedor;
 	}
 
+	private function cadastrarFornecedor($fornecedor){
+		
+		$result = Fornecedor::create([
+			'group_id' => '4',
+			'group_name' => 'supplier',
+			'name' => $fornecedor['nomeFantasia'],
+			'company' => $fornecedor['nomeFantasia'],
+			'cep' => $this->formataCep($fornecedor['cep']),
+			'cpf_cnpj' => $this->formataCnpj($fornecedor['cnpj']),
+			'ie_rg' => $fornecedor['ie'],
+			'phone' => $this->formataTelefone($fornecedor['fone']),
+			'email' => '*',
+			'city' => $fornecedor['cidade_id']
+		]);
+
+		return $result->id;
+	}
+
 	private function getItensDaNFe($xml){
 		$itens = [];
 		foreach($xml->NFe->infNFe->det as $item) {
-
-			$produto = Produto::verificaCadastrado($item->prod->cEAN,
-				$item->prod->xProd, $item->prod->cProd);
+			$produto = Produto::verificaCadastrado($item->prod->cEAN, $item->prod->xProd, $item->prod->cProd);
 
 			$produtoNovo = !$produto ? true : false;
-
-			$tp = null;
-			if($produto != null){
-				$tp = ItemDfe::
-				where('produto_id', $produto->id)
-				->where('numero_nfe', $xml->NFe->infNFe->ide->nNF)
-				->first();
-
-			}
 
 			$item = [
 				'codigo' => $item->prod->cProd,
@@ -858,12 +865,12 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 				'qCom' => $item->prod->qCom,
 				'codBarras' => $item->prod->cEAN,
 				'produtoNovo' => $produtoNovo,
-				'produto_id' => $produtoNovo ? null : $produto->id,
-				'produtoSetadoEstoque' => $tp != null ? true : false,
+				'id' => $produtoNovo ? null : $produto->id,
 				'produtoId' => $produtoNovo ? '0' : $produto->id,
 				'conversao_unitaria' => $produtoNovo ? '' : $produto->conversao_unitaria,
 				'cest' => ($item->prod->CEST) ? $item->prod->CEST : 0
 			];
+
 			array_push($itens, $item);
 		}
 
@@ -941,6 +948,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
 	public function getDonwloadConfigs($chave)
 	{
+		
 		$config = ConfigNota::first();
 
 		$cnpj = str_replace(".", "", $config->cnpj);
@@ -960,64 +968,66 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 			"CSC" => $config->csc,
 			"CSCid" => $config->csc_id
 		], 55);
-		try{
-			$response = $dfe_service->download($chave);
 
-			$stz = new Standardize($response);
-			$std = $stz->toStd();
-			if ($std->cStat != 138) {
-				echo "Documento não retornado. [$std->cStat] $std->xMotivo" . ", aguarde alguns instantes e atualize a pagina!";
-				die();
-			}
-			$zip = $std->loteDistDFeInt->docZip;
-			$xml = gzdecode(base64_decode($zip));
+		try {
+			$public = $_SERVER['DOCUMENT_ROOT'] . '/api_fiscal/public/';
+			$file = $public . 'xml_dfe/' . $chave . '.xml';
 
-			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-
-			file_put_contents($public.'xml_dfe/'.$chave.'.xml',$xml);
-			$nfe = simplexml_load_string($xml);
-			if(!$nfe) {
-				echo "Erro ao ler XML";
-			}else{
-
-				$fornecedor = $this->getFornecedorXML($nfe);
-				$itens = $this->getItensDaNFe($nfe);
-				$infos = $this->getInfosDaNFe($nfe);
-				$fatura = $this->getFaturaDaNFe($nfe);
-
-				$categorias = Categoria::all();
-				$unidadesDeMedida = Produto::unidadesMedida();
-
-				$listaCSTCSOSN = Produto::listaCSTCSOSN();
-				$listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
-				$listaCST_IPI = Produto::listaCST_IPI();
-				$config = ConfigNota::first();
-
-				$manifesto = ManifestaDfe::where('chave', $chave)->first();
-
-				$compra = Compra::
-				where('chave', $chave)
-				->first();
-
+			if(! file_exists($file)) {
 				return response()->json([
-					'fornecedor' => $fornecedor,
-					'itens' => $itens,
-					'infos' => $infos,
-					'dfeJS' => true,
-					'compraFiscal' => $compra != null ? true : false,
-					'fatura' => $fatura,
-					'listaCSTCSOSN' => $listaCSTCSOSN,
-					'listaCST_PIS_COFINS' => $listaCST_PIS_COFINS,
-					'listaCST_IPI' => $listaCST_IPI,
-					'categorias' => $categorias,
-					'config' => $config,
-					'fatura_salva' => $manifesto == null ? false : $manifesto->fatura_salva,
-					'unidadesDeMedida' => $unidadesDeMedida,
+					'error' => true,
+					'message' => "Arquivo XML nao encontrado!"
 				]);
 			}
-		}catch(\Exception $e){
-			echo "Erro de soap:<br>";
-			echo $e->getMessage();
+
+			$content = file_get_contents($file);
+			$nfe = simplexml_load_string($content);
+
+			if(!$nfe) {
+				return response()->json([
+					'error' => true,
+					'message' => "Ocorreu um erro ao ler o XML solicitado!"
+				]);
+			}
+
+			$fornecedor = $this->getFornecedorXML($nfe);
+			$itens = $this->getItensDaNFe($nfe);
+
+			$infos = $this->getInfosDaNFe($nfe);
+			$fatura = $this->getFaturaDaNFe($nfe);
+
+			$categorias = Categoria::all();
+			$unidadesDeMedida = Produto::unidadesMedida();
+
+			$listaCSTCSOSN = Produto::listaCSTCSOSN();
+			$listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
+			$listaCST_IPI = Produto::listaCST_IPI();
+			$config = ConfigNota::first();
+
+			$manifesto = ManifestaDfe::where('chave', $chave)->first();
+
+
+			return response()->json([
+				'fornecedor' => $fornecedor,
+				'itens' => $itens,
+				'infos' => $infos,
+				'dfeJS' => true,
+				'fatura' => $fatura,
+				'listaCSTCSOSN' => $listaCSTCSOSN,
+				'listaCST_PIS_COFINS' => $listaCST_PIS_COFINS,
+				'listaCST_IPI' => $listaCST_IPI,
+				'categorias' => $categorias,
+				'config' => $config,
+				'fatura_salva' => $manifesto == null ? false : $manifesto->fatura_salva,
+				'unidadesDeMedida' => $unidadesDeMedida,
+			]);
+
+		} catch (\Exception $e) {
+			return response()->json([
+				'error' => true,
+				'message' => "Erro interno",
+				'exception' => $e->getMessage() . ' ---> ' . $e->getLine()
+			]);
 		}
 	}
 
@@ -2677,4 +2687,12 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
 		}
     }
+
+	public function downloadDfeXML($chave)
+	{
+		$public = $_SERVER['DOCUMENT_ROOT'] . '/api_fiscal/public';
+		$file = "$public/xml_dfe/$chave.xml";
+
+		return response()->download($file);
+	}
 }

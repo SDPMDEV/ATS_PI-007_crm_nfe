@@ -4,6 +4,8 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use App\NaturezaOperacao;
+use Illuminate\Support\Facades\DB;
+
 class Produto extends Model
 {
 	protected $fillable = [
@@ -38,19 +40,15 @@ class Produto extends Model
 
 	public static function verificaCadastrado($ean, $nome, $referencia){
 		$result = null;
-		$result = Produto::
-		where('referencia', $referencia)
-		->first();
+		$result = DB::table('sma_products')->where('referencia', '=', $referencia)->first();
 
 		if(!$result){
-			$result = Produto::
-			where('nome', $nome)
-			->first();
+			$result = DB::table('sma_products')->where('name', '=', $nome)->first();
 		}
 
 		if(!$result){
-			$result = Produto::
-			where('codBarras', $ean)
+			$result = DB::table('sma_products')
+			->where('codBarras', '=', $ean)
 			->where('codBarras', '!=', 'SEM GTIN')
 			->first();
 		}

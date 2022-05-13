@@ -6,8 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Fornecedor extends Model
 {
+    public $timestamps = false;
+    
+    protected $table = 'sma_companies';
+
     protected $fillable = [
-        'razao_social', 'nome_fantasia', 'bairro', 'numero', 'rua', 'cpf_cnpj', 'telefone', 'celular', 'email', 'cep', 'ie_rg', 'cidade_id'
+        'group_id',
+        'group_name',
+        'name',
+        'company',
+        'ie_rg',
+        'cpf_cnpj',
+        'rua',
+        'city',
+        'state',
+        'cep',
+        'country',
+        'phone',
+        'email',
+        'logo'
     ];
 
     public function cidade(){
