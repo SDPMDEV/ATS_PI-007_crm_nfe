@@ -257,6 +257,7 @@ Route::post('/generate_nfce', 'ApiController@generateNfce');
 Route::get('/print_nfce', 'ApiController@printNfce');
 Route::get('/generate_cupom', 'ApiController@generateCupom');
 Route::get('/dfe/downloadXML/{chave}', 'ApiController@downloadDfeXML');
+Route::get('/dfe/imprimirDanfe/{chave}', 'ApiController@printDanfe');
 
 Route::prefix('mercado_pago')->group(function () {
     Route::get('/make_payment', "MercadoPagoController@makePayment");

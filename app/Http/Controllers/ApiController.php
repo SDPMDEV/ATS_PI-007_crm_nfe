@@ -38,6 +38,7 @@ use Mail;
 use ZipArchive;
 use NFePHP\DA\NFe\Danfce;
 use NFePHP\DA\NFe\Cupom;
+use PhpParser\Node\Expr;
 
 class ApiController extends \NFePHP\DA\NFe\Danfe
 {
@@ -2694,5 +2695,63 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 		$file = "$public/xml_dfe/$chave.xml";
 
 		return response()->download($file);
+	}
+
+	public function printDanfe($chave)
+	{
+		$config = ConfigNota::first();
+
+		$cnpj = str_replace(".", "", $config->cnpj);
+		$cnpj = str_replace("/", "", $cnpj);
+		$cnpj = str_replace("-", "", $cnpj);
+		$cnpj = str_replace(" ", "", $cnpj);
+
+		$dfe_service = new DFeService([
+			"atualizacao" => date('Y-m-d h:i:s'),
+			"tpAmb" => 1,
+			"razaosocial" => $config->razao_social,
+			"siglaUF" => $config->UF,
+			"cnpj" => $cnpj,
+			"schemes" => "PL_009_V4",
+			"versao" => "4.00",
+			"tokenIBPT" => "AAAAAAA",
+			"CSC" => $config->csc,
+			"CSCid" => $config->csc_id
+		], 55);
+
+		$response = $dfe_service->download($chave);
+		try {
+			$stz = new Standardize($response);
+			$std = $stz->toStd();
+
+			if ($std->cStat != 138) {
+				echo "
+				<div style='margin: 5rem; display: flex; align-items: center; justify-content: center;'>
+					<p style='font-family: Arial; font-size: 20px;'>Documento não retornado. [$std->cStat] $std->xMotivo" . ", aguarde alguns instantes e atualize a pagina!</p>
+				<div>
+				";  
+				die;
+			}    
+
+			$zip = $std->loteDistDFeInt->docZip;
+			$xml = gzdecode(base64_decode($zip));
+			
+			$public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+
+			file_put_contents($public.'xml_dfe/'.$chave.'.xml',$xml);
+			
+			$danfe = new Danfe($xml);
+			$id = $danfe->monta();
+			$pdf = $danfe->render();
+			header('Content-Type: application/pdf');
+			echo $pdf;
+
+		} catch (Exception $e) {
+			echo "
+			<div style='margin: 5rem; display: flex; align-items: center; justify-content: center;'>
+				<p style='font-family: Arial; font-size: 20px;'>Erro interno: " . $e->getMessage().", aguarde alguns instantes e atualize a pagina!</p>
+			<div>
+			";
+		}  
 	}
 }
