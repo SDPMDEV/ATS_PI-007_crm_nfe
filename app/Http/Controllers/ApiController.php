@@ -816,7 +816,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 			'cep' => $xml->NFe->infNFe->emit->enderEmit->CEP,
 			'fone' => $xml->NFe->infNFe->emit->enderEmit->fone,
 			'ie' => $xml->NFe->infNFe->emit->IE,
-			'cidade_id' => $cidade->id
+			'cidade' => $xml->NFe->infNFe->emit->enderEmit->xMun,
+			'pais' => $xml->NFe->infNFe->emit->enderEmit->xPais
 		];
 
 		$fornecedorEncontrado = $this->verificaFornecedor($xml->NFe->infNFe->emit->CNPJ);
@@ -838,12 +839,14 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 			'group_name' => 'supplier',
 			'name' => $fornecedor['nomeFantasia'],
 			'company' => $fornecedor['nomeFantasia'],
-			'cep' => $this->formataCep($fornecedor['cep']),
-			'cpf_cnpj' => $this->formataCnpj($fornecedor['cnpj']),
+			'cep' => $fornecedor['cep'],
+			'cpf_cnpj' => $fornecedor['cnpj'],
 			'ie_rg' => $fornecedor['ie'],
 			'phone' => $this->formataTelefone($fornecedor['fone']),
-			'email' => '*',
-			'city' => $fornecedor['cidade_id']
+			'email' => '',
+			'city' => $fornecedor['cidade'],
+			'vat_no' => $fornecedor['cnpj'],
+			'country' => $fornecedor['pais']
 		]);
 
 		return $result->id;

@@ -24,7 +24,8 @@ class Fornecedor extends Model
         'country',
         'phone',
         'email',
-        'logo'
+        'logo',
+        'vat_no'
     ];
 
     public function cidade(){
