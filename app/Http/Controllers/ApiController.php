@@ -834,22 +834,26 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
 	private function cadastrarFornecedor($fornecedor){
 
-		$result = Fornecedor::create([
-			'group_id' => '4',
-			'group_name' => 'supplier',
-			'name' => $fornecedor['nomeFantasia'],
-			'company' => $fornecedor['nomeFantasia'],
-			'cep' => $fornecedor['cep'],
-			'cpf_cnpj' => $fornecedor['cnpj'],
-			'ie_rg' => $fornecedor['ie'],
-			'phone' => $this->formataTelefone($fornecedor['fone']),
-			'email' => '',
-			'city' => $fornecedor['cidade'],
-			'vat_no' => $fornecedor['cnpj'],
-			'country' => $fornecedor['pais']
-		]);
+        if(! Fornecedor::where('company', $fornecedor['nomeFantasia'])->first()) {
+            $result = Fornecedor::create([
+                'group_id' => '4',
+                'group_name' => 'supplier',
+                'name' => $fornecedor['nomeFantasia'],
+                'company' => $fornecedor['nomeFantasia'],
+                'cep' => $fornecedor['cep'],
+                'cpf_cnpj' => $fornecedor['cnpj'],
+                'ie_rg' => $fornecedor['ie'],
+                'phone' => $this->formataTelefone($fornecedor['fone']),
+                'email' => '',
+                'city' => $fornecedor['cidade'],
+                'vat_no' => $fornecedor['cnpj'],
+                'country' => $fornecedor['pais']
+            ]);
 
-		return $result->id;
+            return $result->id;
+        }
+
+        return Fornecedor::where('company', $fornecedor['nomeFantasia'])->first()->id;
 	}
 
 	private function getItensDaNFe($xml){
@@ -978,38 +982,62 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 			$file = $public . 'xml_dfe/' . $chave . '.xml';
 
 			if(! file_exists($file)) {
-				return response()->json([
-					'error' => true,
-					'message' => "Arquivo XML nao encontrado!"
-				]);
-			}
+                $response = $dfe_service->download($chave);
 
-			$content = file_get_contents($file);
-			$nfe = simplexml_load_string($content);
+                $stz = new Standardize($response);
+                $std = $stz->toStd();
+                if ($std->cStat != 138) {
+                    return ['error' => true, 'message' => "Documento não retornado. [$std->cStat] $std->xMotivo" . ", aguarde alguns instantes e atualize a pagina!"];
+                }
 
-			if(!$nfe) {
-				return response()->json([
-					'error' => true,
-					'message' => "Ocorreu um erro ao ler o XML solicitado!"
-				]);
-			}
+                $zip = $std->loteDistDFeInt->docZip;
+                $xml = gzdecode(base64_decode($zip));
+                $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 
-			$fornecedor = $this->getFornecedorXML($nfe);
-			$itens = $this->getItensDaNFe($nfe);
+                file_put_contents($public.'xml_dfe/'.$chave.'.xml',$xml);
+                $nfe = simplexml_load_string($xml);
 
-			$infos = $this->getInfosDaNFe($nfe);
-			$fatura = $this->getFaturaDaNFe($nfe);
+                if(! $nfe) {
+                    return response()->json(["error" => true, 'message' => 'erro ao ler XML.']);
+                }
 
-			$categorias = Categoria::all();
-			$unidadesDeMedida = Produto::unidadesMedida();
+                $fornecedor = $this->getFornecedorXML($nfe);
+                $itens = $this->getItensDaNFe($nfe);
+                $infos = $this->getInfosDaNFe($nfe);
+                $fatura = $this->getFaturaDaNFe($nfe);
+			} else {
+                $content = file_get_contents($file);
+                $nfe = simplexml_load_string($content);
 
-			$listaCSTCSOSN = Produto::listaCSTCSOSN();
-			$listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
-			$listaCST_IPI = Produto::listaCST_IPI();
-			$config = ConfigNota::first();
+                if(!$nfe) {
+                    return response()->json([
+                        'error' => true,
+                        'message' => "Ocorreu um erro ao ler o XML solicitado!"
+                    ]);
+                }
 
-			$manifesto = ManifestaDfe::where('chave', $chave)->first();
+                $fornecedor = $this->getFornecedorXML($nfe);
+                $itens = $this->getItensDaNFe($nfe);
 
+                $infos = $this->getInfosDaNFe($nfe);
+                $fatura = $this->getFaturaDaNFe($nfe);
+            }
+
+            $categorias = Categoria::all();
+            $unidadesDeMedida = Produto::unidadesMedida();
+
+            $listaCSTCSOSN = Produto::listaCSTCSOSN();
+            $listaCST_PIS_COFINS = Produto::listaCST_PIS_COFINS();
+            $listaCST_IPI = Produto::listaCST_IPI();
+            $config = ConfigNota::first();
+
+            $manifesto = ManifestaDfe::where('chave', $chave)->first();
+
+            $xml = simplexml_load_file($file);
+            $objXML = json_encode($xml);
+            $objXML = json_decode($objXML);
+
+            $this->criarFatura($objXML);
 
 			return response()->json([
 				'fornecedor' => $fornecedor,
@@ -1029,8 +1057,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 		} catch (\Exception $e) {
 			return response()->json([
 				'error' => true,
-				'message' => "Erro interno",
-				'exception' => $e->getMessage() . ' ---> ' . $e->getLine()
+				'message' => "Erro interno"
 			]);
 		}
 	}
@@ -2700,7 +2727,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 		} catch(Exception $ex) {
 			return [
 				'error' => true,
-				'message' => $ex->getMessage() . ' ----> ' . $ex->getLine()
+				'message' => "Erro interno"
 			];
 		}
     }
