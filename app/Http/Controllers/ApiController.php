@@ -2623,6 +2623,10 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 		try {
 			$public = $_SERVER['DOCUMENT_ROOT'] . '/api_fiscal/public/';
 
+            if(file_exists($public . 'xml_dfe/' . $_FILES['xml_file']['name'])) {
+                unlink($public . 'xml_dfe/' . $_FILES['xml_file']['name']);
+            }
+
 			$moveFile = move_uploaded_file($_FILES['xml_file']['tmp_name'], $public . 'xml_dfe/' . $_FILES['xml_file']['name']);
 
 			$file = $public . 'xml_dfe/' . $_FILES['xml_file']['name'];
