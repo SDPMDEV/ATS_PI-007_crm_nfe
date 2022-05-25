@@ -11,7 +11,7 @@ ini_set('display_errors', 'On');
 
 class DFeService{
 
-	private $config; 
+	private $config;
 	private $tools;
 
 	public function __construct($config, $modelo){
@@ -57,7 +57,7 @@ class DFeService{
 					continue;
 				}
 				if($last != $ultNSU){
-					
+
 					$last = $ultNSU;
 					if (empty($lote)) {
         			//lote vazio
@@ -66,7 +66,7 @@ class DFeService{
     				//essas tags irão conter os documentos zipados
 					$docs = $lote->getElementsByTagName('docZip');
 
-					
+
 
 					foreach ($docs as $doc) {
 
@@ -88,9 +88,9 @@ class DFeService{
 							'fatura_salva' => false,
 							'sequencia_evento' => 0
 						];
-						
+
 						array_push($arrayDocs, $temp);
-						
+
 						$tipo = substr($schema, 0, 6);
 
 					}
@@ -139,7 +139,7 @@ class DFeService{
 					continue;
 				}
 				if($last != $ultNSU){
-					
+
 					$last = $ultNSU;
 					if (empty($lote)) {
         			//lote vazio
@@ -148,7 +148,7 @@ class DFeService{
     				//essas tags irão conter os documentos zipados
 					$docs = $lote->getElementsByTagName('docZip');
 
-					
+
 
 					foreach ($docs as $doc) {
 
@@ -190,8 +190,8 @@ class DFeService{
 		try {
 
 			$chNFe = $chave;
-			$tpEvento = '210210'; 
-			$xJust = ''; 
+			$tpEvento = '210210';
+			$xJust = '';
 			$nSeqEvento = $nSeqEvento;
 
 			$response = $this->tools->sefazManifesta($chNFe, $tpEvento, $xJust = '', $nSeqEvento);
@@ -224,8 +224,8 @@ class DFeService{
 		try {
 
 			$chNFe = $chave;
-			$tpEvento = '210200'; 
-			$xJust = ''; 
+			$tpEvento = '210200';
+			$xJust = '';
 			$nSeqEvento = $nSeqEvento;
 
 			$response = $this->tools->sefazManifesta($chNFe, $tpEvento, $xJust = '', $nSeqEvento);
@@ -245,8 +245,8 @@ class DFeService{
 		try {
 
 			$chNFe = $chave;
-			$tpEvento = '210240'; 
-			$xJust = $justificativa; 
+			$tpEvento = '210240';
+			$xJust = $justificativa;
 			$nSeqEvento = $nSeqEvento;
 
 			$response = $this->tools->sefazManifesta($chNFe, $tpEvento, $xJust, $nSeqEvento);
@@ -266,8 +266,8 @@ class DFeService{
 		try {
 
 			$chNFe = $chave;
-			$tpEvento = '“210220'; 
-			$xJust = $justificativa; 
+			$tpEvento = '“210220';
+			$xJust = $justificativa;
 			$nSeqEvento = $nSeqEvento;
 
 			$response = $this->tools->sefazManifesta($chNFe, $tpEvento, $xJust, $nSeqEvento);
@@ -283,5 +283,5 @@ class DFeService{
 		}
 	}
 
-	
+
 }

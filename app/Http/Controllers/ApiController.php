@@ -2661,6 +2661,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 					$objXML = json_decode($objXML);
                     $chave = str_replace('.xml', '', $_FILES['xml_file']['name']);
 
+                    $this->criarFatura($objXML);
+
                     if(! ManifestaDfe::where('chave', $chave)->first()) {
                         $res = ManifestaDfe::create([
                             'chave' => $objXML->protNFe->infProt->chNFe,
@@ -2750,4 +2752,25 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 			";
 		}
 	}
+
+    private function criarFatura($xml)
+    {
+        $supplier = DB::table('sma_companies')->where('company', '=', $xml->NFe->infNFe->dest->xNome)->first();
+
+        if(! DB::table('sma_purchases')->where('reference_no', '=', $xml->protNFe->infProt->chNFe)->first()) {
+            DB::table('sma_purchases')->insert([
+                'reference_no' => $xml->protNFe->infProt->chNFe,
+                'date' => date('Y-m-d H:i:s', time()),
+                'supplier_id' => $supplier->id ?? 0,
+                'supplier' => $supplier->company ?? 'Fornecedor Desconhecido',
+                'warehouse_id' => 1,
+                'total' => $xml->NFe->infNFe->total->ICMSTot->vProd,
+                'grand_total' => $xml->NFe->infNFe->total->ICMSTot->vProd,
+                'paid' => 0,
+                'status' => 'pending',
+                'payment_status' => 'pending',
+                'created_by' => 1
+            ]);
+        }
+    }
 }
