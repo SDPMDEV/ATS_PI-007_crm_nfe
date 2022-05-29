@@ -236,7 +236,7 @@ Route::post('/validate_certificate', "ApiController@validateCertificate");
 Route::post('/get_docs', "ApiController@getDocsDFE");
 Route::post('/get_docs_filter', "ApiController@getDocsFilter");
 Route::post('/get_new_docs', "ApiController@getNewDocs");
-Route::post('/get_download_configs/{chave}', "ApiController@getDonwloadConfigs");
+Route::post('/get_download_configs/{chave}', "ApiController@getDownloadConfigs");
 Route::post('/get_fiscal_settings', "ApiController@getFiscalSettings");
 Route::post('/manifest', "ApiController@manifest");
 Route::post('/generate_nfe', "ApiController@gerarNFe");
