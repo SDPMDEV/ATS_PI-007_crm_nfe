@@ -708,7 +708,7 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
         }
 
 
-        $docs = ManifestaDfe::orderBy('id', 'desc')->get();
+        $docs = manifestaDfe::orderBy('id', 'desc')->get();
         $arrayDocs = [];
 
         foreach ($docs as $d) {
@@ -2229,325 +2229,332 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
     public function factNfce(Request $request)
     {
-        $config = ConfigNota::first();
-        $tributacao = Tributacao::first();
+        try {
 
-        $nfe = new Make();
-        $stdInNFe = new \stdClass();
-        $stdInNFe->versao = '4.00'; //versão do layout
-        $stdInNFe->Id = null; //se o Id de 44 digitos não for passado será gerado automaticamente
-        $stdInNFe->pk_nItem = ''; //deixe essa variavel sempre como NULL
-
-        $infNFe = $nfe->taginfNFe($stdInNFe);
-
-        //IDE
-        $stdIde = new \stdClass();
-        $stdIde->cUF = $config->cUF;
-        $stdIde->cNF = rand(11111111, 99999999);
-        $stdIde->natOp = $config->nat_op_padrao;
-
-        // $stdIde->indPag = 1; //NÃO EXISTE MAIS NA VERSÃO 4.00 // forma de pagamento
-
-        $vendaLast = $request->lastId;
-        $lastNumero = $vendaLast;
-
-        $stdIde->mod = 65;
-        $stdIde->serie = $config->numero_serie_nfce;
-        $stdIde->nNF = (int)$lastNumero + 1;
-        $stdIde->dhEmi = date("Y-m-d\TH:i:sP");
-        $stdIde->dhSaiEnt = date("Y-m-d\TH:i:sP");
-        $stdIde->tpNF = 1;
-        $stdIde->idDest = 1;
-        $stdIde->cMunFG = $config->codMun;
-        $stdIde->tpImp = 4;
-        $stdIde->tpEmis = 1;
-        $stdIde->cDV = 0;
-        $stdIde->tpAmb = $config->ambiente;
-        $stdIde->finNFe = 1;
-        $stdIde->indFinal = 1;
-        $stdIde->indPres = 1;
-        $stdIde->procEmi = '0';
-        $stdIde->verProc = '2.0';
-        //
-        $tagide = $nfe->tagide($stdIde);
-
-        $stdEmit = new \stdClass();
-        $stdEmit->xNome = $config->razao_social;
-        $stdEmit->xFant = $config->nome_fantasia;
-
-        $ie = str_replace(".", "", $config->ie);
-        $ie = str_replace("/", "", $ie);
-        $ie = str_replace("-", "", $ie);
-        $stdEmit->IE = $ie;
-        $stdEmit->CRT = $tributacao->regime == 0 ? 1 : 3;
-
-        $cnpj = str_replace(".", "", $config->cnpj);
-        $cnpj = str_replace("/", "", $cnpj);
-        $cnpj = str_replace("-", "", $cnpj);
-        $stdEmit->CNPJ = $cnpj;
-
-        $emit = $nfe->tagemit($stdEmit);
-
-        // ENDERECO EMITENTE
-        $stdEnderEmit = new \stdClass();
-        $stdEnderEmit->xLgr = $config->logradouro;
-        $stdEnderEmit->nro = $config->numero;
-        $stdEnderEmit->xCpl = "";
-        $stdEnderEmit->xBairro = $config->bairro;
-        $stdEnderEmit->cMun = $config->codMun;
-        $stdEnderEmit->xMun = $config->municipio;
-        $stdEnderEmit->UF = $config->UF;
-
-        $cep = str_replace("-", "", $config->cep);
-        $stdEnderEmit->CEP = $cep;
-        $stdEnderEmit->cPais = $config->codPais;
-        $stdEnderEmit->xPais = $config->pais;
-
-        $fone = str_replace(" ", "", $config->fone);
-        $fone = str_replace("-", "", $fone);
-        $stdEnderEmit->fone = $fone;
-
-        $enderEmit = $nfe->tagenderEmit($stdEnderEmit);
-
-        // DESTINATARIO
-
-
-        if ($request->cpf != null) {
-            $stdDest = new \stdClass();
-            $cpf = str_replace(".", "", $request->cpf);
-            $cpf = str_replace("/", "", $cpf);
-            $cpf = str_replace("-", "", $cpf);
-            $cpf = str_replace(" ", "", $cpf);
-
-            if ($request->nome) $stdDest->xNome = $request->nome;
-            $stdDest->indIEDest = "9";
-            $stdDest->CPF = $cpf;
-            $dest = $nfe->tagdest($stdDest);
-        }
-
-
-        $somaProdutos = 0;
-        $somaICMS = 0;
-        //PRODUTOS
-        $itemCont = 0;
-        $somaDesconto = 0;
-        $totalItens = count($request->produtos);
-        $somaAcrescimo = 0;
-        $VBC = 0;
-
-        foreach ($request->produtos as $produto) {
-            $itemCont++;
-
-            $stdProd = new \stdClass();
-            $stdProd->item = $itemCont;
-            $stdProd->cEAN = $produto->codBarras;
-            $stdProd->cEANTrib = $produto->codBarras;
-            $stdProd->cProd = $produto->id;
-            $stdProd->xProd = $produto->nome;
-            if ($produto->CST_CSOSN == '500' || $produto->CST_CSOSN == '60') {
-                $stdProd->cBenef = 'SEM CBENEF';
-            }
-
-            $ncm = $produto->NCM;
-            $ncm = str_replace(".", "", $ncm);
-            $stdProd->NCM = $ncm;
-
-            $stdProd->CFOP = $produto->CFOP_saida_estadual;
-            $cest = $produto->CEST;
-            $cest = str_replace(".", "", $cest);
-            $stdProd->CEST = $cest;
-            $stdProd->uCom = $produto->unidade_venda;
-            $stdProd->qCom = $produto->quantidade;
-            $stdProd->vUnCom = $this->format($produto->valor);
-            $stdProd->vProd = $this->format($produto->quantidade * $produto->valor);
-            $stdProd->uTrib = $produto->unidade_venda;
-            $stdProd->qTrib = $produto->quantidade;
-            $stdProd->vUnTrib = $this->format($produto->valor);
-            $stdProd->indTot = 1;
-
-            // if($venda->desconto > 0){
-            // 	$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
-            // }
-
-            if ($request->desconto > 0) {
-                if ($itemCont < sizeof($request->produtos)) {
-                    $totalVenda = $request->valor_total;
-
-                    $media = (((($stdProd->vProd - $totalVenda) / $totalVenda)) * 100);
-                    $media = 100 - ($media * -1);
-
-                    $tempDesc = ($request->desconto * $media) / 100;
-                    $somaDesconto += $tempDesc;
-
-                    $stdProd->vDesc = $this->format($tempDesc);
-                } else {
-                    $stdProd->vDesc = $this->format($request->desconto - $somaDesconto);
-                }
-            }
-
-            $somaProdutos += $produto->quantidade * $produto->valor;
-
-
-            $prod = $nfe->tagprod($stdProd);
-
+            $config = ConfigNota::first();
             $tributacao = Tributacao::first();
 
-            $stdImposto = new \stdClass();
-            $stdImposto->item = $itemCont;
+            $nfe = new Make();
+            $stdInNFe = new \stdClass();
+            $stdInNFe->versao = '4.00'; //versão do layout
+            $stdInNFe->Id = null; //se o Id de 44 digitos não for passado será gerado automaticamente
+            $stdInNFe->pk_nItem = ''; //deixe essa variavel sempre como NULL
 
-            $imposto = $nfe->tagimposto($stdImposto);
+            $infNFe = $nfe->taginfNFe($stdInNFe);
 
-            if ($tributacao->regime == 1) { // regime normal
+            //IDE
+            $stdIde = new \stdClass();
+            $stdIde->cUF = $config->cUF;
+            $stdIde->cNF = rand(11111111, 99999999);
+            $stdIde->natOp = $config->nat_op_padrao;
 
-                $stdICMS = new \stdClass();
-                $stdICMS->item = $itemCont;
-                $stdICMS->orig = 0;
-                $stdICMS->CST = $produto->CST_CSOSN;
-                $stdICMS->modBC = 0;
-                $stdICMS->vBC = $this->format($produto->valor * $produto->quantidade);
-                $stdICMS->pICMS = $this->format($produto->perc_icms);
-                $stdICMS->vICMS = $stdICMS->vBC * ($stdICMS->pICMS / 100);
+            // $stdIde->indPag = 1; //NÃO EXISTE MAIS NA VERSÃO 4.00 // forma de pagamento
 
+            $vendaLast = $request->lastId;
+            $lastNumero = $vendaLast;
+
+            $stdIde->mod = 65;
+            $stdIde->serie = $config->numero_serie_nfce;
+            $stdIde->nNF = (int)$lastNumero + 1;
+            $stdIde->dhEmi = date("Y-m-d\TH:i:sP");
+            $stdIde->dhSaiEnt = date("Y-m-d\TH:i:sP");
+            $stdIde->tpNF = 1;
+            $stdIde->idDest = 1;
+            $stdIde->cMunFG = $config->codMun;
+            $stdIde->tpImp = 4;
+            $stdIde->tpEmis = 1;
+            $stdIde->cDV = 0;
+            $stdIde->tpAmb = $config->ambiente;
+            $stdIde->finNFe = 1;
+            $stdIde->indFinal = 1;
+            $stdIde->indPres = 1;
+            $stdIde->procEmi = '0';
+            $stdIde->verProc = '2.0';
+            //
+            $tagide = $nfe->tagide($stdIde);
+
+            $stdEmit = new \stdClass();
+            $stdEmit->xNome = $config->razao_social;
+            $stdEmit->xFant = $config->nome_fantasia;
+
+            $ie = str_replace(".", "", $config->ie);
+            $ie = str_replace("/", "", $ie);
+            $ie = str_replace("-", "", $ie);
+            $stdEmit->IE = $ie;
+            $stdEmit->CRT = $tributacao->regime == 0 ? 1 : 3;
+
+            $cnpj = str_replace(".", "", $config->cnpj);
+            $cnpj = str_replace("/", "", $cnpj);
+            $cnpj = str_replace("-", "", $cnpj);
+            $stdEmit->CNPJ = $cnpj;
+
+            $emit = $nfe->tagemit($stdEmit);
+
+            // ENDERECO EMITENTE
+            $stdEnderEmit = new \stdClass();
+            $stdEnderEmit->xLgr = $config->logradouro;
+            $stdEnderEmit->nro = $config->numero;
+            $stdEnderEmit->xCpl = "";
+            $stdEnderEmit->xBairro = $config->bairro;
+            $stdEnderEmit->cMun = $config->codMun;
+            $stdEnderEmit->xMun = $config->municipio;
+            $stdEnderEmit->UF = $config->UF;
+
+            $cep = str_replace("-", "", $config->cep);
+            $stdEnderEmit->CEP = $cep;
+            $stdEnderEmit->cPais = $config->codPais;
+            $stdEnderEmit->xPais = $config->pais;
+
+            $fone = str_replace(" ", "", $config->fone);
+            $fone = str_replace("-", "", $fone);
+            $stdEnderEmit->fone = $fone;
+
+            $enderEmit = $nfe->tagenderEmit($stdEnderEmit);
+
+            // DESTINATARIO
+
+
+            if ($request->cpf != null) {
+                $stdDest = new \stdClass();
+                $cpf = str_replace(".", "", $request->cpf);
+                $cpf = str_replace("/", "", $cpf);
+                $cpf = str_replace("-", "", $cpf);
+                $cpf = str_replace(" ", "", $cpf);
+
+                if ($request->nome) $stdDest->xNome = $request->nome;
+                $stdDest->indIEDest = "9";
+                $stdDest->CPF = $cpf;
+                $dest = $nfe->tagdest($stdDest);
+            }
+
+
+            $somaProdutos = 0;
+            $somaICMS = 0;
+            //PRODUTOS
+            $itemCont = 0;
+            $somaDesconto = 0;
+            $totalItens = count($request->produtos);
+            $somaAcrescimo = 0;
+            $VBC = 0;
+
+            foreach ($request->produtos as $produto) {
+                $itemCont++;
+
+                $stdProd = new \stdClass();
+                $stdProd->item = $itemCont;
+                $stdProd->cEAN = $produto->codBarras;
+                $stdProd->cEANTrib = $produto->codBarras;
+                $stdProd->cProd = $produto->id;
+                $stdProd->xProd = $produto->nome;
                 if ($produto->CST_CSOSN == '500' || $produto->CST_CSOSN == '60') {
-                    $stdICMS->pRedBCEfet = 0.00;
-                    $stdICMS->vBCEfet = 0.00;
-                    $stdICMS->pICMSEfet = 0.00;
-                    $stdICMS->vICMSEfet = 0.00;
-                } else {
-                    $VBC += $stdProd->vProd;
+                    $stdProd->cBenef = 'SEM CBENEF';
                 }
 
-                $somaICMS += $stdICMS->vICMS;
-                $ICMS = $nfe->tagICMS($stdICMS);
+                $ncm = $produto->NCM;
+                $ncm = str_replace(".", "", $ncm);
+                $stdProd->NCM = $ncm;
 
-            } else { // regime simples
+                $stdProd->CFOP = $produto->CFOP_saida_estadual;
+                $cest = $produto->CEST;
+                $cest = str_replace(".", "", $cest);
+                $stdProd->CEST = $cest;
+                $stdProd->uCom = $produto->unidade_venda;
+                $stdProd->qCom = $produto->quantidade;
+                $stdProd->vUnCom = $this->format($produto->valor);
+                $stdProd->vProd = $this->format($produto->quantidade * $produto->valor);
+                $stdProd->uTrib = $produto->unidade_venda;
+                $stdProd->qTrib = $produto->quantidade;
+                $stdProd->vUnTrib = $this->format($produto->valor);
+                $stdProd->indTot = 1;
 
-                $stdICMS = new \stdClass();
+                // if($venda->desconto > 0){
+                // 	$stdProd->vDesc = $this->format($venda->desconto/$totalItens);
+                // }
 
-                $stdICMS->item = $itemCont;
-                $stdICMS->orig = 0;
-                $stdICMS->CSOSN = $produto->CST_CSOSN;
-                $stdICMS->pCredSN = $this->format($produto->perc_icms);
-                $stdICMS->vCredICMSSN = $this->format($produto->perc_icms);
-                $ICMS = $nfe->tagICMSSN($stdICMS);
+                if ($request->desconto > 0) {
+                    if ($itemCont < sizeof($request->produtos)) {
+                        $totalVenda = $request->valor_total;
 
-                $somaICMS = 0;
+                        $media = (((($stdProd->vProd - $totalVenda) / $totalVenda)) * 100);
+                        $media = 100 - ($media * -1);
+
+                        $tempDesc = ($request->desconto * $media) / 100;
+                        $somaDesconto += $tempDesc;
+
+                        $stdProd->vDesc = $this->format($tempDesc);
+                    } else {
+                        $stdProd->vDesc = $this->format($request->desconto - $somaDesconto);
+                    }
+                }
+
+                $somaProdutos += $produto->quantidade * $produto->valor;
+
+
+                $prod = $nfe->tagprod($stdProd);
+
+                $tributacao = Tributacao::first();
+
+                $stdImposto = new \stdClass();
+                $stdImposto->item = $itemCont;
+
+                $imposto = $nfe->tagimposto($stdImposto);
+
+                if ($tributacao->regime == 1) { // regime normal
+
+                    $stdICMS = new \stdClass();
+                    $stdICMS->item = $itemCont;
+                    $stdICMS->orig = 0;
+                    $stdICMS->CST = $produto->CST_CSOSN;
+                    $stdICMS->modBC = 0;
+                    $stdICMS->vBC = $this->format($produto->valor * $produto->quantidade);
+                    $stdICMS->pICMS = $this->format($produto->perc_icms);
+                    $stdICMS->vICMS = $stdICMS->vBC * ($stdICMS->pICMS / 100);
+
+                    if ($produto->CST_CSOSN == '500' || $produto->CST_CSOSN == '60') {
+                        $stdICMS->pRedBCEfet = 0.00;
+                        $stdICMS->vBCEfet = 0.00;
+                        $stdICMS->pICMSEfet = 0.00;
+                        $stdICMS->vICMSEfet = 0.00;
+                    } else {
+                        $VBC += $stdProd->vProd;
+                    }
+
+                    $somaICMS += $stdICMS->vICMS;
+                    $ICMS = $nfe->tagICMS($stdICMS);
+
+                } else { // regime simples
+
+                    $stdICMS = new \stdClass();
+
+                    $stdICMS->item = $itemCont;
+                    $stdICMS->orig = 0;
+                    $stdICMS->CSOSN = $produto->CST_CSOSN;
+                    $stdICMS->pCredSN = $this->format($produto->perc_icms);
+                    $stdICMS->vCredICMSSN = $this->format($produto->perc_icms);
+                    $ICMS = $nfe->tagICMSSN($stdICMS);
+
+                    $somaICMS = 0;
+                }
+
+
+                $stdPIS = new \stdClass();
+                $stdPIS->item = $itemCont;
+                $stdPIS->CST = $produto->CST_PIS;
+                $stdPIS->vBC = $this->format($produto->perc_pis) > 0 ? $stdProd->vProd : 0.00;
+                $stdPIS->pPIS = $this->format($produto->perc_pis);
+                $stdPIS->vPIS = $this->format(($stdProd->vProd * $produto->quantidade) * ($produto->perc_pis / 100));
+                $PIS = $nfe->tagPIS($stdPIS);
+
+                //COFINS
+                $stdCOFINS = new \stdClass();
+                $stdCOFINS->item = $itemCont;
+                $stdCOFINS->CST = $produto->CST_COFINS;
+                $stdCOFINS->vBC = $this->format($produto->perc_cofins) > 0 ? $stdProd->vProd : 0.00;
+                $stdCOFINS->pCOFINS = $this->format($produto->perc_cofins);
+                $stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $produto->quantidade) *
+                    ($produto->perc_cofins / 100));
+                $COFINS = $nfe->tagCOFINS($stdCOFINS);
+
+                if (strlen($produto->descricao_anp) > 5) {
+                    $stdComb = new \stdClass();
+                    $stdComb->item = 1;
+                    $stdComb->cProdANP = $produto->codigo_anp;
+                    $stdComb->descANP = $produto->descricao_anp;
+                    $stdComb->UFCons = $request->cliente->cidade->uf;
+
+                    $nfe->tagcomb($stdComb);
+                }
+
+                $cest = $produto->CEST;
+                $cest = str_replace(".", "", $cest);
+                $stdProd->CEST = $cest;
+                if (strlen($cest) > 0) {
+                    $std = new \stdClass();
+                    $std->item = $itemCont;
+                    $std->CEST = $cest;
+                    $nfe->tagCEST($std);
+                }
             }
 
+            //ICMS TOTAL
+            $stdICMSTot = new \stdClass();
+            $stdICMSTot->vBC = $this->format($VBC);
+            $stdICMSTot->vICMS = $this->format($somaICMS);
+            $stdICMSTot->vICMSDeson = 0.00;
+            $stdICMSTot->vBCST = 0.00;
+            $stdICMSTot->vST = 0.00;
+            $stdICMSTot->vProd = $this->format($somaProdutos);
 
-            $stdPIS = new \stdClass();
-            $stdPIS->item = $itemCont;
-            $stdPIS->CST = $produto->CST_PIS;
-            $stdPIS->vBC = $this->format($produto->perc_pis) > 0 ? $stdProd->vProd : 0.00;
-            $stdPIS->pPIS = $this->format($produto->perc_pis);
-            $stdPIS->vPIS = $this->format(($stdProd->vProd * $produto->quantidade) * ($produto->perc_pis / 100));
-            $PIS = $nfe->tagPIS($stdPIS);
+            $stdICMSTot->vFrete = 0.00;
 
-            //COFINS
-            $stdCOFINS = new \stdClass();
-            $stdCOFINS->item = $itemCont;
-            $stdCOFINS->CST = $produto->CST_COFINS;
-            $stdCOFINS->vBC = $this->format($produto->perc_cofins) > 0 ? $stdProd->vProd : 0.00;
-            $stdCOFINS->pCOFINS = $this->format($produto->perc_cofins);
-            $stdCOFINS->vCOFINS = $this->format(($stdProd->vProd * $produto->quantidade) *
-                ($produto->perc_cofins / 100));
-            $COFINS = $nfe->tagCOFINS($stdCOFINS);
+            $stdICMSTot->vSeg = 0.00;
+            $stdICMSTot->vDesc = $this->format($request->desconto);
+            $stdICMSTot->vII = 0.00;
+            $stdICMSTot->vIPI = 0.00;
+            $stdICMSTot->vPIS = 0.00;
+            $stdICMSTot->vCOFINS = 0.00;
+            $stdICMSTot->vOutro = 0.00;
+            $stdICMSTot->vNF = $this->format($request->valor_total);
+            $stdICMSTot->vTotTrib = 0.00;
+            $ICMSTot = $nfe->tagICMSTot($stdICMSTot);
 
-            if (strlen($produto->descricao_anp) > 5) {
-                $stdComb = new \stdClass();
-                $stdComb->item = 1;
-                $stdComb->cProdANP = $produto->codigo_anp;
-                $stdComb->descANP = $produto->descricao_anp;
-                $stdComb->UFCons = $request->cliente->cidade->uf;
+            //TRANSPORTADORA
 
-                $nfe->tagcomb($stdComb);
+            $stdTransp = new \stdClass();
+            $stdTransp->modFrete = 9;
+
+            $transp = $nfe->tagtransp($stdTransp);
+
+
+            $stdPag = new \stdClass();
+
+            $stdPag->vTroco = $this->format($request->troco);
+
+            $pag = $nfe->tagpag($stdPag);
+
+            //Resp Tecnico
+            $stdResp = new \stdClass();
+            $stdResp->CNPJ = getenv('RESP_CNPJ');
+            $stdResp->xContato = getenv('RESP_NOME');
+            $stdResp->email = getenv('RESP_EMAIL');
+            $stdResp->fone = getenv('RESP_FONE');
+
+            $nfe->taginfRespTec($stdResp);
+
+            //DETALHE PAGAMENTO
+
+            $stdDetPag = new \stdClass();
+            $stdDetPag->indPag = 0;
+
+            $stdDetPag->tPag = $request->tipo_pagamento;
+            $stdDetPag->vPag = $this->format($request->valor_pago); //Obs: deve ser informado o valor pago pelo cliente
+
+            if ($request->tipo_pagamento == '03' || $request->tipo_pagamento == '04') {
+                $stdDetPag->CNPJ = '12345678901234';
+                $stdDetPag->tBand = '01';
+                $stdDetPag->cAut = '3333333';
+                $stdDetPag->tpIntegra = 1;
             }
 
-            $cest = $produto->CEST;
-            $cest = str_replace(".", "", $cest);
-            $stdProd->CEST = $cest;
-            if (strlen($cest) > 0) {
-                $std = new \stdClass();
-                $std->item = $itemCont;
-                $std->CEST = $cest;
-                $nfe->tagCEST($std);
+            $detPag = $nfe->tagdetPag($stdDetPag);
+
+            try {
+                $nfe->monta();
+                $arr = [
+                    'chave' => $nfe->getChave(),
+                    'xml' => $nfe->getXML(),
+                    'nNf' => $stdIde->nNF,
+                    'modelo' => $nfe->getModelo()
+                ];
+                return $arr;
+            } catch (\Exception $e) {
+                return [
+                    'erros_xml' => $nfe->getErrors()
+                ];
             }
-        }
-
-        //ICMS TOTAL
-        $stdICMSTot = new \stdClass();
-        $stdICMSTot->vBC = $this->format($VBC);
-        $stdICMSTot->vICMS = $this->format($somaICMS);
-        $stdICMSTot->vICMSDeson = 0.00;
-        $stdICMSTot->vBCST = 0.00;
-        $stdICMSTot->vST = 0.00;
-        $stdICMSTot->vProd = $this->format($somaProdutos);
-
-        $stdICMSTot->vFrete = 0.00;
-
-        $stdICMSTot->vSeg = 0.00;
-        $stdICMSTot->vDesc = $this->format($request->desconto);
-        $stdICMSTot->vII = 0.00;
-        $stdICMSTot->vIPI = 0.00;
-        $stdICMSTot->vPIS = 0.00;
-        $stdICMSTot->vCOFINS = 0.00;
-        $stdICMSTot->vOutro = 0.00;
-        $stdICMSTot->vNF = $this->format($request->valor_total);
-        $stdICMSTot->vTotTrib = 0.00;
-        $ICMSTot = $nfe->tagICMSTot($stdICMSTot);
-
-        //TRANSPORTADORA
-
-        $stdTransp = new \stdClass();
-        $stdTransp->modFrete = 9;
-
-        $transp = $nfe->tagtransp($stdTransp);
-
-
-        $stdPag = new \stdClass();
-
-        $stdPag->vTroco = $this->format($request->troco);
-
-        $pag = $nfe->tagpag($stdPag);
-
-        //Resp Tecnico
-        $stdResp = new \stdClass();
-        $stdResp->CNPJ = getenv('RESP_CNPJ');
-        $stdResp->xContato = getenv('RESP_NOME');
-        $stdResp->email = getenv('RESP_EMAIL');
-        $stdResp->fone = getenv('RESP_FONE');
-
-        $nfe->taginfRespTec($stdResp);
-
-        //DETALHE PAGAMENTO
-
-        $stdDetPag = new \stdClass();
-        $stdDetPag->indPag = 0;
-
-        $stdDetPag->tPag = $request->tipo_pagamento;
-        $stdDetPag->vPag = $this->format($request->valor_pago); //Obs: deve ser informado o valor pago pelo cliente
-
-        if ($request->tipo_pagamento == '03' || $request->tipo_pagamento == '04') {
-            $stdDetPag->CNPJ = '12345678901234';
-            $stdDetPag->tBand = '01';
-            $stdDetPag->cAut = '3333333';
-            $stdDetPag->tpIntegra = 1;
-        }
-
-        $detPag = $nfe->tagdetPag($stdDetPag);
-
-        try {
-            $nfe->monta();
-            $arr = [
-                'chave' => $nfe->getChave(),
-                'xml' => $nfe->getXML(),
-                'nNf' => $stdIde->nNF,
-                'modelo' => $nfe->getModelo()
-            ];
-            return $arr;
-        } catch (\Exception $e) {
+        } catch (\Exception $ex) {
             return [
-                'erros_xml' => $nfe->getErrors()
+                'exception' => $ex->getMessage() . ' ---> ' . $ex->getLine()
             ];
         }
     }
@@ -2584,6 +2591,14 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
             $request->natureza = json_decode(json_encode($request->natureza));
 
             $nfce = $this->factNfce($request);
+
+            if(isset($nfce['exception'])) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'erro interno',
+                    'exception' => $nfce['exception']
+                ]);
+            }
 
             if (!isset($nfce['erros_xml'])) {
 
@@ -2634,7 +2649,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
         if (file_exists($public . 'xml_nfce/' . $request->chave . '.xml')) {
             try {
                 $xml = file_get_contents($public . 'xml_nfce/' . $request->chave . '.xml');
-                $logo = 'data://text/plain;base64,' . base64_encode(file_get_contents($public . 'imgs/logo.jpg'));
+                $pathLogo = $public . 'imgs/lagolimp_logo_(1)_(1).jpg';
+                $logo = 'data://text/plain;base64,' . base64_encode(file_get_contents($pathLogo));
 
 
                 $danfce = new Danfce($xml);
@@ -2741,29 +2757,48 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                         $products = $objXML->NFe->infNFe->det;
                         foreach($products as $product) {
                             if(isset($product->prod)) {
-                                if($dbProduct = DB::table('sma_products')->where('name', $product->prod->xProd)->first()) {
-                                    $data = [
-                                        'latest_id' => $latest->id,
-                                        'product_id' => $dbProduct->id,
-                                        'quantity' => $product->prod->qCom,
-                                        'cost' => $dbProduct->cost,
-                                        'product_code' => $dbProduct->code,
-                                        'product_name' => $dbProduct->name,
-                                        'net_unit_cost' => $dbProduct->cost,
-                                        'warehouse_id' => 1,
-                                        'subtotal' => $dbProduct->cost,
-                                        'quantity_balance' => $dbProduct->quantity,
-                                        'date' => date('Y-m-d', strtotime('now')),
-                                        'status' => 'received',
-                                        'unit_cost' => $dbProduct->cost,
-                                        'real_unit_cost' => $dbProduct->cost,
-                                        'quantity_received' => $dbProduct->quantity,
-                                        'unit_quantity' => $dbProduct->quantity,
-                                        'unit' => $dbProduct->unit
-                                    ];
+                                $dbProduct = DB::table('sma_products')->where('name', $product->prod->xProd)->first();
 
-                                    $this->createAdjustment($data);
+                                if(! $dbProduct) {
+                                    DB::table('sma_products')->insert([
+                                        'code' => $product->prod->cProd,
+                                        'name' => $product->prod->xProd,
+                                        'price' => $product->prod->vProd,
+                                        'category_id' => 1,
+                                        'barcode_symbology' => 'code128',
+                                        'type' => 'standard',
+                                        'views' => 1,
+                                        'hide' => 0,
+                                        'hide_pos' => 0,
+                                        'CFOP_saida_estadual' => $product->prod->CFOP,
+                                        'NCM' => $product->prod->NCM,
+                                        'quantity' => $product->prod->qCom,
+                                    ]);
+
+                                    $dbProduct = DB::table('sma_products')->where('name', $product->prod->xProd)->first();
                                 }
+
+                                $data = [
+                                    'latest_id' => $latest->id,
+                                    'product_id' => $dbProduct->id,
+                                    'quantity' => $product->prod->qCom,
+                                    'cost' => $dbProduct->cost,
+                                    'product_code' => $dbProduct->code,
+                                    'product_name' => $dbProduct->name,
+                                    'net_unit_cost' => $dbProduct->cost,
+                                    'warehouse_id' => 1,
+                                    'subtotal' => $dbProduct->cost,
+                                    'quantity_balance' => $dbProduct->quantity,
+                                    'date' => date('Y-m-d', strtotime('now')),
+                                    'status' => 'received',
+                                    'unit_cost' => $dbProduct->cost,
+                                    'real_unit_cost' => $dbProduct->cost,
+                                    'quantity_received' => $dbProduct->quantity,
+                                    'unit_quantity' => $dbProduct->quantity,
+                                    'unit' => $dbProduct->unit
+                                ];
+
+                                $this->createAdjustment($data);
                             }
                         }
 
