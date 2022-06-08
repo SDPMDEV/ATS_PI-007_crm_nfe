@@ -1048,19 +1048,43 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
             $this->criarFatura($objXML);
 
-            DB::table('sma_adjustments')->insert([
-                'date' => date('Y-m-d H:i:s', strtotime('now')),
-                'warehouse_id' => 1,
-                'created_by' => 1,
-                'reference_no' => date('Y/m/d', strtotime('now'))
-            ]);
+            if(! DB::table('sma_adjustments')->where('reference_no', $chave)->first()) {
+                DB::table('sma_adjustments')->insert([
+                    'date' => date('Y-m-d H:i:s', strtotime('now')),
+                    'warehouse_id' => 1,
+                    'created_by' => 1,
+                    'reference_no' => $chave
+                ]);
+            }
 
-            $all = DB::table('sma_adjustments')->get();
-            $latest = $all[(count($all) - 1)];
+            $latest = DB::table('sma_adjustments')->where('reference_no', $chave)->first();
 
             $products = $objXML->NFe->infNFe->det;
-            foreach($products as $product) {
-                if(isset($product->prod)) {
+            if(! is_array($products)) {
+                if($dbProduct = DB::table('sma_products')->where('name', $products->prod->xProd)->first()) {
+                    $data = [
+                        'latest_id' => $latest->id,
+                        'product_id' => $dbProduct->id,
+                        'quantity' => $products->prod->qCom,
+                        'cost' => $dbProduct->cost,
+                        'product_code' => $dbProduct->code,
+                        'product_name' => $dbProduct->name,
+                        'net_unit_cost' => $dbProduct->cost,
+                        'warehouse_id' => 1,
+                        'subtotal' => $dbProduct->cost,
+                        'quantity_balance' => $dbProduct->quantity,
+                        'date' => date('Y-m-d', strtotime('now')),
+                        'status' => 'received',
+                        'unit_cost' => $dbProduct->cost,
+                        'real_unit_cost' => $dbProduct->cost,
+                        'quantity_received' => $dbProduct->quantity ?? 0,
+                        'unit_quantity' => $dbProduct->quantity ?? 0,
+                        'unit' => $dbProduct->unit
+                    ];
+                    $this->createAdjustment($data);
+                }
+            } else {
+                foreach($products as $product) {
                     if($dbProduct = DB::table('sma_products')->where('name', $product->prod->xProd)->first()) {
                         $data = [
                             'latest_id' => $latest->id,
@@ -1077,8 +1101,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                             'status' => 'received',
                             'unit_cost' => $dbProduct->cost,
                             'real_unit_cost' => $dbProduct->cost,
-                            'quantity_received' => $dbProduct->quantity,
-                            'unit_quantity' => $dbProduct->quantity,
+                            'quantity_received' => $dbProduct->quantity ?? 0,
+                            'unit_quantity' => $dbProduct->quantity ?? 0,
                             'unit' => $dbProduct->unit
                         ];
                         $this->createAdjustment($data);
@@ -1105,7 +1129,9 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
             return response()->json([
                 'error' => true,
                 'message' => "Erro interno",
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getTrace()
             ]);
         }
     }
@@ -2530,8 +2556,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
             $stdDetPag->vPag = $this->format($request->valor_pago); //Obs: deve ser informado o valor pago pelo cliente
 
             if ($request->tipo_pagamento == '03' || $request->tipo_pagamento == '04') {
-                $stdDetPag->CNPJ = '12345678901234';
-                $stdDetPag->tBand = '01';
+                $stdDetPag->CNPJ = '16549105000215';
+                $stdDetPag->tBand = $request->tipo_pagamento;
                 $stdDetPag->cAut = '3333333';
                 $stdDetPag->tpIntegra = 1;
             }
@@ -2561,85 +2587,91 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
     public function generateNfce(Request $request)
     {
+        try {
+            $config = ConfigNota::first();
 
-        $config = ConfigNota::first();
+            $cnpj = str_replace(".", "", $config->cnpj);
+            $cnpj = str_replace("/", "", $cnpj);
+            $cnpj = str_replace("-", "", $cnpj);
+            $cnpj = str_replace(" ", "", $cnpj);
 
-        $cnpj = str_replace(".", "", $config->cnpj);
-        $cnpj = str_replace("/", "", $cnpj);
-        $cnpj = str_replace("-", "", $cnpj);
-        $cnpj = str_replace(" ", "", $cnpj);
+            $nfe_service = new NFCeService([
+                "atualizacao" => date('Y-m-d h:i:s'),
+                "tpAmb" => (int)$config->ambiente,
+                "razaosocial" => $config->razao_social,
+                "siglaUF" => $config->UF,
+                "cnpj" => $cnpj,
+                "schemes" => "PL_009_V4",
+                "versao" => "4.00",
+                "tokenIBPT" => "AAAAAAA",
+                "CSC" => $config->csc,
+                "CSCid" => $config->csc_id
+            ]);
 
-        $nfe_service = new NFCeService([
-            "atualizacao" => date('Y-m-d h:i:s'),
-            "tpAmb" => (int)$config->ambiente,
-            "razaosocial" => $config->razao_social,
-            "siglaUF" => $config->UF,
-            "cnpj" => $cnpj,
-            "schemes" => "PL_009_V4",
-            "versao" => "4.00",
-            "tokenIBPT" => "AAAAAAA",
-            "CSC" => $config->csc,
-            "CSCid" => $config->csc_id
-        ]);
+            if ($request->estado == 'REJEITADO' || $request->estado == 'DISPONIVEL') {
+                header('Content-type: text/html; charset=UTF-8');
 
-        if ($request->estado == 'REJEITADO' || $request->estado == 'DISPONIVEL') {
-            header('Content-type: text/html; charset=UTF-8');
+                $request->produtos = json_decode(json_encode($request->produtos));
+                $request->frete = json_decode(json_encode($request->frete));
+                $request->cliente = json_decode(json_encode($request->cliente));
+                $request->natureza = json_decode(json_encode($request->natureza));
 
-            $request->produtos = json_decode(json_encode($request->produtos));
-            $request->frete = json_decode(json_encode($request->frete));
-            $request->cliente = json_decode(json_encode($request->cliente));
-            $request->natureza = json_decode(json_encode($request->natureza));
+                $nfce = $this->factNfce($request);
 
-            $nfce = $this->factNfce($request);
-
-            if(isset($nfce['exception'])) {
-                return response()->json([
-                    'error' => true,
-                    'message' => 'erro interno',
-                    'exception' => $nfce['exception']
-                ]);
-            }
-
-            if (!isset($nfce['erros_xml'])) {
-
-                $signed = $nfe_service->sign($nfce['xml']);
-                $resultado = $nfe_service->transmitirNfce($signed, $nfce['chave']);
-
-                $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-                file_put_contents($public . 'xml_nfce/' . $nfce['chave'] . '.xml', $signed);
-
-                if (substr($resultado, 0, 4) != 'Erro') {
-
-                    $data = [
-                        'error' => false,
-                        'chave' => $nfce['chave'],
-                        'estado' => 'APROVADO',
-                        'nfcNum' => $nfce['nNf']
-                    ];
-
-                } else {
-
-                    $data = [
-                        'estado' => 'REJEITADO'
-                    ];
+                if(isset($nfce['exception'])) {
+                    return response()->json([
+                        'error' => true,
+                        'message' => 'erro interno',
+                        'exception' => $nfce['exception']
+                    ]);
                 }
 
-                return response()->json([
-                    'data' => $data,
-                    'json' => $resultado
-                ]);
+                if (!isset($nfce['erros_xml'])) {
+
+                    $signed = $nfe_service->sign($nfce['xml']);
+                    $resultado = $nfe_service->transmitirNfce($signed, $nfce['chave']);
+
+                    $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+                    file_put_contents($public . 'xml_nfce/' . $nfce['chave'] . '.xml', $signed);
+
+                    if (substr($resultado, 0, 4) != 'Erro') {
+
+                        $data = [
+                            'error' => false,
+                            'chave' => $nfce['chave'],
+                            'estado' => 'APROVADO',
+                            'nfcNum' => $nfce['nNf']
+                        ];
+
+                    } else {
+
+                        $data = [
+                            'estado' => 'REJEITADO'
+                        ];
+                    }
+
+                    return response()->json([
+                        'data' => $data,
+                        'json' => $resultado
+                    ]);
+
+                } else {
+                    return response()->json([
+                        'data' => [
+                            'error' => true,
+                            'xml_error' => $nfce['erros_xml']
+                        ]
+                    ]);
+                }
 
             } else {
-                return response()->json([
-                    'data' => [
-                        'error' => true,
-                        'xml_error' => $nfce['erros_xml']
-                    ]
-                ]);
+                echo json_encode("Apro");
             }
-
-        } else {
-            echo json_encode("Apro");
+        } catch(\Exception $e) {
+            return [
+                'error' => true,
+                'exception' => $e->getMessage(),
+            ];
         }
     }
 
@@ -2748,40 +2780,40 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                             'date' => date('Y-m-d H:i:s', strtotime('now')),
                             'warehouse_id' => 1,
                             'created_by' => 1,
-                            'reference_no' => date('Y/m/d', strtotime('now'))
+                            'reference_no' => $chave
                         ]);
 
-                        $all = DB::table('sma_adjustments')->get();
-                        $latest = $all[(count($all) - 1)];
+                        $latest = DB::table('sma_adjustments')->where('reference_no', $chave)->first();
 
                         $products = $objXML->NFe->infNFe->det;
-                        foreach($products as $product) {
-                            if(isset($product->prod)) {
-                                $dbProduct = DB::table('sma_products')->where('name', $product->prod->xProd)->first();
+
+                        if(! is_array($products)) {
+                            if(isset($products->prod)) {
+                                $dbProduct = DB::table('sma_products')->where('name', $products->prod->xProd)->first();
 
                                 if(! $dbProduct) {
                                     DB::table('sma_products')->insert([
-                                        'code' => $product->prod->cProd,
-                                        'name' => $product->prod->xProd,
-                                        'price' => $product->prod->vProd,
+                                        'code' => $products->prod->cProd,
+                                        'name' => $products->prod->xProd,
+                                        'price' => $products->prod->vProd,
                                         'category_id' => 1,
                                         'barcode_symbology' => 'code128',
                                         'type' => 'standard',
                                         'views' => 1,
                                         'hide' => 0,
                                         'hide_pos' => 0,
-                                        'CFOP_saida_estadual' => $product->prod->CFOP,
-                                        'NCM' => $product->prod->NCM,
-                                        'quantity' => $product->prod->qCom,
+                                        'CFOP_saida_estadual' => $products->prod->CFOP,
+                                        'NCM' => $products->prod->NCM,
+                                        'quantity' => $products->prod->qCom,
                                     ]);
 
-                                    $dbProduct = DB::table('sma_products')->where('name', $product->prod->xProd)->first();
+                                    $dbProduct = DB::table('sma_products')->where('name', $products->prod->xProd)->first();
                                 }
 
                                 $data = [
                                     'latest_id' => $latest->id,
                                     'product_id' => $dbProduct->id,
-                                    'quantity' => $product->prod->qCom,
+                                    'quantity' => $products->prod->qCom,
                                     'cost' => $dbProduct->cost,
                                     'product_code' => $dbProduct->code,
                                     'product_name' => $dbProduct->name,
@@ -2799,6 +2831,53 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                                 ];
 
                                 $this->createAdjustment($data);
+                            }
+                        } else {
+                            foreach($products as $product) {
+                                if(isset($product->prod)) {
+                                    $dbProduct = DB::table('sma_products')->where('name', $product->prod->xProd)->first();
+
+                                    if(! $dbProduct) {
+                                        DB::table('sma_products')->insert([
+                                            'code' => $product->prod->cProd,
+                                            'name' => $product->prod->xProd,
+                                            'price' => $product->prod->vProd,
+                                            'category_id' => 1,
+                                            'barcode_symbology' => 'code128',
+                                            'type' => 'standard',
+                                            'views' => 1,
+                                            'hide' => 0,
+                                            'hide_pos' => 0,
+                                            'CFOP_saida_estadual' => $product->prod->CFOP,
+                                            'NCM' => $product->prod->NCM,
+                                            'quantity' => $product->prod->qCom,
+                                        ]);
+
+                                        $dbProduct = DB::table('sma_products')->where('name', $product->prod->xProd)->first();
+                                    }
+
+                                    $data = [
+                                        'latest_id' => $latest->id,
+                                        'product_id' => $dbProduct->id,
+                                        'quantity' => $product->prod->qCom,
+                                        'cost' => $dbProduct->cost,
+                                        'product_code' => $dbProduct->code,
+                                        'product_name' => $dbProduct->name,
+                                        'net_unit_cost' => $dbProduct->cost,
+                                        'warehouse_id' => 1,
+                                        'subtotal' => $dbProduct->cost,
+                                        'quantity_balance' => $dbProduct->quantity,
+                                        'date' => date('Y-m-d', strtotime('now')),
+                                        'status' => 'received',
+                                        'unit_cost' => $dbProduct->cost,
+                                        'real_unit_cost' => $dbProduct->cost,
+                                        'quantity_received' => $dbProduct->quantity,
+                                        'unit_quantity' => $dbProduct->quantity,
+                                        'unit' => $dbProduct->unit
+                                    ];
+
+                                    $this->createAdjustment($data);
+                                }
                             }
                         }
 
