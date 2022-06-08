@@ -1046,8 +1046,6 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
             $objXML = json_encode($xml);
             $objXML = json_decode($objXML);
 
-            $this->criarFatura($objXML);
-
             if(! DB::table('sma_adjustments')->where('reference_no', $chave)->first()) {
                 DB::table('sma_adjustments')->insert([
                     'date' => date('Y-m-d H:i:s', strtotime('now')),
@@ -1056,6 +1054,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                     'reference_no' => $chave
                 ]);
             }
+
+            $this->criarFatura($objXML);
 
             $latest = DB::table('sma_adjustments')->where('reference_no', $chave)->first();
 
@@ -2781,14 +2781,14 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                     $objXML = json_decode($objXML);
                     $chave = str_replace('.xml', '', $_FILES['xml_file']['name']);
                     if (!ManifestaDfe::where('chave', $chave)->first()) {
-                        $this->criarFatura($objXML);
-
                         DB::table('sma_adjustments')->insert([
                             'date' => date('Y-m-d H:i:s', strtotime('now')),
                             'warehouse_id' => 1,
                             'created_by' => 1,
                             'reference_no' => $chave
                         ]);
+
+                        $this->criarFatura($objXML);
 
                         $latest = DB::table('sma_adjustments')->where('reference_no', $chave)->first();
 
@@ -3067,6 +3067,15 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                             'created_by' => 1,
                             'vencimento' => $fatura->dVenc
                         ]);
+
+                        DB::table('sma_expenses')->insert([
+                            'date' => $fatura->dVenc,
+                            'reference' => $xml->protNFe->infProt->chNFe,
+                            'amount' => 0,
+                            'created_by' => 1,
+                            'status' => 'pending',
+                            'warehouse_id' => 1,
+                        ]);
                     }
                 } else {
                     DB::table('sma_purchases')->insert([
@@ -3083,6 +3092,15 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                         'created_by' => 1,
                         'vencimento' => $faturas->dVenc
                     ]);
+
+                    DB::table('sma_expenses')->insert([
+                        'date' => $faturas->dVenc,
+                        'reference' => $xml->protNFe->infProt->chNFe,
+                        'amount' => 0,
+                        'created_by' => 1,
+                        'status' => 'pending',
+                        'warehouse_id' => 1,
+                    ]);
                 }
             } else {
                 DB::table('sma_purchases')->insert([
@@ -3098,6 +3116,15 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                     'payment_status' => 'pending',
                     'created_by' => 1,
                     'vencimento' => ''
+                ]);
+
+                DB::table('sma_expenses')->insert([
+                    'date' => date('Y-m-d H:i:s', time()),
+                    'reference' => $xml->protNFe->infProt->chNFe,
+                    'amount' => 0,
+                    'created_by' => 1,
+                    'status' => 'pending',
+                    'warehouse_id' => 1,
                 ]);
             }
         }
