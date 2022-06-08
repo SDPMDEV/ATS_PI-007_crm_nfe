@@ -479,23 +479,30 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
     public function filtrarXml(Request $request)
     {
-        $xml = DB::table('sma_sales')->whereBetween('date', [
-            $this->parseDate($request->data_inicial),
-            $this->parseDate($request->data_final, true)
-        ])
+        $xml = DB::table('sma_sales')->whereBetween('date', [$request->data_inicial, $request->data_final])
             ->where('pos', '=', 1)
-            ->where('estado', '=', 'APROVADO')->get();
+            ->where('estado', '=', 'APROVADO')
+            ->where('nfNumero', '<>', null)->get();
 
         $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
 
+        $chavesNfe = [];
+        $chavesNfce = [];
+
         try {
+            foreach ($xml as $item) {
+                $item->date = date('d-m-Y', strtotime($item->date));
+                $item->date = str_replace('-', '/', $item->date);
+            }
+
             if (count($xml) > 0) {
 
-                $zip_file = $public . 'xml.zip';
+                $zip_file = $public . 'XML_NFE.zip';
                 $zip = new \ZipArchive();
                 $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
                 foreach ($xml as $x) {
+                    $chavesNfe[] = $x->chave;
                     if (file_exists($public . 'xml_nfe/' . $x->chave . '.xml'))
                         $zip->addFile($public . 'xml_nfe/' . $x->chave . '.xml', $x->chave . ".xml");
                 }
@@ -505,43 +512,14 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
             return response()->json([
                 'error' => true,
                 'message' => "Erro interno do servidor",
-                'exception' => $e->getMessage()
+                'exception' => $e->getMessage(),
             ]);
         }
 
-//        try {
-//            $xmlCte = DB::table('sma_sales')->whereBetween('date', [
-//                $this->parseDate($request->data_inicial),
-//                $this->parseDate($request->data_final, true)
-//            ])
-//            ->where('estado', '=', 'CANCELADA')
-//            ->where('sequencia_cce', '<>', null)
-//            ->where('sequencia_cce', '<>', 0)->get();
-//
-//            if(count($xmlCte) > 0){
-//                $zip_file = $public.'xmlcte.zip';
-//                $zip = new \ZipArchive();
-//                $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-//
-//                foreach($xmlCte as $x){
-//                    if(file_exists($public.'xml_cte/'.$x->chave. '.xml'))
-//                        $zip->addFile($public.'xml_cte/'.$x->chave. '.xml');
-//                }
-//                $zip->close();
-//
-//            }
-//        } catch(\Exception $e) {
-//            return response()->json([
-//                'error' => true,
-//                'message' => "Erro interno do servidor",
-//                'exception' => $e->getMessage()
-//            ]);
-//        }
-
         try {
             $xmlNfce = DB::table('sma_sales')->whereBetween('date', [
-                $this->parseDate($request->data_inicial),
-                $this->parseDate($request->data_final, true)
+                $request->data_inicial,
+                $request->data_final
             ])
                 ->where('estado', '=', 'APROVADO')
                 ->where('nfcNumero', '<>', null)
@@ -549,11 +527,12 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
             if (count($xmlNfce) > 0) {
 
-                $zip_file = $public . 'xmlnfce.zip';
+                $zip_file = $public . 'XML_NFCE.zip';
                 $zip = new \ZipArchive();
                 $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
                 foreach ($xmlNfce as $x) {
+                    $chavesNfce[] = $x->chave;
                     if (file_exists($public . 'xml_nfce/' . $x->chave . '.xml'))
                         $zip->addFile($public . 'xml_nfce/' . $x->chave . '.xml', $x->chave . '.xml');
                 }
@@ -567,37 +546,10 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
             ]);
         }
 
-//        $xmlMdfe = Mdfe::
-//        whereBetween('updated_at', [
-//            $this->parseDate($request->data_inicial),
-//            $this->parseDate($request->data_final, true)])
-//            ->where('estado', 'APROVADO')
-//            ->get();
-//
-//        if(count($xmlMdfe) > 0){
-//            try{
-//
-//                $zip_file = $public.'xmlmdfe.zip';
-//                $zip = new \ZipArchive();
-//                $zip->open($zip_file, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-//
-//                foreach($xmlMdfe as $x){
-//                    if(file_exists($public.'xml_mdfe/'.$x->chave. '.xml')){
-//                        $zip->addFile($public.'xml_mdfe/'.$x->chave. '.xml', $x->chave. '.xml');
-//                    }
-//                }
-//                $zip->close();
-//            }catch(\Exception $e){
-//                return response()->json([
-//                    'error' => true,
-//                    'message' => "Erro interno do servidor"
-//                ]);
-//            }
-//
-//        }
 
-        foreach ($xmlNfce as $index => $value) {
-            $xmlNfce[$index]["razao_social"] = $this->getClientName($value->customer_id);
+        foreach($xmlNfce as $item) {
+            $item->date = date('d-m-Y', strtotime($item->date));
+            $item->date = str_replace('-', '/', $item->date);
         }
 
         $dataInicial = str_replace("/", "-", $request->data_inicial);
@@ -605,9 +557,9 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
         return response()->json([
             'xml' => $xml,
+            'chavesNfe' => $chavesNfe,
             'xmlNfce' => $xmlNfce,
-//            'xmlCte' => $xmlCte,
-//            'xmlMdfe' => $xmlMdfe,
+            'chavesNfce' => $chavesNfce,
             'dataInicial' => $dataInicial,
             'dataFinal' => $dataFinal
         ]);
@@ -618,6 +570,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
         foreach (DB::table('sma_companies')->where(['id', '=', $id])->get() as $dt) {
             return $dt->name;
         }
+
+        return '';
     }
 
     private function parseDate($date, $plusDay = false)
@@ -3133,11 +3087,14 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
     public function downloadPosXml(Request $request)
     {
         if (isset($request->chaves)) {
+            $request->chaves = (array) $request->chaves;
             if(count($request->chaves) == 1) {
                 $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
-                    if (file_exists($public . 'xml_nfce/' . $request->chaves[0] . '.xml')) {
+                if (file_exists($public . 'xml_nfce/' . $request->chaves[0] . '.xml')) {
 
                     return response()->download($public . 'xml_nfce/' . $request->chaves[0] . '.xml');
+                } else if(file_exists($public . 'xml_nfe/' . $request->chaves[0] . '.xml')) {
+                    return response()->download($public . 'xml_nfe/' . $request->chaves[0] . '.xml');
                 } else {
                     return response()->json([
                         'error' => true,
@@ -3164,6 +3121,8 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                 foreach ($request->chaves as $chave) {
                     if (file_exists($public . 'xml_nfce/' . $chave . '.xml')) {
                         $zip->addFile($public . 'xml_nfce/' . $chave . '.xml', "$chave.xml");
+                    } else if(file_exists($public . 'xml_nfe/' . $chave . '.xml')) {
+                        $zip->addFile($public . 'xml_nfe/' . $chave . '.xml', "$chave.xml");
                     } else {
                         return response()->json([
                             'error' => true,
