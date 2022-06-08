@@ -1839,75 +1839,82 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
 
     public function gerarNf(Request $request)
     {
+        try {
+            $config = ConfigNota::first();
 
-        $config = ConfigNota::first();
+            $cnpj = str_replace(".", "", $config->cnpj);
+            $cnpj = str_replace("/", "", $cnpj);
+            $cnpj = str_replace("-", "", $cnpj);
+            $cnpj = str_replace(" ", "", $cnpj);
 
-        $cnpj = str_replace(".", "", $config->cnpj);
-        $cnpj = str_replace("/", "", $cnpj);
-        $cnpj = str_replace("-", "", $cnpj);
-        $cnpj = str_replace(" ", "", $cnpj);
+            $nfe_service = new NFService([
+                "atualizacao" => date('Y-m-d h:i:s'),
+                "tpAmb" => (int)$config->ambiente,
+                "razaosocial" => $config->razao_social,
+                "siglaUF" => $config->UF,
+                "cnpj" => $cnpj,
+                "schemes" => "PL_009_V4",
+                "versao" => "4.00",
+                "tokenIBPT" => "AAAAAAA",
+                "CSC" => $config->csc,
+                "CSCid" => $config->csc_id
+            ]);
+            if ($request->estado == 'REJEITADO' || $request->estado == 'DISPONIVEL') {
 
-        $nfe_service = new NFService([
-            "atualizacao" => date('Y-m-d h:i:s'),
-            "tpAmb" => (int)$config->ambiente,
-            "razaosocial" => $config->razao_social,
-            "siglaUF" => $config->UF,
-            "cnpj" => $cnpj,
-            "schemes" => "PL_009_V4",
-            "versao" => "4.00",
-            "tokenIBPT" => "AAAAAAA",
-            "CSC" => $config->csc,
-            "CSCid" => $config->csc_id
-        ]);
-        if ($request->estado == 'REJEITADO' || $request->estado == 'DISPONIVEL') {
+                header('Content-type: text/html; charset=UTF-8');
 
-            header('Content-type: text/html; charset=UTF-8');
+                $request->produtos = json_decode(json_encode($request->produtos));
+                $request->frete = json_decode(json_encode($request->frete));
+                $request->cliente = json_decode(json_encode($request->cliente));
+                $request->natureza = json_decode(json_encode($request->natureza));
 
-            $request->produtos = json_decode(json_encode($request->produtos));
-            $request->frete = json_decode(json_encode($request->frete));
-            $request->cliente = json_decode(json_encode($request->cliente));
-            $request->natureza = json_decode(json_encode($request->natureza));
+                $nfe = $this->gerarNFe($request);
 
-            $nfe = $this->gerarNFe($request);
+                if (!isset($nfe['erros_xml'])) {
 
-            if (!isset($nfe['erros_xml'])) {
+                    $signed = $nfe_service->sign($nfe['xml']);
+                    $resultado = $nfe_service->transmitir($signed, $nfe['chave']);
 
-                $signed = $nfe_service->sign($nfe['xml']);
-                $resultado = $nfe_service->transmitir($signed, $nfe['chave']);
+                    if (substr($resultado, 0, 4) != 'Erro') {
 
-                if (substr($resultado, 0, 4) != 'Erro') {
+                        $data = [
+                            'error' => false,
+                            'chave' => $nfe['chave'],
+                            'estado' => 'APROVADO',
+                            'nfNumero' => $nfe['nNf']
+                        ];
+                    } else {
 
-                    $data = [
-                        'error' => false,
-                        'chave' => $nfe['chave'],
-                        'estado' => 'APROVADO',
-                        'nfNumero' => $nfe['nNf']
-                    ];
+                        $data = [
+                            'error' => true,
+                            'estado' => 'REJEITADO'
+                        ];
+                    }
+
+                    return response()->json([
+                        'data' => $data,
+                        'lastId' => $request->lastId,
+                        'nf' => $resultado
+                    ]);
+
                 } else {
 
-                    $data = [
+                    return response()->json([
                         'error' => true,
-                        'estado' => 'REJEITADO'
-                    ];
+                        'xml_erros' => $nfe['erros_xml'],
+                        'lastId' => $request->lastId
+                    ]);
                 }
 
-                return response()->json([
-                    'data' => $data,
-                    'lastId' => $request->lastId,
-                    'nf' => $resultado
-                ]);
-
             } else {
-
-                return response()->json([
-                    'error' => true,
-                    'xml_erros' => $nfe['erros_xml'],
-                    'lastId' => $request->lastId
-                ]);
+                echo json_encode("Apro");
             }
-
-        } else {
-            echo json_encode("Apro");
+        } catch (\Exception $ex) {
+            return response()->json([
+               'exception' => $ex->getMessage(),
+               'line' => $ex->getLine(),
+               'file' => $ex->getFile()
+            ]);
         }
     }
 
@@ -3093,6 +3100,59 @@ class ApiController extends \NFePHP\DA\NFe\Danfe
                     'vencimento' => ''
                 ]);
             }
+        }
+    }
+
+    public function downloadPosXml(Request $request)
+    {
+        if (isset($request->chaves)) {
+            if(count($request->chaves) == 1) {
+                $public = getenv('SERVIDOR_WEB') ? 'public/' : '';
+                    if (file_exists($public . 'xml_nfce/' . $request->chaves[0] . '.xml')) {
+
+                    return response()->download($public . 'xml_nfce/' . $request->chaves[0] . '.xml');
+                } else {
+                    return response()->json([
+                        'error' => true,
+                        'message' => "Arquivo XML não encontrado!!"
+                    ]);
+                }
+            } else {
+                $zip = new ZipArchive();
+
+                $public = getenv('SERVIDOR_WEB') ? 'public/' : '';;
+                $DelFilePath = $public . 'xml_nfce/' . 'XML_nfce.zip';
+
+                if(file_exists($DelFilePath)) {
+                    unlink ($DelFilePath);
+                }
+
+                if ($zip->open($DelFilePath, ZIPARCHIVE::CREATE) != TRUE) {
+                    return response()->json([
+                        'error' => true,
+                        'message' => 'Erro ao abrir arquivo zip'
+                    ]);
+                }
+
+                foreach ($request->chaves as $chave) {
+                    if (file_exists($public . 'xml_nfce/' . $chave . '.xml')) {
+                        $zip->addFile($public . 'xml_nfce/' . $chave . '.xml', "$chave.xml");
+                    } else {
+                        return response()->json([
+                            'error' => true,
+                            'message' => "Arquivo XML não encontrado!!"
+                        ]);
+                    }
+                }
+
+                $zip->close();
+                return response()->download($DelFilePath);
+            }
+        } else {
+            return response()->json([
+                'error' => true,
+                'message' => 'Selecione uma venda para baixar o XML'
+            ]);
         }
     }
 }
